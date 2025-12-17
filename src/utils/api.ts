@@ -65,6 +65,8 @@ export const mockReviews: Review[] = [
     rating: 5,
     text: 'Отличная процедура! Кожа стала чище и свежее. Очень довольна результатом.',
     date: '2024-01-15',
+    approved: true,
+    createdAt: '2024-01-15T10:00:00Z',
   },
   {
     id: '2',
@@ -74,6 +76,8 @@ export const mockReviews: Review[] = [
     rating: 5,
     text: 'Прекрасный массаж, очень расслабляет. Кожа стала более упругой.',
     date: '2024-01-10',
+    approved: true,
+    createdAt: '2024-01-10T14:30:00Z',
   },
   {
     id: '3',
@@ -83,6 +87,8 @@ export const mockReviews: Review[] = [
     rating: 4,
     text: 'Процедура прошла комфортно, результат виден уже после первого сеанса.',
     date: '2024-01-05',
+    approved: true,
+    createdAt: '2024-01-05T09:15:00Z',
   },
 ]
 

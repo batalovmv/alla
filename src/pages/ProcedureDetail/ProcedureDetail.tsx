@@ -61,6 +61,7 @@ const ProcedureDetail: React.FC = () => {
               src={procedure.images[0] || '/images/placeholder.jpg'}
               alt={procedure.name}
               className={styles.mainImage}
+              loading="eager"
             />
             {procedure.images.length > 1 && (
               <div className={styles.imageGallery}>
@@ -70,6 +71,7 @@ const ProcedureDetail: React.FC = () => {
                     src={img}
                     alt={`${procedure.name} ${index + 2}`}
                     className={styles.galleryImage}
+                    loading="lazy"
                   />
                 ))}
               </div>

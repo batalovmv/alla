@@ -18,6 +18,7 @@ const ProcedureCard: React.FC<ProcedureCardProps> = ({ procedure }) => {
           src={procedure.images[0] || '/images/placeholder.jpg'}
           alt={procedure.name}
           className={styles.image}
+          loading="lazy"
         />
         {procedure.popular && (
           <span className={styles.badge}>Популярно</span>
@@ -45,6 +46,6 @@ const ProcedureCard: React.FC<ProcedureCardProps> = ({ procedure }) => {
   )
 }
 
-export default ProcedureCard
+export default React.memo(ProcedureCard)
 
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { setProcedures } from '../../store/slices/proceduresSlice'
@@ -19,21 +19,23 @@ const Home: React.FC = () => {
     (state) => state.reviews
   )
 
-  useEffect(() => {
-    const loadData = async () => {
-      const proceduresData = await fetchProcedures()
-      const reviewsData = await fetchReviews()
-      dispatch(setProcedures(proceduresData))
-      dispatch(setReviews(reviewsData))
-    }
-    loadData()
+  const loadData = useCallback(async () => {
+    const proceduresData = await fetchProcedures()
+    const reviewsData = await fetchReviews()
+    dispatch(setProcedures(proceduresData))
+    dispatch(setReviews(reviewsData))
   }, [dispatch])
 
-  const popularProcedures = procedures
-    .filter((p) => p.popular)
-    .slice(0, 4)
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
-  const featuredReviews = reviews.slice(0, 3)
+  const popularProcedures = useMemo(
+    () => procedures.filter((p) => p.popular).slice(0, 4),
+    [procedures]
+  )
+
+  const featuredReviews = useMemo(() => reviews.slice(0, 3), [reviews])
 
   return (
     <>

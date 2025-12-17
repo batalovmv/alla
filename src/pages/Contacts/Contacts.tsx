@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import {
@@ -39,47 +39,56 @@ const Contacts: React.FC = () => {
     },
   })
 
+  const loadProcedures = useCallback(async () => {
+    const data = await fetchProcedures()
+    dispatch(setProcedures(data))
+  }, [dispatch])
+
   useEffect(() => {
-    const loadProcedures = async () => {
-      const data = await fetchProcedures()
-      dispatch(setProcedures(data))
-    }
     if (procedures.length === 0) {
       loadProcedures()
     }
-  }, [dispatch, procedures.length])
+  }, [procedures.length, loadProcedures])
 
   useEffect(() => {
     if (success) {
       reset()
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         dispatch(resetForm())
       }, 5000)
+      return () => clearTimeout(timer)
     }
   }, [success, reset, dispatch])
 
-  const procedureOptions = procedures.map((p) => ({
-    value: p.id,
-    label: `${p.name} - ${p.price} ₽`,
-  }))
+  const procedureOptions = useMemo(
+    () =>
+      procedures.map((p) => ({
+        value: p.id,
+        label: `${p.name} - ${p.price} ₽`,
+      })),
+    [procedures]
+  )
 
-  const onSubmit = async (data: BookingFormData) => {
-    dispatch(submitBooking())
-    try {
-      const result = await submitBookingAPI(data)
-      if (result.success) {
-        dispatch(submitBookingSuccess())
-      } else {
-        dispatch(submitBookingFailure(result.message || 'Ошибка отправки'))
-      }
-    } catch (err) {
-      dispatch(
-        submitBookingFailure(
-          err instanceof Error ? err.message : 'Произошла ошибка'
+  const onSubmit = useCallback(
+    async (data: BookingFormData) => {
+      dispatch(submitBooking())
+      try {
+        const result = await submitBookingAPI(data)
+        if (result.success) {
+          dispatch(submitBookingSuccess())
+        } else {
+          dispatch(submitBookingFailure(result.message || 'Ошибка отправки'))
+        }
+      } catch (err) {
+        dispatch(
+          submitBookingFailure(
+            err instanceof Error ? err.message : 'Произошла ошибка'
+          )
         )
-      )
-    }
-  }
+      }
+    },
+    [dispatch]
+  )
 
   return (
     <>

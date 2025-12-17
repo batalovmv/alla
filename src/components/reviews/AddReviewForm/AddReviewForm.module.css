@@ -1,0 +1,107 @@
+.formContainer {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 32px;
+}
+
+.title {
+  margin: 0 0 24px;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ratingSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ratingLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.required {
+  color: #ff6b9d;
+  margin-left: 4px;
+}
+
+.ratingStars {
+  display: flex;
+  gap: 8px;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+.starLabel {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.starLabel:hover {
+  transform: scale(1.2);
+}
+
+.starLabel:hover ~ .starLabel {
+  transform: scale(1.1);
+}
+
+.starInput {
+  display: none;
+}
+
+.starInput:checked ~ .star,
+.starInput:checked ~ .starLabel .star,
+.starLabel:hover .star {
+  filter: brightness(1.2);
+}
+
+.star {
+  font-size: 32px;
+  display: block;
+  transition: filter 0.2s ease;
+}
+
+.starInput:checked + .star {
+  filter: drop-shadow(0 0 4px rgba(255, 107, 157, 0.5));
+}
+
+.errorMessage {
+  color: #ff4444;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.submitButton {
+  width: 100%;
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .formContainer {
+    padding: 24px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .ratingStars {
+    gap: 4px;
+  }
+
+  .star {
+    font-size: 28px;
+  }
+}
+

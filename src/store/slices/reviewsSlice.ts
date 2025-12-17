@@ -7,25 +7,40 @@ const initialState: ReviewsState = {
   loading: false,
 }
 
+const calculateAverageRating = (reviews: Review[]): number => {
+  if (reviews.length === 0) return 0
+  const sum = reviews.reduce((acc, review) => acc + review.rating, 0)
+  return sum / reviews.length
+}
+
 const reviewsSlice = createSlice({
   name: 'reviews',
   initialState,
   reducers: {
     setReviews: (state, action: PayloadAction<Review[]>) => {
       state.items = action.payload
-      // Вычисляем средний рейтинг
-      if (action.payload.length > 0) {
-        const sum = action.payload.reduce((acc, review) => acc + review.rating, 0)
-        state.averageRating = sum / action.payload.length
-      } else {
-        state.averageRating = 0
-      }
+      state.averageRating = calculateAverageRating(action.payload)
     },
     addReview: (state, action: PayloadAction<Review>) => {
       state.items.push(action.payload)
-      // Пересчитываем средний рейтинг
-      const sum = state.items.reduce((acc, review) => acc + review.rating, 0)
-      state.averageRating = sum / state.items.length
+      state.averageRating = calculateAverageRating(state.items)
+    },
+    updateReview: (state, action: PayloadAction<{ id: string; updates: Partial<Review> }>) => {
+      const index = state.items.findIndex((r) => r.id === action.payload.id)
+      if (index !== -1) {
+        state.items[index] = { ...state.items[index], ...action.payload.updates }
+        state.averageRating = calculateAverageRating(state.items)
+      }
+    },
+    deleteReview: (state, action: PayloadAction<string>) => {
+      state.items = state.items.filter((r) => r.id !== action.payload)
+      state.averageRating = calculateAverageRating(state.items)
+    },
+    approveReview: (state, action: PayloadAction<string>) => {
+      const index = state.items.findIndex((r) => r.id === action.payload)
+      if (index !== -1) {
+        state.items[index].approved = true
+      }
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload
@@ -36,6 +51,9 @@ const reviewsSlice = createSlice({
 export const {
   setReviews,
   addReview,
+  updateReview,
+  deleteReview,
+  approveReview,
   setLoading,
 } = reviewsSlice.actions
 

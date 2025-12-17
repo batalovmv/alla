@@ -32,6 +32,8 @@ export interface Review {
   rating: number
   text: string
   date: string
+  approved?: boolean
+  createdAt?: string
 }
 
 export interface ProceduresState {
