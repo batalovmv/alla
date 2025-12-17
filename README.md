@@ -19,11 +19,13 @@
 - ✅ Детальные страницы процедур
 - ✅ Форма записи на сеанс с валидацией
 - ✅ Страница "О специалисте"
-- ✅ Отзывы клиентов
+- ✅ Система реальных отзывов с формой добавления
+- ✅ Хранение отзывов в localStorage
 - ✅ Контакты с картой
 - ✅ SEO оптимизация (мета-теги, Schema.org, sitemap)
 - ✅ Адаптивный дизайн
 - ✅ Автодеплой на GitHub Pages
+- ✅ Оптимизация производительности (React.memo, code splitting, lazy loading)
 
 ## Установка
 
@@ -91,7 +93,11 @@ export const mockProcedures: Procedure[] = [
 
 ### Отзывы
 
-Добавьте отзывы в файл `src/utils/api.ts` в массив `mockReviews`.
+Отзывы можно добавлять двумя способами:
+1. Через форму на странице "Отзывы" (сохраняются в localStorage)
+2. Добавить базовые отзывы в файл `src/utils/api.ts` в массив `mockReviews`
+
+Все отзывы автоматически сохраняются в localStorage браузера и синхронизируются между вкладками.
 
 ## Структура проекта
 
@@ -101,6 +107,7 @@ src/
     common/           # UI компоненты (Button, Input, Card и т.д.)
     layout/           # Header, Footer, Layout
     procedures/       # Компоненты для процедур
+    reviews/          # Компоненты для отзывов
   pages/              # Страницы приложения
     Home/             # Главная страница
     Procedures/       # Каталог процедур
@@ -114,6 +121,7 @@ src/
   utils/              # Утилиты
     api.ts            # Симуляция API
     validation.ts     # Валидация форм
+    reviewsStorage.ts # Хранение отзывов в localStorage
   assets/             # Статические ресурсы
     styles/           # Глобальные стили
   config/             # Конфигурация
@@ -140,6 +148,15 @@ src/
 - Tablet (768px - 1199px)
 - Mobile (< 768px)
 
+## Оптимизации производительности
+
+- React.memo для компонентов
+- useMemo/useCallback для дорогих вычислений
+- Lazy loading изображений
+- Code splitting с React.lazy
+- Оптимизация Vite bundle (manual chunks)
+- Resource hints (preconnect, dns-prefetch)
+
 ## Будущие улучшения
 
 - Интеграция с реальным API для отправки форм
@@ -148,6 +165,7 @@ src/
 - Админ-панель для управления контентом
 - Блог/статьи для SEO
 - Галерея работ (до/после)
+- Service Worker для PWA
 
 ## Лицензия
 

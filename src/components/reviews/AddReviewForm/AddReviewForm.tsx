@@ -32,7 +32,6 @@ const AddReviewForm: React.FC<AddReviewFormProps> = ({
     handleSubmit,
     formState: { errors },
     reset,
-    watch,
   } = useForm<ReviewFormData>({
     defaultValues: {
       rating: 5,
