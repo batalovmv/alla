@@ -282,6 +282,7 @@ const Contacts: React.FC = () => {
           </div>
         </div>
       </div>
+      </div>
     </>
   )
 }

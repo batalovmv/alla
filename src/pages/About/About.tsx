@@ -104,6 +104,7 @@ const About: React.FC = () => {
           </div>
         </div>
       </div>
+      </div>
     </>
   )
 }
