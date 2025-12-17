@@ -94,7 +94,6 @@ const Reviews: React.FC = () => {
       const newReview: Review = {
         id: `review_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         clientName: formData.clientName,
-        phone: formData.phone,
         procedureId: formData.procedureId,
         procedureName: selectedProcedure?.name || 'Неизвестная процедура',
         rating: formData.rating,
@@ -103,6 +102,9 @@ const Reviews: React.FC = () => {
         createdAt: new Date().toISOString(),
         approved: true, // Автоматическое одобрение (можно изменить на false для модерации)
       }
+      
+      // Телефон сохраняем отдельно в localStorage для связи, но не показываем в отзыве
+      // Можно использовать для модерации или связи с клиентом
 
       // Сохраняем в localStorage
       addReviewToStorage(newReview)

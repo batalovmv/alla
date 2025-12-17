@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useAppSelector } from '../../../store/hooks'
-import { Procedure } from '../../../types'
 import { validatePhone } from '../../../utils/validation'
 import Input from '../../common/Input/Input'
 import Textarea from '../../common/Textarea/Textarea'
@@ -39,12 +38,6 @@ const AddReviewForm: React.FC<AddReviewFormProps> = ({
       rating: 5,
     },
   })
-
-  const selectedProcedureId = watch('procedureId')
-  const selectedProcedure = useMemo(
-    () => procedures.find((p) => p.id === selectedProcedureId),
-    [procedures, selectedProcedureId]
-  )
 
   const procedureOptions = useMemo(
     () =>
