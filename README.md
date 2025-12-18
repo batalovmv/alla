@@ -8,11 +8,15 @@
 - Redux Toolkit для управления состоянием
 - React Router v6 для навигации
 - React Hook Form для работы с формами
+- Firebase (Authentication, Firestore, Storage) для админ-панели
 - Vite для сборки
 - CSS Modules для стилизации
+- GitHub Actions для CI/CD
 - gh-pages для деплоя
 
 ## Функциональность
+
+### Публичная часть сайта
 
 - ✅ Главная страница с Hero-секцией и популярными процедурами
 - ✅ Каталог процедур с фильтрацией и поиском
@@ -20,12 +24,23 @@
 - ✅ Форма записи на сеанс с валидацией
 - ✅ Страница "О специалисте"
 - ✅ Система реальных отзывов с формой добавления
-- ✅ Хранение отзывов в localStorage
-- ✅ Контакты с картой
+- ✅ Хранение отзывов в Firebase и localStorage (fallback)
+- ✅ Контакты с формой записи
 - ✅ SEO оптимизация (мета-теги, Schema.org, sitemap)
 - ✅ Адаптивный дизайн
-- ✅ Автодеплой на GitHub Pages
+- ✅ Автодеплой на GitHub Pages через CI/CD
 - ✅ Оптимизация производительности (React.memo, code splitting, lazy loading)
+
+### Админ-панель
+
+- ✅ Авторизация через Firebase Authentication
+- ✅ Управление процедурами (CRUD операции)
+- ✅ Загрузка изображений процедур в Firebase Storage
+- ✅ Модерация отзывов (одобрение, отклонение, удаление)
+- ✅ Редактирование контактной информации
+- ✅ Редактирование информации "О специалисте" с загрузкой фото
+- ✅ Просмотр и управление заявками на запись
+- ✅ Дашборд со статистикой
 
 ## Установка
 
@@ -35,9 +50,15 @@ npm install
 
 ### Настройка Firebase (для админ-панели)
 
+**Для локальной разработки:**
 1. Создайте файл `.env.local` в корне проекта
 2. Скопируйте содержимое из `env.local.template` в `.env.local`
 3. Следуйте инструкциям в `QUICK_START.md` для настройки Firebase
+
+**Для CI/CD (GitHub Pages):**
+1. Настройте GitHub Secrets (см. `GITHUB_SECRETS_SETUP.md`)
+2. Настройте Firebase в консоли (см. `FIREBASE_SETUP.md`)
+3. После push изменения автоматически задеплоятся
 
 ## Запуск в режиме разработки
 
@@ -82,28 +103,22 @@ export const CONTACT_INFO = {
 }
 ```
 
-### Процедуры
+### Управление контентом
 
-Добавьте процедуры в файл `src/utils/api.ts` в массив `mockProcedures`:
+**Через админ-панель (рекомендуется):**
+1. Войдите в админку по адресу `/admin/login`
+2. Используйте интерфейс для управления:
+   - Добавление и редактирование процедур
+   - Модерация отзывов
+   - Обновление контактной информации
+   - Редактирование информации "О специалисте"
 
-```typescript
-export const mockProcedures: Procedure[] = [
-  {
-    id: '1',
-    name: 'Название процедуры',
-    category: 'Категория',
-    // ...
-  },
-]
-```
+**Через код (fallback, если Firebase не настроен):**
+- Процедуры: `src/utils/api.ts` → `mockProcedures`
+- Отзывы: `src/utils/api.ts` → `mockReviews`
+- Контакты: `src/config/constants.ts` → `CONTACT_INFO`
 
-### Отзывы
-
-Отзывы можно добавлять двумя способами:
-1. Через форму на странице "Отзывы" (сохраняются в localStorage)
-2. Добавить базовые отзывы в файл `src/utils/api.ts` в массив `mockReviews`
-
-Все отзывы автоматически сохраняются в localStorage браузера и синхронизируются между вкладками.
+При наличии Firebase все данные хранятся в Firestore и автоматически синхронизируются.
 
 ## Структура проекта
 
@@ -114,6 +129,12 @@ src/
     layout/           # Header, Footer, Layout
     procedures/       # Компоненты для процедур
     reviews/          # Компоненты для отзывов
+    admin/            # Компоненты админ-панели
+      AdminLayout/    # Layout админки
+      AdminSidebar/   # Боковое меню
+      ImageUpload/    # Загрузка изображений
+    auth/             # Компоненты авторизации
+      LoginForm/      # Форма входа
   pages/              # Страницы приложения
     Home/             # Главная страница
     Procedures/       # Каталог процедур
@@ -121,11 +142,25 @@ src/
     About/            # О специалисте
     Reviews/          # Отзывы
     Contacts/         # Контакты и форма записи
+    Admin/            # Страницы админ-панели
+      Login/          # Страница входа
+      Dashboard/      # Дашборд
+      Procedures/     # Управление процедурами
+      Reviews/        # Модерация отзывов
+      Contacts/       # Редактирование контактов
+      About/          # Редактирование "О специалисте"
+      Bookings/       # Просмотр заявок
   store/              # Redux store
     slices/           # Redux Toolkit slices
+      authSlice.ts    # Авторизация
+      proceduresSlice.ts
+      bookingSlice.ts
+      reviewsSlice.ts
     hooks.ts          # Типизированные хуки
+  services/           # Сервисы
+    firebaseService.ts # Работа с Firebase
   utils/              # Утилиты
-    api.ts            # Симуляция API
+    api.ts            # API (Firebase + fallback на mock)
     validation.ts     # Валидация форм
     reviewsStorage.ts # Хранение отзывов в localStorage
   assets/             # Статические ресурсы
@@ -133,6 +168,7 @@ src/
   config/             # Конфигурация
     routes.ts         # Маршруты
     constants.ts      # Константы
+    firebase.ts       # Конфигурация Firebase
   types/              # TypeScript типы
 ```
 
@@ -194,6 +230,13 @@ src/
 - Редактирование информации "О специалисте"
 - Просмотр и управление заявками на запись
 
+## Документация
+
+- `QUICK_START.md` - Быстрый старт с Firebase
+- `FIREBASE_SETUP.md` - Подробная инструкция по настройке Firebase
+- `GITHUB_SECRETS_SETUP.md` - Настройка GitHub Secrets для CI/CD
+- `env.local.template` - Шаблон конфигурации Firebase
+
 ## Будущие улучшения
 
 - Интеграция с календарем для записи
@@ -201,6 +244,7 @@ src/
 - Блог/статьи для SEO
 - Галерея работ (до/после)
 - Service Worker для PWA
+- Расширенная аналитика в админ-панели
 
 ## Лицензия
 
