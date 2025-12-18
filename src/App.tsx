@@ -3,7 +3,6 @@ import { Routes, Route } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import AdminLayout from './components/admin/AdminLayout/AdminLayout'
 import ProtectedRoute from './components/common/ProtectedRoute/ProtectedRoute'
-import { ROUTES } from './config/routes'
 
 // Lazy load pages for code splitting
 const Home = lazy(() => import('./pages/Home/Home'))
@@ -62,20 +61,40 @@ function App() {
       
       <Route path="/admin/*" element={
         <ProtectedRoute>
-          <Suspense fallback={<PageLoader />}>
-            <AdminLayout>
-              <Routes>
-                <Route index element={<AdminDashboard />} />
-                <Route path="procedures" element={<AdminProcedures />} />
-                <Route path="reviews" element={<AdminReviews />} />
-                <Route path="contacts" element={<AdminContacts />} />
-                <Route path="about" element={<AdminAbout />} />
-                <Route path="bookings" element={<AdminBookings />} />
-              </Routes>
-            </AdminLayout>
-          </Suspense>
+          <AdminLayout />
         </ProtectedRoute>
-      } />
+      }>
+        <Route index element={
+          <Suspense fallback={<PageLoader />}>
+            <AdminDashboard />
+          </Suspense>
+        } />
+        <Route path="procedures" element={
+          <Suspense fallback={<PageLoader />}>
+            <AdminProcedures />
+          </Suspense>
+        } />
+        <Route path="reviews" element={
+          <Suspense fallback={<PageLoader />}>
+            <AdminReviews />
+          </Suspense>
+        } />
+        <Route path="contacts" element={
+          <Suspense fallback={<PageLoader />}>
+            <AdminContacts />
+          </Suspense>
+        } />
+        <Route path="about" element={
+          <Suspense fallback={<PageLoader />}>
+            <AdminAbout />
+          </Suspense>
+        } />
+        <Route path="bookings" element={
+          <Suspense fallback={<PageLoader />}>
+            <AdminBookings />
+          </Suspense>
+        } />
+      </Route>
     </Routes>
   )
 }

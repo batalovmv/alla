@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { proceduresService } from '../../../services/firebaseService'
 import { Procedure } from '../../../types'
-import { ROUTES } from '../../../config/routes'
 import ProceduresList from './ProceduresList'
 import ProcedureForm from './ProcedureForm'
 import Button from '../../../components/common/Button/Button'
 import styles from './Procedures.module.css'
 
 const Procedures: React.FC = () => {
-  const navigate = useNavigate()
   const [procedures, setProcedures] = useState<Procedure[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)

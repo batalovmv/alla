@@ -16,11 +16,10 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const [procedures, reviews, allReviews, bookings, allBookings] = await Promise.all([
+        const [procedures, reviews, allReviews, allBookings] = await Promise.all([
           proceduresService.getAll(),
           reviewsService.getApproved(),
           reviewsService.getAll(),
-          bookingsService.getAll(),
           bookingsService.getAll(),
         ])
 
