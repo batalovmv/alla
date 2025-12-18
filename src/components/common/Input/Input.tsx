@@ -12,17 +12,31 @@ const Input: React.FC<InputProps> = ({
   className = '',
   id,
   name,
+  onChange,
+  onBlur,
   ...props
 }) => {
-  // #region agent log
-  React.useEffect(() => {
-    if (props.value !== undefined || props.defaultValue !== undefined) {
-      fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Input.tsx:15',message:'Input render',data:{id,name,hasValue:props.value!==undefined,hasDefaultValue:props.defaultValue!==undefined,hasOnChange:!!props.onChange,hasOnBlur:!!props.onBlur,value:props.value,type:props.type},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    }
-  }, [props.value, props.defaultValue, props.onChange, props.onBlur]);
-  // #endregion
-
   const inputId = id || name || `input-${Math.random().toString(36).substr(2, 9)}`
+  
+  // #region agent log
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Input.tsx:handleChange',message:'Input onChange',data:{id:inputId,name:name||inputId,value:e.target.value,valueLength:e.target.value.length,hasOnChange:!!onChange},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'E'})}).catch(()=>{});
+    if (onChange) {
+      onChange(e)
+    }
+  }
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Input.tsx:handleBlur',message:'Input onBlur',data:{id:inputId,name:name||inputId,value:e.target.value,hasOnBlur:!!onBlur},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
+    if (onBlur) {
+      onBlur(e)
+    }
+  }
+
+  React.useEffect(() => {
+    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Input.tsx:render',message:'Input render',data:{id:inputId,name:name||inputId,hasOnChange:!!onChange,hasOnBlur:!!onBlur,hasError:!!error,errorMessage:error,type:props.type,value:props.value},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'G'})}).catch(()=>{});
+  }, [inputId, name, onChange, onBlur, error, props.value, props.type]);
+  // #endregion
   
   return (
     <div className={styles.inputWrapper}>
@@ -33,10 +47,12 @@ const Input: React.FC<InputProps> = ({
         </label>
       )}
       <input
+        {...props}
         id={inputId}
         name={name || inputId}
         className={`${styles.input} ${error ? styles.error : ''} ${className}`}
-        {...props}
+        onChange={handleChange}
+        onBlur={handleBlur}
       />
       {error && <span className={styles.errorMessage}>{error}</span>}
     </div>

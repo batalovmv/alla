@@ -28,7 +28,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     formState: { errors },
     watch,
   } = useForm<LoginFormData>({
-    mode: 'onChange',
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
   })
 
   // Debug logging
@@ -76,7 +77,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
 
   // #region agent log
   React.useEffect(() => {
-    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginForm.tsx:67',message:'Form render',data:{emailValue,passwordValue,errors:Object.keys(errors),errorCount:Object.keys(errors).length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginForm.tsx:77',message:'Form render',data:{emailValue,passwordValue,emailError:errors.email?.message,passwordError:errors.password?.message,errors:Object.keys(errors),errorCount:Object.keys(errors).length},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'H'})}).catch(()=>{});
   }, [emailValue, passwordValue, errors]);
   // #endregion
 
