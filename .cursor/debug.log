@@ -1,0 +1,3 @@
+{"location":"LoginForm.tsx:67","message":"Form render","data":{"errors":[],"errorCount":0},"timestamp":1766063506704,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"LoginForm.tsx:85","message":"Register objects","data":{"emailRegisterName":"email","emailRegisterOnChange":true,"passwordRegisterName":"password","passwordRegisterOnChange":true},"timestamp":1766063506705,"sessionId":"debug-session","runId":"run1","hypothesisId":"C"}
+{"location":"LoginForm.tsx:67","message":"Form render","data":{"errors":[],"errorCount":0},"timestamp":1766063509144,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
