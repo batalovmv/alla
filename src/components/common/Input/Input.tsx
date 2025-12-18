@@ -14,9 +14,10 @@ const Input: React.FC<InputProps> = ({
   name,
   ...props
 }) => {
-  // Extract onChange and onBlur from props (they come from register via {...emailRegister})
+  // Extract onChange, onBlur, and name from props (they come from register via {...emailRegister})
   // These are in props because they come from react-hook-form's register()
-  const { onChange: propsOnChange, onBlur: propsOnBlur, name: propsName, ...restProps } = props
+  const propsName = (props as any).name
+  const { onChange: propsOnChange, onBlur: propsOnBlur, ...restProps } = props
   
   // Use name from props (from register) if available, otherwise use the name prop or id
   const inputName = propsName || name || id || `input-${Math.random().toString(36).substr(2, 9)}`
