@@ -6,28 +6,29 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string
 }
 
-const Input: React.FC<InputProps> = ({
+const Input = React.forwardRef<HTMLInputElement, InputProps>(({
   label,
   error,
   className = '',
   id,
   name: propName,
   ...props
-}) => {
-  // Extract name, onChange, and onBlur from props (they come from register via {...emailRegister})
+}, ref) => {
+  // Extract name, onChange, onBlur, and ref from props (they come from register via {...emailRegister})
   // These are in props because they come from react-hook-form's register()
   // We need to extract them BEFORE spreading restProps to ensure they're not lost
   const registerName = (props as any).name
   const registerOnChange = (props as any).onChange
   const registerOnBlur = (props as any).onBlur
+  const registerRef = (props as any).ref || ref
   
   // Use name from register if available (this is critical for react-hook-form),
   // otherwise use the name prop or id
   const inputName = registerName || propName || id || `input-${Math.random().toString(36).substr(2, 9)}`
   const inputId = id || inputName
   
-  // Remove name, onChange, onBlur from restProps to avoid conflicts
-  const { name: _, onChange: __, onBlur: ___, ...restProps } = props as any
+  // Remove name, onChange, onBlur, ref from restProps to avoid conflicts
+  const { name: _, onChange: __, onBlur: ___, ref: ____, ...restProps } = props as any
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Call the handler from register first (this updates react-hook-form state)
@@ -53,6 +54,7 @@ const Input: React.FC<InputProps> = ({
       )}
       <input
         {...restProps}
+        ref={registerRef}
         id={inputId}
         name={inputName}
         className={`${styles.input} ${error ? styles.error : ''} ${className}`}
@@ -62,7 +64,9 @@ const Input: React.FC<InputProps> = ({
       {error && <span className={styles.errorMessage}>{error}</span>}
     </div>
   )
-}
+})
+
+Input.displayName = 'Input'
 
 export default Input
 
