@@ -1,6 +1,10 @@
 import { Procedure, Review, BookingFormData } from '../types'
+import { proceduresService, reviewsService, bookingsService } from '../services/firebaseService'
 
-// Симуляция API - в будущем здесь будут реальные запросы
+// Fallback на mock данные если Firebase не настроен
+const useFirebase = !!import.meta.env.VITE_FIREBASE_API_KEY
+
+// Симуляция API - fallback если Firebase не настроен
 export const mockProcedures: Procedure[] = [
   {
     id: '1',
@@ -93,12 +97,30 @@ export const mockReviews: Review[] = [
 ]
 
 export const fetchProcedures = async (): Promise<Procedure[]> => {
+  if (useFirebase) {
+    try {
+      return await proceduresService.getAll()
+    } catch (error) {
+      console.error('Ошибка загрузки процедур из Firebase:', error)
+      // Fallback на mock данные
+      return mockProcedures
+    }
+  }
   // Симуляция задержки сети
   await new Promise((resolve) => setTimeout(resolve, 500))
   return mockProcedures
 }
 
 export const fetchReviews = async (): Promise<Review[]> => {
+  if (useFirebase) {
+    try {
+      return await reviewsService.getApproved()
+    } catch (error) {
+      console.error('Ошибка загрузки отзывов из Firebase:', error)
+      // Fallback на mock данные
+      return mockReviews
+    }
+  }
   await new Promise((resolve) => setTimeout(resolve, 300))
   return mockReviews
 }
@@ -106,6 +128,21 @@ export const fetchReviews = async (): Promise<Review[]> => {
 export const submitBooking = async (
   data: BookingFormData
 ): Promise<{ success: boolean; message: string }> => {
+  if (useFirebase) {
+    try {
+      await bookingsService.create(data)
+      return {
+        success: true,
+        message: 'Ваша заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.',
+      }
+    } catch (error) {
+      console.error('Ошибка отправки заявки в Firebase:', error)
+      return {
+        success: false,
+        message: 'Ошибка при отправке заявки. Попробуйте позже.',
+      }
+    }
+  }
   // Симуляция отправки данных
   await new Promise((resolve) => setTimeout(resolve, 1000))
   console.log('Booking submitted:', data)

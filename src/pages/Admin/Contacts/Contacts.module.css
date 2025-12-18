@@ -1,0 +1,43 @@
+.contacts {
+  max-width: 800px;
+}
+
+.title {
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+}
+
+.card {
+  padding: 2rem;
+}
+
+.successMessage {
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  background-color: #d4edda;
+  color: #155724;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sectionTitle {
+  margin: 1rem 0 0.5rem 0;
+  color: #333;
+  font-size: 1.25rem;
+}
+
+.actions {
+  margin-top: 1rem;
+}
+
