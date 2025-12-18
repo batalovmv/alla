@@ -16,13 +16,16 @@ const Input: React.FC<InputProps> = ({
 }) => {
   // Extract onChange and onBlur from props (they come from register via {...emailRegister})
   // These are in props because they come from react-hook-form's register()
-  const { onChange: propsOnChange, onBlur: propsOnBlur, ...restProps } = props
+  const { onChange: propsOnChange, onBlur: propsOnBlur, name: propsName, ...restProps } = props
   
   // Use name from props (from register) if available, otherwise use the name prop or id
-  const inputName = restProps.name || name || id || `input-${Math.random().toString(36).substr(2, 9)}`
+  const inputName = propsName || name || id || `input-${Math.random().toString(36).substr(2, 9)}`
   const inputId = id || inputName
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Input.tsx:handleChange',message:'Input onChange',data:{inputName,value:e.target.value,valueLength:e.target.value.length,hasPropsOnChange:!!propsOnChange,propsName},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     // Call the handler from register first (this updates react-hook-form state)
     if (propsOnChange) {
       propsOnChange(e)
@@ -30,6 +33,9 @@ const Input: React.FC<InputProps> = ({
   }
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Input.tsx:handleBlur',message:'Input onBlur',data:{inputName,value:e.target.value,hasPropsOnBlur:!!propsOnBlur},timestamp:Date.now(),sessionId:'debug-session',runId:'run4',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     // Call the handler from register (this triggers validation)
     if (propsOnBlur) {
       propsOnBlur(e)
@@ -45,10 +51,10 @@ const Input: React.FC<InputProps> = ({
         </label>
       )}
       <input
-        {...restProps}
         id={inputId}
         name={inputName}
         className={`${styles.input} ${error ? styles.error : ''} ${className}`}
+        {...restProps}
         onChange={handleChange}
         onBlur={handleBlur}
       />
