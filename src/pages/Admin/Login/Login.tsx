@@ -20,7 +20,7 @@ const Login: React.FC = () => {
       return
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth!, (user) => {
       dispatch(setUser(user))
       dispatch(setLoading(false))
       if (user) {

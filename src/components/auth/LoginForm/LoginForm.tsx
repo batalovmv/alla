@@ -40,7 +40,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
 
     try {
       const userCredential = await signInWithEmailAndPassword(
-        auth,
+        auth!,
         data.email,
         data.password
       )

@@ -1,7 +1,7 @@
-import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
-import { getStorage } from 'firebase/storage'
+import { initializeApp, FirebaseApp } from 'firebase/app'
+import { getAuth, Auth } from 'firebase/auth'
+import { getFirestore, Firestore } from 'firebase/firestore'
+import { getStorage, FirebaseStorage } from 'firebase/storage'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
@@ -13,10 +13,10 @@ const firebaseConfig = {
 }
 
 // Initialize Firebase only if config is provided
-let app
-let auth
-let db
-let storage
+let app: FirebaseApp | undefined
+let auth: Auth | null = null
+let db: Firestore | null = null
+let storage: FirebaseStorage | null = null
 
 try {
   if (firebaseConfig.apiKey && firebaseConfig.projectId) {
@@ -27,15 +27,9 @@ try {
   } else {
     // Create dummy objects if Firebase is not configured
     console.warn('Firebase не настроен. Админ-панель будет недоступна.')
-    auth = null as any
-    db = null as any
-    storage = null as any
   }
 } catch (error) {
   console.error('Ошибка инициализации Firebase:', error)
-  auth = null as any
-  db = null as any
-  storage = null as any
 }
 
 // Export services

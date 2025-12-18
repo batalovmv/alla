@@ -20,7 +20,7 @@ const AdminSidebar: React.FC = () => {
       return
     }
     try {
-      await signOut(auth)
+      await signOut(auth!)
       dispatch(logout())
       navigate(ROUTES.ADMIN_LOGIN)
     } catch (error) {

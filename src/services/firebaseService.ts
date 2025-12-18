@@ -16,11 +16,19 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../config/firebase'
 import { Procedure, Review, BookingFormData } from '../types'
 
+// Helper function to check if Firebase is initialized
+const checkFirebase = () => {
+  if (!db || !storage) {
+    throw new Error('Firebase не настроен. Пожалуйста, настройте Firebase для работы админ-панели.')
+  }
+}
+
 // Procedures
 export const proceduresService = {
   async getAll(): Promise<Procedure[]> {
+    checkFirebase()
     try {
-      const q = query(collection(db, 'procedures'), orderBy('createdAt', 'desc'))
+      const q = query(collection(db!, 'procedures'), orderBy('createdAt', 'desc'))
       const querySnapshot = await getDocs(q)
       return querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -28,7 +36,8 @@ export const proceduresService = {
       })) as Procedure[]
     } catch (error) {
       // Если нет поля createdAt или другой ошибки, загружаем без сортировки
-      const querySnapshot = await getDocs(collection(db, 'procedures'))
+      checkFirebase()
+      const querySnapshot = await getDocs(collection(db!, 'procedures'))
       return querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -37,7 +46,8 @@ export const proceduresService = {
   },
 
   async getById(id: string): Promise<Procedure | null> {
-    const docRef = doc(db, 'procedures', id)
+    checkFirebase()
+    const docRef = doc(db!, 'procedures', id)
     const docSnap = await getDoc(docRef)
     if (docSnap.exists()) {
       return { id: docSnap.id, ...docSnap.data() } as Procedure
@@ -46,7 +56,8 @@ export const proceduresService = {
   },
 
   async create(procedure: Omit<Procedure, 'id'>): Promise<string> {
-    const docRef = await addDoc(collection(db, 'procedures'), {
+    checkFirebase()
+    const docRef = await addDoc(collection(db!, 'procedures'), {
       ...procedure,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
@@ -55,7 +66,8 @@ export const proceduresService = {
   },
 
   async update(id: string, procedure: Partial<Procedure>): Promise<void> {
-    const docRef = doc(db, 'procedures', id)
+    checkFirebase()
+    const docRef = doc(db!, 'procedures', id)
     await updateDoc(docRef, {
       ...procedure,
       updatedAt: Timestamp.now(),
@@ -63,15 +75,17 @@ export const proceduresService = {
   },
 
   async delete(id: string): Promise<void> {
-    await deleteDoc(doc(db, 'procedures', id))
+    checkFirebase()
+    await deleteDoc(doc(db!, 'procedures', id))
   },
 }
 
 // Reviews
 export const reviewsService = {
   async getAll(): Promise<Review[]> {
+    checkFirebase()
     try {
-      const q = query(collection(db, 'reviews'), orderBy('createdAt', 'desc'))
+      const q = query(collection(db!, 'reviews'), orderBy('createdAt', 'desc'))
       const querySnapshot = await getDocs(q)
       return querySnapshot.docs.map((doc) => {
         const data = doc.data()
@@ -84,7 +98,8 @@ export const reviewsService = {
       }) as Review[]
     } catch (error) {
       // Если нет поля createdAt, загружаем без сортировки
-      const querySnapshot = await getDocs(collection(db, 'reviews'))
+      checkFirebase()
+      const querySnapshot = await getDocs(collection(db!, 'reviews'))
       return querySnapshot.docs.map((doc) => {
         const data = doc.data()
         return {
@@ -97,9 +112,10 @@ export const reviewsService = {
   },
 
   async getApproved(): Promise<Review[]> {
+    checkFirebase()
     try {
       const q = query(
-        collection(db, 'reviews'),
+        collection(db!, 'reviews'),
         where('approved', '==', true),
         orderBy('createdAt', 'desc')
       )
@@ -115,7 +131,8 @@ export const reviewsService = {
       }) as Review[]
     } catch (error) {
       // Если нет поля createdAt, загружаем без сортировки
-      const q = query(collection(db, 'reviews'), where('approved', '==', true))
+      checkFirebase()
+      const q = query(collection(db!, 'reviews'), where('approved', '==', true))
       const querySnapshot = await getDocs(q)
       return querySnapshot.docs.map((doc) => {
         const data = doc.data()
@@ -129,7 +146,8 @@ export const reviewsService = {
   },
 
   async create(review: Omit<Review, 'id'>): Promise<string> {
-    const docRef = await addDoc(collection(db, 'reviews'), {
+    checkFirebase()
+    const docRef = await addDoc(collection(db!, 'reviews'), {
       ...review,
       createdAt: Timestamp.now(),
     })
@@ -137,18 +155,21 @@ export const reviewsService = {
   },
 
   async update(id: string, review: Partial<Review>): Promise<void> {
-    await updateDoc(doc(db, 'reviews', id), review)
+    checkFirebase()
+    await updateDoc(doc(db!, 'reviews', id), review)
   },
 
   async delete(id: string): Promise<void> {
-    await deleteDoc(doc(db, 'reviews', id))
+    checkFirebase()
+    await deleteDoc(doc(db!, 'reviews', id))
   },
 }
 
 // Contact Info
 export const contactInfoService = {
   async get(): Promise<any> {
-    const docRef = doc(db, 'contactInfo', 'main')
+    checkFirebase()
+    const docRef = doc(db!, 'contactInfo', 'main')
     const docSnap = await getDoc(docRef)
     if (docSnap.exists()) {
       return docSnap.data()
@@ -157,14 +178,16 @@ export const contactInfoService = {
   },
 
   async update(data: any): Promise<void> {
-    await setDoc(doc(db, 'contactInfo', 'main'), data, { merge: true })
+    checkFirebase()
+    await setDoc(doc(db!, 'contactInfo', 'main'), data, { merge: true })
   },
 }
 
 // About Info
 export const aboutInfoService = {
   async get(): Promise<any> {
-    const docRef = doc(db, 'aboutInfo', 'main')
+    checkFirebase()
+    const docRef = doc(db!, 'aboutInfo', 'main')
     const docSnap = await getDoc(docRef)
     if (docSnap.exists()) {
       return docSnap.data()
@@ -173,14 +196,16 @@ export const aboutInfoService = {
   },
 
   async update(data: any): Promise<void> {
-    await setDoc(doc(db, 'aboutInfo', 'main'), data, { merge: true })
+    checkFirebase()
+    await setDoc(doc(db!, 'aboutInfo', 'main'), data, { merge: true })
   },
 }
 
 // Bookings
 export const bookingsService = {
   async getAll(): Promise<any[]> {
-    const q = query(collection(db, 'bookings'), orderBy('createdAt', 'desc'))
+    checkFirebase()
+    const q = query(collection(db!, 'bookings'), orderBy('createdAt', 'desc'))
     const querySnapshot = await getDocs(q)
     return querySnapshot.docs.map((doc) => ({
       id: doc.id,
@@ -190,7 +215,8 @@ export const bookingsService = {
   },
 
   async create(booking: BookingFormData): Promise<string> {
-    const docRef = await addDoc(collection(db, 'bookings'), {
+    checkFirebase()
+    const docRef = await addDoc(collection(db!, 'bookings'), {
       ...booking,
       status: 'new',
       createdAt: Timestamp.now(),
@@ -199,14 +225,16 @@ export const bookingsService = {
   },
 
   async update(id: string, data: Partial<any>): Promise<void> {
-    await updateDoc(doc(db, 'bookings', id), data)
+    checkFirebase()
+    await updateDoc(doc(db!, 'bookings', id), data)
   },
 }
 
 // Storage
 export const storageService = {
   async uploadImage(file: File, path: string): Promise<string> {
-    const storageRef = ref(storage, path)
+    checkFirebase()
+    const storageRef = ref(storage!, path)
     await uploadBytes(storageRef, file)
     return await getDownloadURL(storageRef)
   },
