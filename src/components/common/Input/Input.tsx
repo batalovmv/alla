@@ -21,12 +21,18 @@ const Input: React.FC<InputProps> = ({
   const inputId = id || inputName
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Input.tsx:handleChange',message:'Input onChange',data:{name:inputName,value:e.target.value,valueLength:e.target.value.length,hasOnChange:!!onChange},timestamp:Date.now(),sessionId:'debug-session',runId:'run3',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     if (onChange) {
       onChange(e)
     }
   }
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Input.tsx:handleBlur',message:'Input onBlur',data:{name:inputName,value:e.target.value,hasOnBlur:!!onBlur},timestamp:Date.now(),sessionId:'debug-session',runId:'run3',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
     if (onBlur) {
       onBlur(e)
     }
@@ -41,10 +47,10 @@ const Input: React.FC<InputProps> = ({
         </label>
       )}
       <input
-        {...props}
         id={inputId}
         name={inputName}
         className={`${styles.input} ${error ? styles.error : ''} ${className}`}
+        {...props}
         onChange={handleChange}
         onBlur={handleBlur}
       />

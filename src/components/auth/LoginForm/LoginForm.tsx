@@ -32,6 +32,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   })
 
   const onSubmit = async (data: LoginFormData) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginForm.tsx:onSubmit',message:'Form submit called',data:{email:data.email,passwordLength:data.password?.length,hasEmail:!!data.email,hasPassword:!!data.password},timestamp:Date.now(),sessionId:'debug-session',runId:'run3',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     if (!auth) {
       dispatch(setError('Firebase не настроен. Пожалуйста, настройте Firebase для работы админ-панели.'))
       return
@@ -83,8 +86,21 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     },
   })
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginForm.tsx:handleFormSubmit',message:'Form submit event',data:{errors:Object.keys(errors),emailError:errors.email?.message,passwordError:errors.password?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run3',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    handleSubmit(onSubmit)(e)
+  }
+
+  // #region agent log
+  React.useEffect(() => {
+    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginForm.tsx:render',message:'Form render',data:{errors:Object.keys(errors),emailError:errors.email?.message,passwordError:errors.password?.message,emailRegisterName:emailRegister.name,passwordRegisterName:passwordRegister.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run3',hypothesisId:'C'})}).catch(()=>{});
+  }, [errors, emailRegister.name, passwordRegister.name]);
+  // #endregion
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+    <form onSubmit={handleFormSubmit} className={styles.form}>
       {error && <div className={styles.errorMessage}>{error}</div>}
 
       <Input
