@@ -16,27 +16,21 @@ const Input: React.FC<InputProps> = ({
   onBlur,
   ...props
 }) => {
-  const inputId = id || name || `input-${Math.random().toString(36).substr(2, 9)}`
+  // Use name from props if provided (from register), otherwise use id or generate
+  const inputName = name || id || `input-${Math.random().toString(36).substr(2, 9)}`
+  const inputId = id || inputName
   
-  // #region agent log
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Input.tsx:handleChange',message:'Input onChange',data:{id:inputId,name:name||inputId,value:e.target.value,valueLength:e.target.value.length,hasOnChange:!!onChange},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'E'})}).catch(()=>{});
     if (onChange) {
       onChange(e)
     }
   }
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Input.tsx:handleBlur',message:'Input onBlur',data:{id:inputId,name:name||inputId,value:e.target.value,hasOnBlur:!!onBlur},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
     if (onBlur) {
       onBlur(e)
     }
   }
-
-  React.useEffect(() => {
-    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Input.tsx:render',message:'Input render',data:{id:inputId,name:name||inputId,hasOnChange:!!onChange,hasOnBlur:!!onBlur,hasError:!!error,errorMessage:error,type:props.type,value:props.value},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'G'})}).catch(()=>{});
-  }, [inputId, name, onChange, onBlur, error, props.value, props.type]);
-  // #endregion
   
   return (
     <div className={styles.inputWrapper}>
@@ -49,7 +43,7 @@ const Input: React.FC<InputProps> = ({
       <input
         {...props}
         id={inputId}
-        name={name || inputId}
+        name={inputName}
         className={`${styles.input} ${error ? styles.error : ''} ${className}`}
         onChange={handleChange}
         onBlur={handleBlur}

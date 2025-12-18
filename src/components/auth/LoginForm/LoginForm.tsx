@@ -26,20 +26,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
   } = useForm<LoginFormData>({
-    mode: 'onBlur',
+    mode: 'onSubmit',
     reValidateMode: 'onChange',
   })
 
-  // Debug logging
-  const emailValue = watch('email')
-  const passwordValue = watch('password')
-
   const onSubmit = async (data: LoginFormData) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginForm.tsx:31',message:'Form submit called',data:{email:data.email,passwordLength:data.password?.length,hasEmail:!!data.email,hasPassword:!!data.password},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     if (!auth) {
       dispatch(setError('Firebase не настроен. Пожалуйста, настройте Firebase для работы админ-панели.'))
       return
@@ -75,12 +67,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     }
   }
 
-  // #region agent log
-  React.useEffect(() => {
-    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginForm.tsx:77',message:'Form render',data:{emailValue,passwordValue,emailError:errors.email?.message,passwordError:errors.password?.message,errors:Object.keys(errors),errorCount:Object.keys(errors).length},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'H'})}).catch(()=>{});
-  }, [emailValue, passwordValue, errors]);
-  // #endregion
-
   const emailRegister = register('email', {
     required: 'Email обязателен',
     pattern: {
@@ -97,16 +83,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     },
   })
 
-  // #region agent log
-  React.useEffect(() => {
-    fetch('http://127.0.0.1:7243/ingest/aebc2654-a59d-4f02-bd1f-918a50878f95',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginForm.tsx:85',message:'Register objects',data:{emailRegisterName:emailRegister.name,emailRegisterOnChange:!!emailRegister.onChange,passwordRegisterName:passwordRegister.name,passwordRegisterOnChange:!!passwordRegister.onChange},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-  }, []);
-  // #endregion
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-      <h2 className={styles.title}>Вход в админ-панель</h2>
-
       {error && <div className={styles.errorMessage}>{error}</div>}
 
       <Input
@@ -124,15 +102,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         {...passwordRegister}
         error={errors.password?.message}
       />
-      
-      {/* Debug info */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ fontSize: '12px', color: '#999', marginTop: '10px' }}>
-          Email: {emailValue || '(пусто)'} | Пароль: {passwordValue ? '***' : '(пусто)'}
-          <br />
-          Errors: {JSON.stringify(errors)}
-        </div>
-      )}
 
       <Button type="submit" disabled={isSubmitting} className={styles.submitButton}>
         {isSubmitting ? 'Вход...' : 'Войти'}

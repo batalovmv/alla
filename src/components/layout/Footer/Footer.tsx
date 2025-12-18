@@ -1,10 +1,15 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAppSelector } from '../../../store/hooks'
 import { ROUTES } from '../../../config/routes'
 import { CONTACT_INFO } from '../../../config/constants'
+import LoginModal from '../../auth/LoginModal/LoginModal'
 import styles from './Footer.module.css'
 
 const Footer: React.FC = () => {
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+  const { user } = useAppSelector((state) => state.auth)
+
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
@@ -84,11 +89,23 @@ const Footer: React.FC = () => {
 
         <div className={styles.copyright}>
           <p>&copy; {new Date().getFullYear()} Косметология. Все права защищены.</p>
-          <Link to={ROUTES.ADMIN_LOGIN} className={styles.adminLink}>
-            Вход для администратора
-          </Link>
+          {!user && (
+            <button
+              onClick={() => setIsLoginModalOpen(true)}
+              className={styles.adminLink}
+              type="button"
+            >
+              Вход для администратора
+            </button>
+          )}
+          {user && (
+            <Link to={ROUTES.ADMIN} className={styles.adminLink}>
+              Админ-панель
+            </Link>
+          )}
         </div>
       </div>
+      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
     </footer>
   )
 }
