@@ -9,11 +9,15 @@ import { auth } from './config/firebase'
 import { setUser, setLoading } from './store/slices/authSlice'
 import './assets/styles/index.css'
 
-// Initialize auth state
-onAuthStateChanged(auth, (user) => {
-  store.dispatch(setUser(user))
+// Initialize auth state (only if Firebase is configured)
+if (auth) {
+  onAuthStateChanged(auth, (user) => {
+    store.dispatch(setUser(user))
+    store.dispatch(setLoading(false))
+  })
+} else {
   store.dispatch(setLoading(false))
-})
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

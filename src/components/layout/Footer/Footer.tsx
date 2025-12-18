@@ -84,6 +84,9 @@ const Footer: React.FC = () => {
 
         <div className={styles.copyright}>
           <p>&copy; {new Date().getFullYear()} Косметология. Все права защищены.</p>
+          <Link to={ROUTES.ADMIN_LOGIN} className={styles.adminLink}>
+            Вход для администратора
+          </Link>
         </div>
       </div>
     </footer>

@@ -14,6 +14,11 @@ const AdminSidebar: React.FC = () => {
   const dispatch = useAppDispatch()
 
   const handleLogout = async () => {
+    if (!auth) {
+      dispatch(logout())
+      navigate(ROUTES.ADMIN_LOGIN)
+      return
+    }
     try {
       await signOut(auth)
       dispatch(logout())

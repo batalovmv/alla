@@ -29,6 +29,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   } = useForm<LoginFormData>()
 
   const onSubmit = async (data: LoginFormData) => {
+    if (!auth) {
+      dispatch(setError('Firebase не настроен. Пожалуйста, настройте Firebase для работы админ-панели.'))
+      return
+    }
+
     setIsSubmitting(true)
     dispatch(setError(null))
     dispatch(setLoading(true))
@@ -49,6 +54,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
           ? 'Неверный email или пароль'
           : err.code === 'auth/too-many-requests'
           ? 'Слишком много попыток. Попробуйте позже'
+          : err.code === 'auth/invalid-api-key'
+          ? 'Firebase не настроен. Проверьте конфигурацию.'
           : 'Ошибка входа. Попробуйте еще раз'
       dispatch(setError(errorMessage))
     } finally {

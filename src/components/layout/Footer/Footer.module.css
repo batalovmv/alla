@@ -93,6 +93,21 @@
   text-align: center;
   color: #888;
   font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.adminLink {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.adminLink:hover {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 @media (max-width: 768px) {

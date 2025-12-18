@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { onAuthStateChanged } from 'firebase/auth'
 import { useAppDispatch, useAppSelector } from '../../../store/hooks'
-import { setUser, setLoading } from '../../../store/slices/authSlice'
+import { setUser, setLoading, setError } from '../../../store/slices/authSlice'
 import { auth } from '../../../config/firebase'
 import { ROUTES } from '../../../config/routes'
 import LoginForm from '../../../components/auth/LoginForm/LoginForm'
@@ -14,6 +14,12 @@ const Login: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth)
 
   useEffect(() => {
+    if (!auth) {
+      dispatch(setError('Firebase не настроен. Пожалуйста, настройте Firebase для работы админ-панели.'))
+      dispatch(setLoading(false))
+      return
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       dispatch(setUser(user))
       dispatch(setLoading(false))
