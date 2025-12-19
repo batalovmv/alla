@@ -50,19 +50,6 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
   // Используем value из параметров (который приходит от field через {...field})
   const currentValue = value !== undefined && value !== null ? String(value) : ''
   const shouldShowDefaultOption = showDefaultOption && currentValue === ''
-  
-  // Исключаем из props свойства, которые мы уже обработали, чтобы избежать конфликтов
-  // Важно: эти свойства уже извлечены в параметрах функции, поэтому они не должны быть в props
-  const {
-    ref: _ref,
-    id: _id,
-    name: _name,
-    value: _value,
-    onChange: _onChange,
-    onBlur: _onBlur,
-    className: _className,
-    ...restProps
-  } = props
 
   return (
     <div className={styles.selectWrapper}>
@@ -73,7 +60,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
         </label>
       )}
       <select
-        {...restProps}
+        {...props}
         ref={ref}
         id={selectId}
         name={name}
