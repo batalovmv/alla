@@ -30,10 +30,10 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
   
   // Обработчик onChange: правильно обрабатываем как register, так и Controller
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    // Controller от react-hook-form передает onChange, который может принимать значение напрямую
-    // Но для select элемента мы всегда передаем событие
-    // Controller автоматически извлечет значение из события через e.target.value
     if (onChange) {
+      // Controller от react-hook-form для нативных элементов принимает событие
+      // и автоматически извлекает значение через e.target.value
+      // Передаем событие напрямую - Controller сам извлечет значение
       onChange(e)
     }
   }
@@ -47,10 +47,12 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
 
   // Определяем, показывать ли опцию "Выберите..."
   // value может быть undefined, null, или пустой строкой
+  // Используем value из параметров (который приходит от field через {...field})
   const currentValue = value !== undefined && value !== null ? String(value) : ''
   const shouldShowDefaultOption = showDefaultOption && currentValue === ''
   
   // Исключаем из props свойства, которые мы уже обработали, чтобы избежать конфликтов
+  // Важно: эти свойства уже извлечены в параметрах функции, поэтому они не должны быть в props
   const {
     ref: _ref,
     id: _id,
