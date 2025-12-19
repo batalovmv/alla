@@ -96,7 +96,7 @@ const ProcedureDetail: React.FC = () => {
               </div>
             </div>
 
-            <Link to={ROUTES.CONTACTS}>
+            <Link to={ROUTES.CONTACTS_WITH_PROCEDURE(procedure.id)}>
               <Button size="large" className={styles.bookButton}>
                 Записаться на процедуру
               </Button>

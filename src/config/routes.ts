@@ -5,6 +5,7 @@ export const ROUTES = {
   ABOUT: '/about',
   REVIEWS: '/reviews',
   CONTACTS: '/contacts',
+  CONTACTS_WITH_PROCEDURE: (procedureId: string) => `/contacts?procedureId=${procedureId}`,
   ADMIN_LOGIN: '/admin/login',
   ADMIN: '/admin',
   ADMIN_PROCEDURES: '/admin/procedures',

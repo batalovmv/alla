@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
+import { useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import {
   submitBooking,
@@ -23,6 +24,7 @@ import styles from './Contacts.module.css'
 
 const Contacts: React.FC = () => {
   const dispatch = useAppDispatch()
+  const [searchParams] = useSearchParams()
   const { items: procedures } = useAppSelector((state) => state.procedures)
   const { isSubmitting, success, error } = useAppSelector(
     (state) => state.booking
@@ -33,6 +35,7 @@ const Contacts: React.FC = () => {
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<BookingFormData>({
     defaultValues: {
       consent: false,
@@ -49,6 +52,18 @@ const Contacts: React.FC = () => {
       loadProcedures()
     }
   }, [procedures.length, loadProcedures])
+
+  // Автоматически выбираем процедуру из URL параметра
+  useEffect(() => {
+    const procedureId = searchParams.get('procedureId')
+    if (procedureId && procedures.length > 0) {
+      // Проверяем, что процедура существует в списке
+      const procedureExists = procedures.some((p) => p.id === procedureId)
+      if (procedureExists) {
+        setValue('procedureId', procedureId)
+      }
+    }
+  }, [searchParams, procedures, setValue])
 
   useEffect(() => {
     if (success) {

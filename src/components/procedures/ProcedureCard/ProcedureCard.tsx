@@ -37,7 +37,7 @@ const ProcedureCard: React.FC<ProcedureCardProps> = ({ procedure }) => {
               Подробнее
             </Button>
           </Link>
-          <Link to={ROUTES.CONTACTS}>
+          <Link to={ROUTES.CONTACTS_WITH_PROCEDURE(procedure.id)}>
             <Button size="small">Записаться</Button>
           </Link>
         </div>
