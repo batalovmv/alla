@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { useAppSelector } from '../../../store/hooks'
 import { validatePhone } from '../../../utils/validation'
 import Input from '../../common/Input/Input'
@@ -30,6 +30,7 @@ const AddReviewForm: React.FC<AddReviewFormProps> = ({
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
     reset,
   } = useForm<ReviewFormData>({
@@ -83,13 +84,18 @@ const AddReviewForm: React.FC<AddReviewFormProps> = ({
           error={errors.phone?.message}
         />
 
-        <Select
-          label="Процедура"
-          options={procedureOptions}
-          {...register('procedureId', {
-            required: 'Выберите процедуру',
-          })}
-          error={errors.procedureId?.message}
+        <Controller
+          name="procedureId"
+          control={control}
+          rules={{ required: 'Выберите процедуру' }}
+          render={({ field }) => (
+            <Select
+              label="Процедура"
+              options={procedureOptions}
+              {...field}
+              error={errors.procedureId?.message}
+            />
+          )}
         />
 
         <div className={styles.ratingSection}>

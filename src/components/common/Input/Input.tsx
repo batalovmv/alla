@@ -11,36 +11,24 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(({
   error,
   className = '',
   id,
-  name: propName,
+  name,
+  onChange,
+  onBlur,
   ...props
 }, ref) => {
-  // Extract name, onChange, onBlur, and ref from props (they come from register via {...emailRegister})
-  // These are in props because they come from react-hook-form's register()
-  // We need to extract them BEFORE spreading restProps to ensure they're not lost
-  const registerName = (props as any).name
-  const registerOnChange = (props as any).onChange
-  const registerOnBlur = (props as any).onBlur
-  const registerRef = (props as any).ref || ref
+  const inputId = id || name || `input-${Math.random().toString(36).substr(2, 9)}`
   
-  // Use name from register if available (this is critical for react-hook-form),
-  // otherwise use the name prop or id
-  const inputName = registerName || propName || id || `input-${Math.random().toString(36).substr(2, 9)}`
-  const inputId = id || inputName
-  
-  // Remove name, onChange, onBlur, ref from restProps to avoid conflicts
-  const { name: _, onChange: __, onBlur: ___, ref: ____, ...restProps } = props as any
-  
+  // Обработчик onChange: вызываем обработчик от react-hook-form
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Call the handler from register first (this updates react-hook-form state)
-    if (registerOnChange) {
-      registerOnChange(e)
+    if (onChange) {
+      onChange(e)
     }
   }
 
+  // Обработчик onBlur: вызываем обработчик от react-hook-form
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    // Call the handler from register (this triggers validation)
-    if (registerOnBlur) {
-      registerOnBlur(e)
+    if (onBlur) {
+      onBlur(e)
     }
   }
   
@@ -49,14 +37,14 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(({
       {label && (
         <label htmlFor={inputId} className={styles.label}>
           {label}
-          {restProps.required && <span className={styles.required}>*</span>}
+          {props.required && <span className={styles.required}>*</span>}
         </label>
       )}
       <input
-        {...restProps}
-        ref={registerRef}
+        {...props}
+        ref={ref}
         id={inputId}
-        name={inputName}
+        name={name}
         className={`${styles.input} ${error ? styles.error : ''} ${className}`}
         onChange={handleChange}
         onBlur={handleBlur}

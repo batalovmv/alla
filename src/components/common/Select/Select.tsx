@@ -19,64 +19,57 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
   options,
   className = '',
   id,
-  name: propName,
-  value: propValue,
+  name,
+  value,
+  onChange,
+  onBlur,
   showDefaultOption = true,
   ...props
 }, ref) => {
-  // Extract name, onChange, onBlur, value, and ref from props (they come from register via {...register('procedureId')})
-  // These are in props because they come from react-hook-form's register()
-  // We need to extract them BEFORE spreading restProps to ensure they're not lost
-  const registerName = (props as any).name
-  const registerOnChange = (props as any).onChange
-  const registerOnBlur = (props as any).onBlur
-  const registerValue = (props as any).value
-  const registerRef = (props as any).ref || ref
-
-  // Use value from register if available, otherwise use prop value
-  const selectValue = registerValue !== undefined ? registerValue : (propValue !== undefined ? propValue : '')
-
-  // Use name from register if available (this is critical for react-hook-form),
-  // otherwise use the name prop or id
-  const selectName = registerName || propName || id || `select-${Math.random().toString(36).substr(2, 9)}`
-  const selectId = id || selectName
-
-  // Remove name, onChange, onBlur, value, ref from restProps to avoid conflicts
-  const { name: _, onChange: __, onBlur: ___, value: ____, ref: _____, ...restProps } = props as any
-
+  const selectId = id || name || `select-${Math.random().toString(36).substr(2, 9)}`
+  
+  // Обработчик onChange: правильно обрабатываем как register, так и Controller
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    // Call the handler from register first (this updates react-hook-form state)
-    if (registerOnChange) {
-      registerOnChange(e)
+    // Controller может передать onChange, который принимает значение напрямую
+    // Но для select элемента onChange всегда получает событие
+    // Проверяем, является ли onChange функцией, которая принимает событие
+    if (onChange) {
+      // Если это функция от Controller, она может принимать значение напрямую
+      // Но мы всегда передаем событие, так как это стандартное поведение для select
+      onChange(e)
     }
   }
 
+  // Обработчик onBlur: вызываем оба обработчика
   const handleBlur = (e: React.FocusEvent<HTMLSelectElement>) => {
-    // Call the handler from register (this triggers validation)
-    if (registerOnBlur) {
-      registerOnBlur(e)
+    // Вызываем обработчик от react-hook-form (register или Controller)
+    if (onBlur) {
+      onBlur(e)
     }
   }
+
+  // Определяем, показывать ли опцию "Выберите..."
+  const shouldShowDefaultOption = showDefaultOption && (!value || value === '')
 
   return (
     <div className={styles.selectWrapper}>
       {label && (
         <label htmlFor={selectId} className={styles.label}>
           {label}
-          {restProps.required && <span className={styles.required}>*</span>}
+          {props.required && <span className={styles.required}>*</span>}
         </label>
       )}
       <select
-        {...restProps}
-        ref={registerRef}
+        {...props}
+        ref={ref}
         id={selectId}
-        name={selectName}
-        value={selectValue}
+        name={name}
+        value={value ?? ''}
         className={`${styles.select} ${error ? styles.error : ''} ${className}`}
         onChange={handleChange}
         onBlur={handleBlur}
       >
-        {showDefaultOption && !selectValue && (
+        {shouldShowDefaultOption && (
           <option value="">Выберите...</option>
         )}
         {options.map((option) => (

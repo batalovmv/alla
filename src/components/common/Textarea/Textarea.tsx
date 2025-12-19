@@ -12,36 +12,24 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({
   error,
   className = '',
   id,
-  name: propName,
+  name,
+  onChange,
+  onBlur,
   ...props
 }, ref) => {
-  // Extract name, onChange, onBlur, and ref from props (they come from register via {...register()})
-  // These are in props because they come from react-hook-form's register()
-  // We need to extract them BEFORE spreading restProps to ensure they're not lost
-  const registerName = (props as any).name
-  const registerOnChange = (props as any).onChange
-  const registerOnBlur = (props as any).onBlur
-  const registerRef = (props as any).ref || ref
+  const textareaId = id || name || `textarea-${Math.random().toString(36).substr(2, 9)}`
   
-  // Use name from register if available (this is critical for react-hook-form),
-  // otherwise use the name prop or id
-  const textareaName = registerName || propName || id || `textarea-${Math.random().toString(36).substr(2, 9)}`
-  const textareaId = id || textareaName
-  
-  // Remove name, onChange, onBlur, ref from restProps to avoid conflicts
-  const { name: _, onChange: __, onBlur: ___, ref: ____, ...restProps } = props as any
-  
+  // Обработчик onChange: вызываем обработчик от react-hook-form
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    // Call the handler from register first (this updates react-hook-form state)
-    if (registerOnChange) {
-      registerOnChange(e)
+    if (onChange) {
+      onChange(e)
     }
   }
 
+  // Обработчик onBlur: вызываем обработчик от react-hook-form
   const handleBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
-    // Call the handler from register (this triggers validation)
-    if (registerOnBlur) {
-      registerOnBlur(e)
+    if (onBlur) {
+      onBlur(e)
     }
   }
   
@@ -50,14 +38,14 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({
       {label && (
         <label htmlFor={textareaId} className={styles.label}>
           {label}
-          {restProps.required && <span className={styles.required}>*</span>}
+          {props.required && <span className={styles.required}>*</span>}
         </label>
       )}
       <textarea
-        {...restProps}
-        ref={registerRef}
+        {...props}
+        ref={ref}
         id={textareaId}
-        name={textareaName}
+        name={name}
         className={`${styles.textarea} ${error ? styles.error : ''} ${className}`}
         onChange={handleChange}
         onBlur={handleBlur}
