@@ -27,7 +27,7 @@
   font-size: 22px;
   font-weight: 650;
   letter-spacing: 0.2px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-2) 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-2) 65%, rgba(216, 184, 146, 0.75) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -62,7 +62,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-2) 100%);
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-primary-2) 100%);
 }
 
 .actions {

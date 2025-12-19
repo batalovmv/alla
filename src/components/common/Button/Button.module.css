@@ -20,14 +20,16 @@
 
 /* Variants */
 .primary {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-2) 100%);
+  background:
+    radial-gradient(120px 80px at 20% 20%, rgba(255, 255, 255, 0.35), transparent 60%),
+    linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-2) 55%, rgba(216, 184, 146, 0.60) 100%);
   color: white;
-  box-shadow: 0 10px 24px rgba(255, 107, 157, 0.22);
+  box-shadow: 0 14px 34px rgba(242, 154, 179, 0.22);
 }
 
 .primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 16px 40px rgba(255, 107, 157, 0.28);
+  box-shadow: 0 18px 48px rgba(242, 154, 179, 0.26);
 }
 
 .secondary {
@@ -41,13 +43,13 @@
 
 .outline {
   background: transparent;
-  border: 1px solid rgba(255, 107, 157, 0.55);
+  border: 1px solid rgba(216, 184, 146, 0.65);
   color: var(--color-primary);
 }
 
 .outline:hover:not(:disabled) {
-  background: rgba(255, 107, 157, 0.10);
-  color: var(--color-primary);
+  background: rgba(216, 184, 146, 0.12);
+  color: var(--color-text);
 }
 
 /* Sizes */

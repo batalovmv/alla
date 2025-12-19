@@ -37,13 +37,13 @@
   position: absolute;
   top: 12px;
   right: 12px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-2) 100%);
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-primary-2) 100%);
   color: white;
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
-  box-shadow: 0 12px 24px rgba(255, 107, 157, 0.25);
+  box-shadow: 0 14px 30px rgba(216, 184, 146, 0.25);
   z-index: 1;
 }
 
