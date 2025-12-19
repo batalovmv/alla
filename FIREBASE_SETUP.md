@@ -64,10 +64,22 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
     
-    // Заявки - читать и писать только авторизованные, создавать все
+    // Заявки - публичное создание, только админы могут читать/обновлять/удалять
     match /bookings/{bookingId} {
-      allow read, write: if request.auth != null;
-      allow create: if true;
+      allow create: if true; // Все могут создавать заявки
+      allow read, update, delete: if request.auth != null; // Только админы могут читать/обновлять/удалять
+    }
+    
+    // Клиенты - публичное создание и обновление (при создании заявки), только админы могут читать/удалять
+    match /clients/{clientId} {
+      allow create: if true; // Все могут создавать клиентов (при создании заявки)
+      allow update: if true; // Все могут обновлять клиентов (при обновлении заявки)
+      allow read, delete: if request.auth != null; // Только админы могут читать/удалять
+    }
+    
+    // Записи об оказанных услугах - только админы
+    match /serviceRecords/{recordId} {
+      allow read, write: if request.auth != null; // Только админы
     }
   }
 }
@@ -163,9 +175,11 @@ npm run dev
 - Проверьте, что все переменные окружения в `.env.local` заполнены правильно
 - Убедитесь, что файл называется именно `.env.local` (не `.env`)
 
-### Ошибка "Permission denied" при записи
-- Проверьте правила Firestore и Storage
-- Убедитесь, что вы авторизованы в админке
+### Ошибка "Permission denied" или "Missing or insufficient permissions"
+- **ВАЖНО**: Проверьте правила Firestore - они должны разрешать создание заявок и клиентов для всех пользователей
+- Убедитесь, что правила опубликованы (нажмите "Publish" после изменения)
+- Для детальной инструкции см. файл `FIRESTORE_RULES_SETUP.md`
+- Убедитесь, что вы авторизованы в админке (для админских операций)
 
 ### Изображения не загружаются
 - Проверьте правила Storage
