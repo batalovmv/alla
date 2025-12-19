@@ -201,7 +201,7 @@ const ClientHistory: React.FC = () => {
                   options={procedureOptions}
                   {...field}
                   error={errors.procedureId?.message}
-                  showDefaultOption={false}
+                  showDefaultOption={true}
                 />
               )}
             />

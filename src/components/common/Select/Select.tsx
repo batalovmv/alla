@@ -30,10 +30,10 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
   
   // Обработчик onChange: правильно обрабатываем как register, так и Controller
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    // Controller от react-hook-form для нативных элементов принимает событие
+    // и автоматически извлекает значение через e.target.value
+    // Важно: всегда вызываем onChange, даже если он undefined (для совместимости)
     if (onChange) {
-      // Controller от react-hook-form для нативных элементов принимает событие
-      // и автоматически извлекает значение через e.target.value
-      // Передаем событие напрямую - Controller сам извлечет значение
       onChange(e)
     }
   }
@@ -48,8 +48,8 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
   // Определяем, показывать ли опцию "Выберите..."
   // value может быть undefined, null, или пустой строкой
   // Используем value из параметров (который приходит от field через {...field})
+  // Важно: для Controller value может быть undefined изначально, но после выбора должно обновиться
   const currentValue = value !== undefined && value !== null ? String(value) : ''
-  const shouldShowDefaultOption = showDefaultOption && currentValue === ''
 
   return (
     <div className={styles.selectWrapper}>
@@ -69,9 +69,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
         onChange={handleChange}
         onBlur={handleBlur}
       >
-        {shouldShowDefaultOption && (
-          <option value="">Выберите...</option>
-        )}
+        {showDefaultOption && <option value="">Выберите...</option>}
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
