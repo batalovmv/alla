@@ -8,7 +8,7 @@ import styles from './Bookings.module.css'
 const Bookings: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
-  const [statusFilter, setStatusFilter] = useState<'all' | BookingStatus>('new') // По умолчанию показываем новые
+  const [statusFilter, setStatusFilter] = useState<BookingStatus>('new') // По умолчанию показываем новые
 
   useEffect(() => {
     loadBookings()
@@ -32,8 +32,12 @@ const Bookings: React.FC = () => {
         return booking
       })
 
-      // Фильтруем по выбранному статусу (всегда фильтруем, так как 'all' больше не используется)
-      filtered = filtered.filter((b: Booking) => b.status === statusFilter) as Booking[]
+      // Фильтруем по выбранному статусу
+      // Также обрабатываем старые статусы 'processed' как 'awaiting' для обратной совместимости
+      filtered = filtered.filter((b: Booking) => {
+        const bookingStatus = b.status === 'processed' ? 'awaiting' : b.status
+        return bookingStatus === statusFilter
+      }) as Booking[]
 
       setBookings(filtered)
     } catch (error) {
