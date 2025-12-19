@@ -3,13 +3,12 @@ import { bookingsService, proceduresService } from '../../../services/firebaseSe
 import { Booking, BookingStatus } from '../../../types'
 import Card from '../../../components/common/Card/Card'
 import Button from '../../../components/common/Button/Button'
-import Select from '../../../components/common/Select/Select'
 import styles from './Bookings.module.css'
 
 const Bookings: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
-  const [statusFilter, setStatusFilter] = useState<'all' | BookingStatus>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | BookingStatus>('new') // По умолчанию показываем новые
 
   useEffect(() => {
     loadBookings()
@@ -33,9 +32,8 @@ const Bookings: React.FC = () => {
         return booking
       })
 
-      if (statusFilter !== 'all') {
-        filtered = filtered.filter((b: Booking) => b.status === statusFilter) as Booking[]
-      }
+      // Фильтруем по выбранному статусу (всегда фильтруем, так как 'all' больше не используется)
+      filtered = filtered.filter((b: Booking) => b.status === statusFilter) as Booking[]
 
       setBookings(filtered)
     } catch (error) {
@@ -107,8 +105,7 @@ const Bookings: React.FC = () => {
     }
   }
 
-  const statusOptions = [
-    { value: 'all', label: 'Все заявки' },
+  const tabs = [
     { value: 'new', label: 'Новые' },
     { value: 'awaiting', label: 'Ожидание' },
     { value: 'completed', label: 'Выполненные' },
@@ -151,14 +148,18 @@ const Bookings: React.FC = () => {
 
   return (
     <div className={styles.bookings}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Заявки на запись</h1>
-        <Select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as 'all' | BookingStatus)}
-          options={statusOptions}
-          showDefaultOption={false}
-        />
+      <h1 className={styles.title}>Заявки на запись</h1>
+      
+      <div className={styles.tabs}>
+        {tabs.map((tab) => (
+          <button
+            key={tab.value}
+            className={`${styles.tab} ${statusFilter === tab.value ? styles.tabActive : ''}`}
+            onClick={() => setStatusFilter(tab.value as BookingStatus)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {bookings.length === 0 ? (
