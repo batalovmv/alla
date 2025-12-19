@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react'
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { setReviews, addReview, setLoading } from '../../store/slices/reviewsSlice'
 import { fetchReviews, submitReview as submitReviewAPI } from '../../utils/api'
@@ -27,6 +27,14 @@ const Reviews: React.FC = () => {
   const [submitMessage, setSubmitMessage] = useState<string | null>(null)
   const useFirebase =
     !!import.meta.env.VITE_FIREBASE_API_KEY && !!import.meta.env.VITE_FIREBASE_PROJECT_ID
+  const reviewsKeyRef = useRef<string>('')
+
+  useEffect(() => {
+    // key includes approval state to avoid missing transitions when moderation happens
+    reviewsKeyRef.current = reviews
+      .map((r) => `${r.id}:${r.approved === true ? '1' : r.approved === false ? '0' : 'u'}`)
+      .join('|')
+  }, [reviews])
 
   // Загрузка отзывов из localStorage и API
   useEffect(() => {
@@ -38,8 +46,8 @@ const Reviews: React.FC = () => {
       
       const ttlMs = 3 * 60 * 1000
       // Загружаем из API (Firebase/моковые данные) только если данных нет или они устарели
-      const apiReviews =
-        reviews.length === 0 || isStale(lastFetched, ttlMs) ? await fetchReviews() : []
+      const shouldFetch = reviews.length === 0 || isStale(lastFetched, ttlMs)
+      const apiReviews = shouldFetch ? await fetchReviews() : []
       
       // Объединяем: сначала из API (как базовые), затем из localStorage
       // Убираем дубликаты по ID
@@ -48,12 +56,20 @@ const Reviews: React.FC = () => {
         new Map(allReviews.map((r) => [r.id, r])).values()
       )
       
-      dispatch(setReviews(uniqueReviews))
+      const nextKey = uniqueReviews
+        .map((r) => `${r.id}:${r.approved === true ? '1' : r.approved === false ? '0' : 'u'}`)
+        .join('|')
+      if (nextKey !== reviewsKeyRef.current) {
+        dispatch(setReviews(uniqueReviews))
+      }
       dispatch(setLoading(false))
     }
     
     loadAllReviews()
-  }, [dispatch, reviews.length, lastFetched])
+    // Важно: не добавляем reviews/lastFetched в deps, иначе можно зациклиться,
+    // потому что setReviews обновляет lastFetched в slice.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, useFirebase])
 
   // Синхронизация между вкладками
   useEffect(() => {
