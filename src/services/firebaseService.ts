@@ -166,6 +166,29 @@ export const reviewsService = {
   },
 }
 
+// Review Meta (PII) - stored separately from public review content
+export const reviewMetaService = {
+  async upsert(reviewId: string, data: { phone: string }): Promise<void> {
+    checkFirebase()
+    await setDoc(
+      doc(db!, 'reviewMeta', reviewId),
+      {
+        phone: data.phone,
+        createdAt: Timestamp.now(),
+      },
+      { merge: true }
+    )
+  },
+
+  async get(reviewId: string): Promise<{ phone?: string } | null> {
+    checkFirebase()
+    const docRef = doc(db!, 'reviewMeta', reviewId)
+    const docSnap = await getDoc(docRef)
+    if (docSnap.exists()) return docSnap.data() as any
+    return null
+  },
+}
+
 // Contact Info
 export const contactInfoService = {
   async get(): Promise<any> {

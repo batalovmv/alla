@@ -54,6 +54,12 @@
   font-size: 0.9rem;
 }
 
+.phone {
+  margin: 0 0 0.5rem 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
 .rating {
   font-size: 1.25rem;
 }

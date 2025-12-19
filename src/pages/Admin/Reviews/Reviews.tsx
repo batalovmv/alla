@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { reviewsService } from '../../../services/firebaseService'
+import { reviewsService, reviewMetaService, serviceRecordsService } from '../../../services/firebaseService'
 import { Review } from '../../../types'
 import Card from '../../../components/common/Card/Card'
 import Button from '../../../components/common/Button/Button'
@@ -10,6 +10,8 @@ const Reviews: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'approved' | 'pending'>('all')
+  const [phonesByReviewId, setPhonesByReviewId] = useState<Record<string, string>>({})
+  const [verifiedByReviewId, setVerifiedByReviewId] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     loadReviews()
@@ -24,15 +26,35 @@ const Reviews: React.FC = () => {
       if (filter === 'approved') {
         filtered = allReviews.filter((r) => r.approved === true)
       } else if (filter === 'pending') {
-        filtered = allReviews.filter((r) => r.approved !== true)
+        // Только ожидающие (approved отсутствует)
+        filtered = allReviews.filter((r) => r.approved !== true && r.approved !== false)
       }
 
       setReviews(filtered)
+
+      // Подтягиваем телефоны из reviewMeta (PII, админский доступ)
+      const pairs = await Promise.all(
+        filtered.map(async (r) => {
+          const meta = await reviewMetaService.get(r.id)
+          return [r.id, meta?.phone || ''] as const
+        })
+      )
+      const map: Record<string, string> = {}
+      for (const [id, phone] of pairs) {
+        if (phone) map[id] = phone
+      }
+      setPhonesByReviewId(map)
     } catch (error) {
       console.error('Ошибка загрузки отзывов:', error)
     } finally {
       setLoading(false)
     }
+  }
+
+  const clampRating = (value: unknown): number => {
+    const n = typeof value === 'number' ? value : Number(value)
+    if (!Number.isFinite(n)) return 0
+    return Math.max(0, Math.min(5, Math.round(n)))
   }
 
   const handleApprove = async (id: string) => {
@@ -64,6 +86,33 @@ const Reviews: React.FC = () => {
         console.error('Ошибка удаления отзыва:', error)
         alert('Ошибка при удалении отзыва')
       }
+    }
+  }
+
+  const handleVerify = async (review: Review) => {
+    const phone = phonesByReviewId[review.id]
+    if (!phone) {
+      alert('Телефон не найден для этого отзыва')
+      return
+    }
+
+    try {
+      const records = await serviceRecordsService.getByPhone(phone)
+      const match = (records || []).some((rec: any) => {
+        const nameOk =
+          String(rec.clientName || '').trim().toLowerCase() ===
+          String(review.clientName || '').trim().toLowerCase()
+        const procedureOk =
+          String(rec.procedureId || '') === String(review.procedureId || '')
+        return nameOk && procedureOk
+      })
+      setVerifiedByReviewId((prev) => ({ ...prev, [review.id]: match }))
+      if (!match) {
+        alert('Не найдено совпадений в истории услуг по телефону/имени/процедуре.')
+      }
+    } catch (error) {
+      console.error('Ошибка проверки отзыва:', error)
+      alert('Ошибка при проверке')
     }
   }
 
@@ -100,9 +149,12 @@ const Reviews: React.FC = () => {
                 <div>
                   <h3 className={styles.clientName}>{review.clientName}</h3>
                   <p className={styles.procedureName}>{review.procedureName}</p>
+                  {phonesByReviewId[review.id] && (
+                    <p className={styles.phone}>Телефон: {phonesByReviewId[review.id]}</p>
+                  )}
                   <div className={styles.rating}>
-                    {'⭐'.repeat(review.rating)}
-                    {'☆'.repeat(5 - review.rating)}
+                    {'⭐'.repeat(clampRating(review.rating))}
+                    {'☆'.repeat(5 - clampRating(review.rating))}
                   </div>
                 </div>
                 <div className={styles.status}>
@@ -113,6 +165,9 @@ const Reviews: React.FC = () => {
                   ) : (
                     <span className={styles.pending}>⏳ Ожидает</span>
                   )}
+                  {verifiedByReviewId[review.id] === true && (
+                    <span className={styles.approved}> • Проверено</span>
+                  )}
                 </div>
               </div>
               <p className={styles.text}>{review.text}</p>
@@ -120,6 +175,14 @@ const Reviews: React.FC = () => {
                 {new Date(review.date).toLocaleDateString('ru-RU')}
               </p>
               <div className={styles.actions}>
+                <Button
+                  size="small"
+                  variant="outline"
+                  onClick={() => handleVerify(review)}
+                  disabled={!phonesByReviewId[review.id]}
+                >
+                  Проверить
+                </Button>
                 {review.approved !== true && (
                   <Button
                     size="small"

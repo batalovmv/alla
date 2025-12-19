@@ -1,5 +1,5 @@
 import { Procedure, Review, BookingFormData } from '../types'
-import { proceduresService, reviewsService, bookingsService } from '../services/firebaseService'
+import { proceduresService, reviewsService, bookingsService, reviewMetaService } from '../services/firebaseService'
 
 // Fallback на mock данные если Firebase не настроен
 const useFirebase = !!import.meta.env.VITE_FIREBASE_API_KEY && !!import.meta.env.VITE_FIREBASE_PROJECT_ID
@@ -78,6 +78,7 @@ export const submitBooking = async (
 
 export const submitReview = async (data: {
   clientName: string
+  phone: string
   procedureId: string
   procedureName: string
   rating: number
@@ -85,15 +86,18 @@ export const submitReview = async (data: {
 }): Promise<{ success: boolean; message: string }> => {
   if (useFirebase) {
     try {
-      await reviewsService.create({
+      const reviewId = await reviewsService.create({
         clientName: data.clientName,
         procedureId: data.procedureId,
         procedureName: data.procedureName,
         rating: data.rating,
         text: data.text,
         date: new Date().toISOString().split('T')[0],
-        approved: false,
       })
+
+      // Телефон сохраняем отдельно (PII) — не публикуется вместе с отзывом
+      await reviewMetaService.upsert(reviewId, { phone: data.phone })
+
       return {
         success: true,
         message: 'Спасибо! Отзыв отправлен и появится на сайте после модерации.',

@@ -38,10 +38,10 @@ service cloud.firestore {
       allow write: if isAdmin(); // Только админы могут создавать/обновлять/удалять
     }
     
-    // Отзывы - публичное чтение только одобренных, публичное создание, только админы могут модерацию
+    // Отзывы - публичное чтение только одобренных, публичное создание (без возможности выставить approved), только админы могут модерацию
     match /reviews/{reviewId} {
       allow read: if resource.data.approved == true || isAdmin(); // Публично читаем только одобренные
-      // Все могут создавать отзывы, НО без возможности самосогласования
+      // Все могут создавать отзывы, НО без возможности выставить approved (это делает только админ)
       allow create: if
         request.resource.data.keys().hasOnly([
           'clientName',
@@ -50,11 +50,17 @@ service cloud.firestore {
           'rating',
           'text',
           'date',
-          'createdAt',
-          'approved'
+          'createdAt'
         ])
-        && request.resource.data.approved == false;
+        && !request.resource.data.keys().hasAny(['approved']);
       allow update, delete: if isAdmin(); // Только админы могут обновлять/удалять
+    }
+
+    // Метаданные отзыва (PII), например телефон для сверки админом.
+    // Публично можно создать, но читать/обновлять/удалять — только админ.
+    match /reviewMeta/{reviewId} {
+      allow create: if request.resource.data.keys().hasOnly(['phone', 'createdAt']);
+      allow read, update, delete: if isAdmin();
     }
     
     // Заявки - публичное создание, только админы могут читать/обновлять/удалять

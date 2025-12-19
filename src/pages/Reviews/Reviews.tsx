@@ -73,7 +73,7 @@ const Reviews: React.FC = () => {
 
   // Фильтруем только одобренные отзывы для отображения
   const approvedReviews = useMemo(
-    () => reviews.filter((r) => r.approved !== false),
+    () => reviews.filter((r) => r.approved === true),
     [reviews]
   )
 
@@ -88,6 +88,7 @@ const Reviews: React.FC = () => {
   const handleAddReview = useCallback(
     async (formData: {
       clientName: string
+      phone: string
       procedureId: string
       rating: number
       text: string
@@ -101,6 +102,7 @@ const Reviews: React.FC = () => {
 
       const result = await submitReviewAPI({
         clientName: formData.clientName,
+        phone: formData.phone,
         procedureId: formData.procedureId,
         procedureName,
         rating: formData.rating,
@@ -134,7 +136,8 @@ const Reviews: React.FC = () => {
   )
 
   const getRatingStars = (rating: number) => {
-    return '⭐'.repeat(rating) + '☆'.repeat(5 - rating)
+    const safe = Math.max(0, Math.min(5, Number.isFinite(rating) ? rating : 0))
+    return '⭐'.repeat(safe) + '☆'.repeat(5 - safe)
   }
 
   return (
@@ -164,8 +167,8 @@ const Reviews: React.FC = () => {
                   {averageRating.toFixed(1)}
                 </span>
                 <div className={styles.stars}>
-                  {'⭐'.repeat(Math.round(averageRating))}
-                  {'☆'.repeat(5 - Math.round(averageRating))}
+                  {'⭐'.repeat(Math.max(0, Math.min(5, Math.round(averageRating))))}
+                  {'☆'.repeat(5 - Math.max(0, Math.min(5, Math.round(averageRating))))}
                 </div>
                 <p className={styles.ratingText}>
                   На основе {approvedReviews.length} отзывов
