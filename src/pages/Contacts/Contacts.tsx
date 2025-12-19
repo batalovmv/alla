@@ -36,6 +36,7 @@ const Contacts: React.FC = () => {
     formState: { errors },
     reset,
     setValue,
+    watch,
   } = useForm<BookingFormData>({
     defaultValues: {
       consent: false,
@@ -60,10 +61,18 @@ const Contacts: React.FC = () => {
       // Проверяем, что процедура существует в списке
       const procedureExists = procedures.some((p) => p.id === procedureId)
       if (procedureExists) {
-        setValue('procedureId', procedureId)
+        // Проверяем текущее значение через watch
+        const currentValue = watch('procedureId')
+        // Устанавливаем значение только если оно отличается от текущего
+        if (currentValue !== procedureId) {
+          setValue('procedureId', procedureId, {
+            shouldValidate: true,
+            shouldDirty: true,
+          })
+        }
       }
     }
-  }, [searchParams, procedures, setValue])
+  }, [searchParams, procedures, setValue, watch])
 
   useEffect(() => {
     if (success) {
