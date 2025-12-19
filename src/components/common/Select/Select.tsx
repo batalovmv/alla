@@ -30,26 +30,37 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
   
   // Обработчик onChange: правильно обрабатываем как register, так и Controller
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    // Controller может передать onChange, который принимает значение напрямую
-    // Но для select элемента onChange всегда получает событие
-    // Проверяем, является ли onChange функцией, которая принимает событие
+    // Controller от react-hook-form передает onChange, который может принимать значение напрямую
+    // Но для select элемента мы всегда передаем событие
+    // Controller автоматически извлечет значение из события через e.target.value
     if (onChange) {
-      // Если это функция от Controller, она может принимать значение напрямую
-      // Но мы всегда передаем событие, так как это стандартное поведение для select
       onChange(e)
     }
   }
 
-  // Обработчик onBlur: вызываем оба обработчика
+  // Обработчик onBlur: вызываем обработчик от react-hook-form
   const handleBlur = (e: React.FocusEvent<HTMLSelectElement>) => {
-    // Вызываем обработчик от react-hook-form (register или Controller)
     if (onBlur) {
       onBlur(e)
     }
   }
 
   // Определяем, показывать ли опцию "Выберите..."
-  const shouldShowDefaultOption = showDefaultOption && (!value || value === '')
+  // value может быть undefined, null, или пустой строкой
+  const currentValue = value !== undefined && value !== null ? String(value) : ''
+  const shouldShowDefaultOption = showDefaultOption && currentValue === ''
+  
+  // Исключаем из props свойства, которые мы уже обработали, чтобы избежать конфликтов
+  const {
+    ref: _ref,
+    id: _id,
+    name: _name,
+    value: _value,
+    onChange: _onChange,
+    onBlur: _onBlur,
+    className: _className,
+    ...restProps
+  } = props
 
   return (
     <div className={styles.selectWrapper}>
@@ -60,11 +71,11 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
         </label>
       )}
       <select
-        {...props}
+        {...restProps}
         ref={ref}
         id={selectId}
         name={name}
-        value={value ?? ''}
+        value={currentValue}
         className={`${styles.select} ${error ? styles.error : ''} ${className}`}
         onChange={handleChange}
         onBlur={handleBlur}
