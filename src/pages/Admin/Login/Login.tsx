@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { onAuthStateChanged } from 'firebase/auth'
+import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { useAppDispatch, useAppSelector } from '../../../store/hooks'
 import { setUser, setLoading, setError } from '../../../store/slices/authSlice'
 import { auth } from '../../../config/firebase'
 import { ROUTES } from '../../../config/routes'
+import { isAdminUid } from '../../../config/admin'
 import LoginForm from '../../../components/auth/LoginForm/LoginForm'
 import styles from './Login.module.css'
 
@@ -24,7 +25,16 @@ const Login: React.FC = () => {
       dispatch(setUser(user))
       dispatch(setLoading(false))
       if (user) {
-        navigate(ROUTES.ADMIN)
+        if (isAdminUid(user.uid)) {
+          navigate(ROUTES.ADMIN)
+        } else {
+          dispatch(
+            setError(
+              `У этого аккаунта нет прав администратора. UID: ${user.uid}. Добавьте этот UID в allowlist (VITE_ADMIN_UID(S)) и в Firebase Rules.`
+            )
+          )
+          signOut(auth!).catch(() => {})
+        }
       }
     })
 

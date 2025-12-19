@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { setProcedures } from '../../store/slices/proceduresSlice'
 import { fetchProcedures } from '../../utils/api'
+import { isStale } from '../../utils/cache'
 import ProcedureCard from '../../components/procedures/ProcedureCard/ProcedureCard'
 import ProcedureFilters from '../../components/procedures/ProcedureFilters/ProcedureFilters'
 import SEO from '../../components/common/SEO/SEO'
@@ -9,7 +10,7 @@ import styles from './Procedures.module.css'
 
 const Procedures: React.FC = () => {
   const dispatch = useAppDispatch()
-  const { items: procedures, filters } = useAppSelector(
+  const { items: procedures, filters, lastFetched } = useAppSelector(
     (state) => state.procedures
   )
 
@@ -18,8 +19,11 @@ const Procedures: React.FC = () => {
       const data = await fetchProcedures()
       dispatch(setProcedures(data))
     }
-    loadProcedures()
-  }, [dispatch])
+    const ttlMs = 5 * 60 * 1000
+    if (procedures.length === 0 || isStale(lastFetched, ttlMs)) {
+      loadProcedures()
+    }
+  }, [dispatch, procedures.length, lastFetched])
 
   const filteredProcedures = useMemo(() => {
     let result = [...procedures]

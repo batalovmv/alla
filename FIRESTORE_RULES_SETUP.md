@@ -22,9 +22,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Функция для проверки авторизации администратора
+    // Функция для проверки администратора (allowlist по UID)
+    // 1) Firebase Console -> Authentication -> Users -> UID
+    // 2) Впишите UID ниже (можно несколько UID)
     function isAdmin() {
-      return request.auth != null && request.auth.uid != null;
+      return request.auth != null
+        && request.auth.uid in [
+          "ADMIN_UID_1"
+        ];
     }
     
     // Процедуры - публичное чтение, только админы могут писать
@@ -33,24 +38,61 @@ service cloud.firestore {
       allow write: if isAdmin(); // Только админы могут создавать/обновлять/удалять
     }
     
-    // Отзывы - публичное чтение одобренных, публичное создание, только админы могут модерацию
+    // Отзывы - публичное чтение только одобренных, публичное создание, только админы могут модерацию
     match /reviews/{reviewId} {
-      allow read: if true; // Все могут читать
-      allow create: if true; // Все могут создавать отзывы
+      allow read: if resource.data.approved == true || isAdmin(); // Публично читаем только одобренные
+      // Все могут создавать отзывы, НО без возможности самосогласования
+      allow create: if
+        request.resource.data.keys().hasOnly([
+          'clientName',
+          'procedureId',
+          'procedureName',
+          'rating',
+          'text',
+          'date',
+          'createdAt',
+          'approved'
+        ])
+        && request.resource.data.approved == false;
       allow update, delete: if isAdmin(); // Только админы могут обновлять/удалять
     }
     
     // Заявки - публичное создание, только админы могут читать/обновлять/удалять
     match /bookings/{bookingId} {
-      allow create: if true; // Все могут создавать заявки
+      // Важно: публичное создание только с валидными полями.
+      // Статус разрешаем ТОЛЬКО 'new'. createdAt — timestamp, близкий к request.time.
+      allow create: if
+        request.resource.data.keys().hasOnly([
+          'name',
+          'phone',
+          'email',
+          'procedureId',
+          'desiredDate',
+          'desiredTime',
+          'comment',
+          'consent',
+          'procedureName',
+          'status',
+          'createdAt'
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.phone is string
+        && request.resource.data.procedureId is string
+        && request.resource.data.desiredDate is string
+        && request.resource.data.desiredTime is string
+        && request.resource.data.consent is bool
+        && request.resource.data.consent == true
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.createdAt <= request.time
+        && request.resource.data.createdAt >= request.time - duration.value(10, 'm');
       allow read, update, delete: if isAdmin(); // Только админы могут читать/обновлять/удалять
     }
     
-    // Клиенты - публичное создание и обновление (при создании заявки), только админы могут читать/удалять
+    // Клиенты - ТОЛЬКО админы.
+    // Клиентская база - чувствительные данные (PII). Публичной части сайта доступ запрещен.
     match /clients/{clientId} {
-      allow create: if true; // Все могут создавать клиентов (при создании заявки)
-      allow update: if true; // Все могут обновлять клиентов (при обновлении заявки)
-      allow read, delete: if isAdmin(); // Только админы могут читать/удалять
+      allow read, write: if isAdmin();
     }
     
     // Записи об оказанных услугах - только админы
@@ -86,11 +128,12 @@ service cloud.firestore {
 
 ### Безопасность
 
-⚠️ **Внимание**: Эти правила позволяют любому пользователю создавать заявки и клиентов. Это нормально для публичного сайта, но убедитесь, что:
+⚠️ **Внимание**: Эти правила позволяют любому пользователю создавать заявки. Это нормально для публичного сайта, но убедитесь, что:
 
 1. **Админ-панель защищена** - только авторизованные пользователи могут входить в админку
 2. **Чувствительные данные защищены** - записи об услугах (`serviceRecords`) доступны только админам
 3. **Заявки защищены** - только админы могут видеть и управлять заявками
+4. **Клиенты защищены** - коллекция `clients` доступна только админам (PII)
 
 ### Альтернативный вариант (более строгий)
 

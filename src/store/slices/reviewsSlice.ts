@@ -5,6 +5,7 @@ const initialState: ReviewsState = {
   items: [],
   averageRating: 0,
   loading: false,
+  lastFetched: undefined,
 }
 
 const calculateAverageRating = (reviews: Review[]): number => {
@@ -20,6 +21,7 @@ const reviewsSlice = createSlice({
     setReviews: (state, action: PayloadAction<Review[]>) => {
       state.items = action.payload
       state.averageRating = calculateAverageRating(action.payload)
+      state.lastFetched = Date.now()
     },
     addReview: (state, action: PayloadAction<Review>) => {
       state.items.push(action.payload)

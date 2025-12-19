@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "rules:print": "node scripts/render-firebase-rules.mjs",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },

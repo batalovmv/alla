@@ -87,6 +87,7 @@ export interface ProceduresState {
   }
   loading: boolean
   error: string | null
+  lastFetched?: number
 }
 
 export interface BookingState {
@@ -100,6 +101,7 @@ export interface ReviewsState {
   items: Review[]
   averageRating: number
   loading: boolean
+  lastFetched?: number
 }
 
 

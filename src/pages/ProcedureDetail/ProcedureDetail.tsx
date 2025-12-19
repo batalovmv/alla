@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { setProcedures } from '../../store/slices/proceduresSlice'
 import { fetchProcedures } from '../../utils/api'
+import { isStale } from '../../utils/cache'
 import { ROUTES } from '../../config/routes'
 import Card from '../../components/common/Card/Card'
 import Button from '../../components/common/Button/Button'
@@ -13,17 +14,18 @@ import styles from './ProcedureDetail.module.css'
 const ProcedureDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const dispatch = useAppDispatch()
-  const { items: procedures } = useAppSelector((state) => state.procedures)
+  const { items: procedures, lastFetched } = useAppSelector((state) => state.procedures)
 
   useEffect(() => {
     const loadProcedures = async () => {
       const data = await fetchProcedures()
       dispatch(setProcedures(data))
     }
-    if (procedures.length === 0) {
+    const ttlMs = 5 * 60 * 1000
+    if (procedures.length === 0 || isStale(lastFetched, ttlMs)) {
       loadProcedures()
     }
-  }, [dispatch, procedures.length])
+  }, [dispatch, procedures.length, lastFetched])
 
   const procedure = procedures.find((p) => p.id === id)
 

@@ -21,8 +21,10 @@ const SEO: React.FC<SEOProps> = ({
   const defaultDescription =
     'Профессиональные косметологические процедуры. Индивидуальный подход, современные технологии, гарантия качества.'
   const metaDescription = description || defaultDescription
-  const siteUrl = 'https://batalovmv.github.io/alla'
-  const metaImage = image || `${siteUrl}/images/og-image.jpg`
+  const siteUrl =
+    (import.meta.env.VITE_SITE_URL as string | undefined) ||
+    `${window.location.origin}${import.meta.env.BASE_URL || '/'}`
+  const metaImage = image || `${siteUrl.replace(/\/$/, '')}/images/og-image.jpg`
 
   useEffect(() => {
     // Обновляем title

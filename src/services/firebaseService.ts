@@ -206,19 +206,30 @@ export const aboutInfoService = {
 export const bookingsService = {
   async getAll(): Promise<any[]> {
     checkFirebase()
-    const q = query(collection(db!, 'bookings'), orderBy('createdAt', 'desc'))
-    const querySnapshot = await getDocs(q)
-    return querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate(),
-    }))
+    try {
+      const q = query(collection(db!, 'bookings'), orderBy('createdAt', 'desc'))
+      const querySnapshot = await getDocs(q)
+      return querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate(),
+      }))
+    } catch (error) {
+      // Fallback если поле createdAt отсутствует или не индексировано
+      const querySnapshot = await getDocs(collection(db!, 'bookings'))
+      return querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate?.() || undefined,
+      }))
+    }
   },
 
   async create(booking: BookingFormData & { procedureName?: string }): Promise<string> {
     checkFirebase()
     const docRef = await addDoc(collection(db!, 'bookings'), {
       ...booking,
+      comment: booking.comment || '',
       status: 'new',
       createdAt: Timestamp.now(),
     })

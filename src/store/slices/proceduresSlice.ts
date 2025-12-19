@@ -11,6 +11,7 @@ const initialState: ProceduresState = {
   },
   loading: false,
   error: null,
+  lastFetched: undefined,
 }
 
 const proceduresSlice = createSlice({
@@ -24,6 +25,7 @@ const proceduresSlice = createSlice({
         new Set(action.payload.map((p) => p.category))
       )
       state.categories = categories
+      state.lastFetched = Date.now()
     },
     setCategoryFilter: (state, action: PayloadAction<string>) => {
       state.filters.category = action.payload

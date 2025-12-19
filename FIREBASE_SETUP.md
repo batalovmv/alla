@@ -21,6 +21,7 @@
 2. Нажмите "Add user"
 3. Введите email и пароль для администратора
 4. Запомните эти данные - они понадобятся для входа в админку
+5. Откройте созданного пользователя и скопируйте поле **UID** (оно понадобится для правил безопасности)
 
 ## Шаг 4: Настройка Firestore Database
 
@@ -30,56 +31,61 @@
 4. Выберите регион (ближайший к вам)
 5. Нажмите "Готово"
 
-### Настройка правил безопасности Firestore
+### Настройка правил безопасности Firestore (безопасный вариант для 1 администратора)
 
 1. Перейдите в раздел "Правила" (Rules)
-2. Замените правила на следующие:
+2. Замените правила на следующие (впишите ваш UID вместо `ADMIN_UID_1`):
 
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Процедуры - читать могут все, писать только авторизованные
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.uid in [
+          "ADMIN_UID_1"
+        ];
+    }
+
+    // Процедуры - читать могут все, писать только админ
     match /procedures/{procedureId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     
-    // Отзывы - читать одобренные могут все, писать все, модерация только авторизованные
+    // Отзывы - читать одобренные могут все, создавать все, модерация только админ
     match /reviews/{reviewId} {
-      allow read: if resource.data.approved == true || request.auth != null;
-      allow create: if true;
-      allow update, delete: if request.auth != null;
+      allow read: if resource.data.approved == true || isAdmin();
+      allow create: if request.resource.data.approved == false;
+      allow update, delete: if isAdmin();
     }
     
     // Контактная информация - читать все, писать только авторизованные
     match /contactInfo/{document} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     
     // Информация о специалисте - читать все, писать только авторизованные
     match /aboutInfo/{document} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     
     // Заявки - публичное создание, только админы могут читать/обновлять/удалять
     match /bookings/{bookingId} {
       allow create: if true; // Все могут создавать заявки
-      allow read, update, delete: if request.auth != null; // Только админы могут читать/обновлять/удалять
+      allow read, update, delete: if isAdmin(); // Только админы могут читать/обновлять/удалять
     }
     
-    // Клиенты - публичное создание и обновление (при создании заявки), только админы могут читать/удалять
+    // Клиенты - ТОЛЬКО админ (PII)
     match /clients/{clientId} {
-      allow create: if true; // Все могут создавать клиентов (при создании заявки)
-      allow update: if true; // Все могут обновлять клиентов (при обновлении заявки)
-      allow read, delete: if request.auth != null; // Только админы могут читать/удалять
+      allow read, write: if isAdmin();
     }
     
     // Записи об оказанных услугах - только админы
     match /serviceRecords/{recordId} {
-      allow read, write: if request.auth != null; // Только админы
+      allow read, write: if isAdmin(); // Только админы
     }
   }
 }
@@ -94,25 +100,32 @@ service cloud.firestore {
 3. Примите правила по умолчанию
 4. Выберите регион (тот же, что и для Firestore)
 
-### Настройка правил Storage
+### Настройка правил Storage (безопасный вариант для 1 администратора)
 
 1. Перейдите в раздел "Правила" (Rules)
-2. Замените правила на следующие:
+2. Замените правила на следующие (впишите ваш UID вместо `ADMIN_UID_1`):
 
 ```javascript
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.uid in [
+          "ADMIN_UID_1"
+        ];
+    }
+
     // Изображения процедур - читать все, писать только авторизованные
     match /procedures/{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     
     // Фото специалиста - читать все, писать только авторизованные
     match /about/{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
   }
 }
@@ -132,15 +145,19 @@ service firebase.storage {
 
 1. Создайте файл `.env.local` в корне проекта (рядом с `package.json`)
 
-2. Скопируйте содержимое из файла `.env.local.example` или создайте файл со следующим содержимым:
+2. Скопируйте содержимое из файла `env.local.template` (в репозитории) и заполните значениями из Firebase Console:
 
 ```
-VITE_FIREBASE_API_KEY=AIzaSyD5uWHtk972D7S4rQTGgKT-Sv9Y-J-Bz9g
-VITE_FIREBASE_AUTH_DOMAIN=alla-cosmetology.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=alla-cosmetology
-VITE_FIREBASE_STORAGE_BUCKET=alla-cosmetology.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=422226108580
-VITE_FIREBASE_APP_ID=1:422226108580:web:1dd99a5af4f381aa92c631
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+
+VITE_ADMIN_UID=ADMIN_UID_1
+# или список:
+# VITE_ADMIN_UIDS=ADMIN_UID_1,ADMIN_UID_2
 ```
 
 **Важно**: Файл `.env.local` уже добавлен в `.gitignore` и не будет закоммичен в репозиторий.

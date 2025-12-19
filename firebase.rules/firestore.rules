@@ -1,0 +1,119 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ВАЖНО:
+    // - Firebase конфиг на фронтенде НЕ секрет, безопасность обеспечивается правилами ниже.
+    // - Замените ADMIN_UID_1 на реальный UID администратора.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.uid in [
+          "ADMIN_UID_1"
+        ];
+    }
+
+    // Basic helpers
+    function isNonEmptyString(v, maxLen) {
+      return v is string && v.size() > 0 && v.size() <= maxLen;
+    }
+
+    // Процедуры: публичное чтение, запись только админ
+    match /procedures/{procedureId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Отзывы:
+    // - публично читаем только одобренные
+    // - создавать могут все, но ТОЛЬКО с approved=false
+    // - модерация/удаление только админ
+    match /reviews/{reviewId} {
+      allow read: if resource.data.approved == true || isAdmin();
+      allow create: if
+        request.resource.data.keys().hasOnly([
+          "clientName",
+          "procedureId",
+          "procedureName",
+          "rating",
+          "text",
+          "date",
+          "createdAt",
+          "approved"
+        ])
+        && request.resource.data.approved == false
+        && isNonEmptyString(request.resource.data.clientName, 80)
+        && isNonEmptyString(request.resource.data.procedureId, 128)
+        && isNonEmptyString(request.resource.data.procedureName, 200)
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && isNonEmptyString(request.resource.data.text, 2000)
+        && isNonEmptyString(request.resource.data.date, 32)
+        && request.resource.data.createdAt is timestamp
+        // мягкая защита от подделки времени
+        && request.resource.data.createdAt <= request.time
+        && request.resource.data.createdAt >= request.time - duration.value(10, "m");
+
+      allow update, delete: if isAdmin();
+    }
+
+    // Заявки:
+    // - публичное создание, но строго по схеме
+    // - читать/обновлять/удалять только админ
+    match /bookings/{bookingId} {
+      allow create: if
+        request.resource.data.keys().hasOnly([
+          "name",
+          "phone",
+          "email",
+          "procedureId",
+          "procedureName",
+          "desiredDate",
+          "desiredTime",
+          "comment",
+          "consent",
+          "status",
+          "createdAt"
+        ])
+        && isNonEmptyString(request.resource.data.name, 80)
+        && isNonEmptyString(request.resource.data.phone, 32)
+        && (request.resource.data.email == null || isNonEmptyString(request.resource.data.email, 120))
+        && isNonEmptyString(request.resource.data.procedureId, 128)
+        && (request.resource.data.procedureName == null || isNonEmptyString(request.resource.data.procedureName, 200))
+        && isNonEmptyString(request.resource.data.desiredDate, 32)
+        && isNonEmptyString(request.resource.data.desiredTime, 32)
+        && (request.resource.data.comment == null || (request.resource.data.comment is string && request.resource.data.comment.size() <= 2000))
+        && request.resource.data.consent is bool
+        && request.resource.data.consent == true
+        && request.resource.data.status == "new"
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.createdAt <= request.time
+        && request.resource.data.createdAt >= request.time - duration.value(10, "m");
+
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Клиенты: только админ (PII)
+    match /clients/{clientId} {
+      allow read, write: if isAdmin();
+    }
+
+    // История услуг: только админ (PII)
+    match /serviceRecords/{recordId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Контакты/о специалисте: читать могут все, писать только админ
+    match /contactInfo/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /aboutInfo/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
+
+

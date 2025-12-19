@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAppSelector } from '../../../store/hooks'
 import { ROUTES } from '../../../config/routes'
 import { CONTACT_INFO } from '../../../config/constants'
+import { isAdminUid } from '../../../config/admin'
 import LoginModal from '../../auth/LoginModal/LoginModal'
 import styles from './Footer.module.css'
 
@@ -89,6 +90,9 @@ const Footer: React.FC = () => {
 
         <div className={styles.copyright}>
           <p>&copy; {new Date().getFullYear()} Косметология. Все права защищены.</p>
+          <Link to={ROUTES.PRIVACY} className={styles.adminLink}>
+            Политика конфиденциальности
+          </Link>
           {!user && (
             <button
               onClick={() => setIsLoginModalOpen(true)}
@@ -98,7 +102,7 @@ const Footer: React.FC = () => {
               Вход для администратора
             </button>
           )}
-          {user && (
+          {user && isAdminUid(user.uid) && (
             <Link to={ROUTES.ADMIN} className={styles.adminLink}>
               Админ-панель
             </Link>

@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { setProcedures } from '../../store/slices/proceduresSlice'
 import { setReviews } from '../../store/slices/reviewsSlice'
 import { fetchProcedures, fetchReviews } from '../../utils/api'
+import { isStale } from '../../utils/cache'
 import { ROUTES } from '../../config/routes'
 import { CONTACT_INFO } from '../../config/constants'
 import ProcedureCard from '../../components/procedures/ProcedureCard/ProcedureCard'
@@ -14,17 +15,27 @@ import styles from './Home.module.css'
 
 const Home: React.FC = () => {
   const dispatch = useAppDispatch()
-  const { items: procedures } = useAppSelector((state) => state.procedures)
-  const { items: reviews, averageRating } = useAppSelector(
+  const { items: procedures, lastFetched: proceduresLastFetched } = useAppSelector(
+    (state) => state.procedures
+  )
+  const { items: reviews, averageRating, lastFetched: reviewsLastFetched } = useAppSelector(
     (state) => state.reviews
   )
 
   const loadData = useCallback(async () => {
-    const proceduresData = await fetchProcedures()
-    const reviewsData = await fetchReviews()
-    dispatch(setProcedures(proceduresData))
-    dispatch(setReviews(reviewsData))
-  }, [dispatch])
+    const proceduresTtlMs = 5 * 60 * 1000
+    const reviewsTtlMs = 3 * 60 * 1000
+
+    if (procedures.length === 0 || isStale(proceduresLastFetched, proceduresTtlMs)) {
+      const proceduresData = await fetchProcedures()
+      dispatch(setProcedures(proceduresData))
+    }
+
+    if (reviews.length === 0 || isStale(reviewsLastFetched, reviewsTtlMs)) {
+      const reviewsData = await fetchReviews()
+      dispatch(setReviews(reviewsData))
+    }
+  }, [dispatch, procedures.length, proceduresLastFetched, reviews.length, reviewsLastFetched])
 
   useEffect(() => {
     loadData()

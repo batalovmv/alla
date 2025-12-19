@@ -11,6 +11,7 @@ const ProcedureDetail = lazy(() => import('./pages/ProcedureDetail/ProcedureDeta
 const About = lazy(() => import('./pages/About/About'))
 const Reviews = lazy(() => import('./pages/Reviews/Reviews'))
 const Contacts = lazy(() => import('./pages/Contacts/Contacts'))
+const Privacy = lazy(() => import('./pages/Privacy/Privacy'))
 
 // Admin pages
 const AdminLogin = lazy(() => import('./pages/Admin/Login/Login'))
@@ -49,6 +50,7 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/reviews" element={<Reviews />} />
               <Route path="/contacts" element={<Contacts />} />
+              <Route path="/privacy" element={<Privacy />} />
             </Routes>
           </Suspense>
         </Layout>

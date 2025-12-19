@@ -1,0 +1,27 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Замените ADMIN_UID_1 на реальный UID администратора.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.uid in [
+          "ADMIN_UID_1"
+        ];
+    }
+
+    // Изображения процедур - читать все, писать только админ
+    match /procedures/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Фото специалиста - читать все, писать только админ
+    match /about/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
+
+

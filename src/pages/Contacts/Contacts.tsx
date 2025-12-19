@@ -11,6 +11,7 @@ import {
 import { setProcedures } from '../../store/slices/proceduresSlice'
 import { fetchProcedures } from '../../utils/api'
 import { submitBooking as submitBookingAPI } from '../../utils/api'
+import { isStale } from '../../utils/cache'
 import { CONTACT_INFO } from '../../config/constants'
 import { BookingFormData } from '../../types'
 import { validatePhone, validateEmail } from '../../utils/validation'
@@ -25,7 +26,7 @@ import styles from './Contacts.module.css'
 const Contacts: React.FC = () => {
   const dispatch = useAppDispatch()
   const [searchParams] = useSearchParams()
-  const { items: procedures } = useAppSelector((state) => state.procedures)
+  const { items: procedures, lastFetched } = useAppSelector((state) => state.procedures)
   const { isSubmitting, success, error } = useAppSelector(
     (state) => state.booking
   )
@@ -49,10 +50,11 @@ const Contacts: React.FC = () => {
   }, [dispatch])
 
   useEffect(() => {
-    if (procedures.length === 0) {
+    const ttlMs = 5 * 60 * 1000
+    if (procedures.length === 0 || isStale(lastFetched, ttlMs)) {
       loadProcedures()
     }
-  }, [procedures.length, loadProcedures])
+  }, [procedures.length, lastFetched, loadProcedures])
 
   // Автоматически выбираем процедуру из URL параметра
   useEffect(() => {
@@ -94,10 +96,28 @@ const Contacts: React.FC = () => {
 
   const onSubmit = useCallback(
     async (data: BookingFormData) => {
+      // Honeypot field: если бот заполнил скрытое поле — имитируем успех без записи в базу
+      const hp = (document.getElementById('hp_company') as HTMLInputElement | null)
+        ?.value
+      if (hp && hp.trim().length > 0) {
+        dispatch(submitBookingSuccess())
+        return
+      }
+
+      // Анти-спам (клиентский слой): простая защита от частых отправок
+      const now = Date.now()
+      const lastSubmitRaw = localStorage.getItem('booking_last_submit_ts')
+      const lastSubmitTs = lastSubmitRaw ? Number(lastSubmitRaw) : 0
+      if (lastSubmitTs && now - lastSubmitTs < 60_000) {
+        dispatch(submitBookingFailure('Пожалуйста, подождите минуту и попробуйте снова.'))
+        return
+      }
+
       dispatch(submitBooking())
       try {
         const result = await submitBookingAPI(data)
         if (result.success) {
+          localStorage.setItem('booking_last_submit_ts', String(now))
           dispatch(submitBookingSuccess())
         } else {
           dispatch(submitBookingFailure(result.message || 'Ошибка отправки'))
@@ -112,6 +132,8 @@ const Contacts: React.FC = () => {
     },
     [dispatch]
   )
+
+  const mapEmbedUrl = (import.meta.env.VITE_MAP_EMBED_URL as string | undefined) || ''
 
   return (
     <>
@@ -192,12 +214,22 @@ const Contacts: React.FC = () => {
               </div>
 
               <div className={styles.map}>
-                <div className={styles.mapPlaceholder}>
-                  <p>Карта местоположения</p>
-                  <p className={styles.mapNote}>
-                    Здесь будет встроена карта Яндекс.Карт или Google Maps
-                  </p>
-                </div>
+                {mapEmbedUrl ? (
+                  <iframe
+                    title="Карта"
+                    src={mapEmbedUrl}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    style={{ width: '100%', height: 320, border: 0, borderRadius: 12 }}
+                  />
+                ) : (
+                  <div className={styles.mapPlaceholder}>
+                    <p>Карта местоположения</p>
+                    <p className={styles.mapNote}>
+                      Укажите VITE_MAP_EMBED_URL в .env.local, чтобы встроить карту
+                    </p>
+                  </div>
+                )}
               </div>
             </Card>
           </div>
@@ -216,6 +248,16 @@ const Contacts: React.FC = () => {
               )}
 
               <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+                {/* Honeypot: скрытое поле для ботов */}
+                <input
+                  id="hp_company"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  style={{ position: 'absolute', left: '-10000px', top: 'auto' }}
+                  aria-hidden="true"
+                />
+
                 <Input
                   label="Имя"
                   {...register('name', {
@@ -283,7 +325,12 @@ const Contacts: React.FC = () => {
 
                 <Textarea
                   label="Комментарий"
-                  {...register('comment')}
+                  {...register('comment', {
+                    maxLength: {
+                      value: 2000,
+                      message: 'Комментарий не должен превышать 2000 символов',
+                    },
+                  })}
                   error={errors.comment?.message}
                 />
 
@@ -297,7 +344,14 @@ const Contacts: React.FC = () => {
                     })}
                   />
                   <label htmlFor="consent">
-                    Я согласен(а) на обработку персональных данных
+                    Я согласен(а) на обработку персональных данных.{' '}
+                    <a
+                      href={`${import.meta.env.BASE_URL}privacy`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Политика конфиденциальности
+                    </a>
                   </label>
                   {errors.consent && (
                     <span className={styles.errorMessage}>

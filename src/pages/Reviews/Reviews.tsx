@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { setReviews, addReview, setLoading } from '../../store/slices/reviewsSlice'
-import { fetchReviews } from '../../utils/api'
+import { fetchReviews, submitReview as submitReviewAPI } from '../../utils/api'
+import { isStale } from '../../utils/cache'
 import {
   loadReviewsFromStorage,
   saveReviewsToStorage,
@@ -17,12 +18,15 @@ import styles from './Reviews.module.css'
 
 const Reviews: React.FC = () => {
   const dispatch = useAppDispatch()
-  const { items: reviews, averageRating } = useAppSelector(
+  const { items: reviews, averageRating, lastFetched } = useAppSelector(
     (state) => state.reviews
   )
   const { items: procedures } = useAppSelector((state) => state.procedures)
   const [filteredProcedure, setFilteredProcedure] = useState<string>('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitMessage, setSubmitMessage] = useState<string | null>(null)
+  const useFirebase =
+    !!import.meta.env.VITE_FIREBASE_API_KEY && !!import.meta.env.VITE_FIREBASE_PROJECT_ID
 
   // Загрузка отзывов из localStorage и API
   useEffect(() => {
@@ -32,8 +36,10 @@ const Reviews: React.FC = () => {
       // Загружаем из localStorage
       const storedReviews = loadReviewsFromStorage()
       
-      // Загружаем из API (моковые данные)
-      const apiReviews = await fetchReviews()
+      const ttlMs = 3 * 60 * 1000
+      // Загружаем из API (Firebase/моковые данные) только если данных нет или они устарели
+      const apiReviews =
+        reviews.length === 0 || isStale(lastFetched, ttlMs) ? await fetchReviews() : []
       
       // Объединяем: сначала из API (как базовые), затем из localStorage
       // Убираем дубликаты по ID
@@ -47,7 +53,7 @@ const Reviews: React.FC = () => {
     }
     
     loadAllReviews()
-  }, [dispatch])
+  }, [dispatch, reviews.length, lastFetched])
 
   // Синхронизация между вкладками
   useEffect(() => {
@@ -82,40 +88,46 @@ const Reviews: React.FC = () => {
   const handleAddReview = useCallback(
     async (formData: {
       clientName: string
-      phone: string
       procedureId: string
       rating: number
       text: string
     }) => {
       setIsSubmitting(true)
+      setSubmitMessage(null)
       
       const selectedProcedure = procedures.find((p) => p.id === formData.procedureId)
       
-      const newReview: Review = {
-        id: `review_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      const procedureName = selectedProcedure?.name || 'Неизвестная процедура'
+
+      const result = await submitReviewAPI({
         clientName: formData.clientName,
         procedureId: formData.procedureId,
-        procedureName: selectedProcedure?.name || 'Неизвестная процедура',
+        procedureName,
         rating: formData.rating,
         text: formData.text,
-        date: new Date().toISOString().split('T')[0],
-        createdAt: new Date().toISOString(),
-        approved: true, // Автоматическое одобрение (можно изменить на false для модерации)
-      }
-      
-      // Телефон сохраняем отдельно в localStorage для связи, но не показываем в отзыве
-      // Можно использовать для модерации или связи с клиентом
+      })
 
-      // Сохраняем в localStorage
-      addReviewToStorage(newReview)
-      
-      // Добавляем в Redux
-      dispatch(addReview(newReview))
-      
-      // Сохраняем все отзывы в localStorage
-      const allReviews = [...reviews, newReview]
-      saveReviewsToStorage(allReviews)
-      
+      // В offline/mock режиме submitReviewAPI не сохраняет — оставляем прежнее поведение через localStorage
+      if (result.success && !useFirebase) {
+        const newReview: Review = {
+          id: `review_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          clientName: formData.clientName,
+          procedureId: formData.procedureId,
+          procedureName,
+          rating: formData.rating,
+          text: formData.text,
+          date: new Date().toISOString().split('T')[0],
+          createdAt: new Date().toISOString(),
+          approved: true,
+        }
+
+        addReviewToStorage(newReview)
+        dispatch(addReview(newReview))
+        const allReviews = [...reviews, newReview]
+        saveReviewsToStorage(allReviews)
+      }
+
+      setSubmitMessage(result.message)
       setIsSubmitting(false)
     },
     [dispatch, procedures, reviews]
@@ -135,6 +147,12 @@ const Reviews: React.FC = () => {
       <div className={styles.reviews}>
         <div className={styles.container}>
           <h1 className={styles.title}>Отзывы клиентов</h1>
+
+          {submitMessage && (
+            <Card className={styles.reviewCard}>
+              <p>{submitMessage}</p>
+            </Card>
+          )}
 
           <AddReviewForm onSubmit={handleAddReview} isSubmitting={isSubmitting} />
 

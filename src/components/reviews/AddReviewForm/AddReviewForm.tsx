@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { useAppSelector } from '../../../store/hooks'
-import { validatePhone } from '../../../utils/validation'
 import Input from '../../common/Input/Input'
 import Textarea from '../../common/Textarea/Textarea'
 import Select from '../../common/Select/Select'
@@ -10,7 +9,6 @@ import styles from './AddReviewForm.module.css'
 
 interface ReviewFormData {
   clientName: string
-  phone: string
   procedureId: string
   rating: number
   text: string
@@ -71,17 +69,6 @@ const AddReviewForm: React.FC<AddReviewFormProps> = ({
             },
           })}
           error={errors.clientName?.message}
-        />
-
-        <Input
-          label="Телефон"
-          type="tel"
-          {...register('phone', {
-            required: 'Телефон обязателен для заполнения',
-            validate: (value) =>
-              validatePhone(value) || 'Неверный формат телефона',
-          })}
-          error={errors.phone?.message}
         />
 
         <Controller
