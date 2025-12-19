@@ -35,7 +35,8 @@ const Bookings: React.FC = () => {
       // Фильтруем по выбранному статусу
       // Также обрабатываем старые статусы 'processed' как 'awaiting' для обратной совместимости
       filtered = filtered.filter((b: Booking) => {
-        const bookingStatus = b.status === 'processed' ? 'awaiting' : b.status
+        // Нормализуем статус: старый 'processed' становится 'awaiting'
+        const bookingStatus = (b.status as string) === 'processed' ? 'awaiting' : b.status
         return bookingStatus === statusFilter
       }) as Booking[]
 
