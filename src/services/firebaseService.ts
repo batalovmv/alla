@@ -9,12 +9,13 @@ import {
   query,
   where,
   orderBy,
+  limit,
   Timestamp,
   setDoc,
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../config/firebase'
-import { Procedure, Review, BookingFormData } from '../types'
+import { Procedure, Review, BookingFormData, Client, ServiceRecord } from '../types'
 
 // Helper function to check if Firebase is initialized
 const checkFirebase = () => {
@@ -227,6 +228,138 @@ export const bookingsService = {
   async update(id: string, data: Partial<any>): Promise<void> {
     checkFirebase()
     await updateDoc(doc(db!, 'bookings', id), data)
+  },
+}
+
+// Clients
+export const clientsService = {
+  async getAll(): Promise<any[]> {
+    checkFirebase()
+    const q = query(collection(db!, 'clients'), orderBy('createdAt', 'desc'))
+    const querySnapshot = await getDocs(q)
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate(),
+      lastVisit: doc.data().lastVisit?.toDate(),
+    }))
+  },
+
+  async get(id: string): Promise<any | null> {
+    checkFirebase()
+    const docRef = doc(db!, 'clients', id)
+    const docSnap = await getDoc(docRef)
+    if (docSnap.exists()) {
+      return {
+        id: docSnap.id,
+        ...docSnap.data(),
+        createdAt: docSnap.data().createdAt?.toDate(),
+        lastVisit: docSnap.data().lastVisit?.toDate(),
+      }
+    }
+    return null
+  },
+
+  async getByPhone(phone: string): Promise<any | null> {
+    checkFirebase()
+    const q = query(collection(db!, 'clients'), where('phone', '==', phone), limit(1))
+    const querySnapshot = await getDocs(q)
+    if (!querySnapshot.empty) {
+      const doc = querySnapshot.docs[0]
+      return {
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate(),
+        lastVisit: doc.data().lastVisit?.toDate(),
+      }
+    }
+    return null
+  },
+
+  async create(client: any): Promise<string> {
+    checkFirebase()
+    const docRef = await addDoc(collection(db!, 'clients'), {
+      ...client,
+      totalVisits: client.totalVisits || 0,
+      createdAt: Timestamp.now(),
+    })
+    return docRef.id
+  },
+
+  async update(id: string, data: Partial<any>): Promise<void> {
+    checkFirebase()
+    await updateDoc(doc(db!, 'clients', id), data)
+  },
+}
+
+// Service Records
+export const serviceRecordsService = {
+  async getAll(): Promise<any[]> {
+    checkFirebase()
+    const q = query(collection(db!, 'serviceRecords'), orderBy('date', 'desc'))
+    const querySnapshot = await getDocs(q)
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      date: doc.data().date?.toDate(),
+      createdAt: doc.data().createdAt?.toDate(),
+    }))
+  },
+
+  async getByClientId(clientId: string): Promise<any[]> {
+    checkFirebase()
+    const q = query(
+      collection(db!, 'serviceRecords'),
+      where('clientId', '==', clientId),
+      orderBy('date', 'desc')
+    )
+    const querySnapshot = await getDocs(q)
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      date: doc.data().date?.toDate(),
+      createdAt: doc.data().createdAt?.toDate(),
+    }))
+  },
+
+  async getByPhone(phone: string): Promise<any[]> {
+    checkFirebase()
+    const q = query(
+      collection(db!, 'serviceRecords'),
+      where('clientPhone', '==', phone),
+      orderBy('date', 'desc')
+    )
+    const querySnapshot = await getDocs(q)
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      date: doc.data().date?.toDate(),
+      createdAt: doc.data().createdAt?.toDate(),
+    }))
+  },
+
+  async create(record: any): Promise<string> {
+    checkFirebase()
+    const docRef = await addDoc(collection(db!, 'serviceRecords'), {
+      ...record,
+      date: Timestamp.fromDate(record.date),
+      createdAt: Timestamp.now(),
+    })
+    return docRef.id
+  },
+
+  async update(id: string, data: Partial<any>): Promise<void> {
+    checkFirebase()
+    const updateData: any = { ...data }
+    if (data.date) {
+      updateData.date = Timestamp.fromDate(data.date)
+    }
+    await updateDoc(doc(db!, 'serviceRecords', id), updateData)
+  },
+
+  async delete(id: string): Promise<void> {
+    checkFirebase()
+    await deleteDoc(doc(db!, 'serviceRecords', id))
   },
 }
 

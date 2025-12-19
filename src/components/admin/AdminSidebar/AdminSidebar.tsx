@@ -33,6 +33,7 @@ const AdminSidebar: React.FC = () => {
     { path: ROUTES.ADMIN_PROCEDURES, label: 'Процедуры', icon: '💆' },
     { path: ROUTES.ADMIN_REVIEWS, label: 'Отзывы', icon: '⭐' },
     { path: ROUTES.ADMIN_BOOKINGS, label: 'Заявки', icon: '📅' },
+    { path: ROUTES.ADMIN_CLIENTS, label: 'Клиенты', icon: '👥' },
     { path: ROUTES.ADMIN_CONTACTS, label: 'Контакты', icon: '📞' },
     { path: ROUTES.ADMIN_ABOUT, label: 'О специалисте', icon: '👤' },
   ]
@@ -48,7 +49,9 @@ const AdminSidebar: React.FC = () => {
             key={item.path}
             to={item.path}
             className={`${styles.navItem} ${
-              location.pathname === item.path ? styles.active : ''
+              location.pathname === item.path || 
+              (item.path === ROUTES.ADMIN_CLIENTS && location.pathname.startsWith(ROUTES.ADMIN_CLIENTS))
+                ? styles.active : ''
             }`}
           >
             <span className={styles.icon}>{item.icon}</span>

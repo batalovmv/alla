@@ -1,0 +1,173 @@
+.history {
+  padding: 2rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.header > div {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.loading,
+.error {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+  font-size: 1.2rem;
+  gap: 1rem;
+}
+
+.clientInfo {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.infoGrid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.label {
+  font-weight: 500;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.infoGrid a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.infoGrid a:hover {
+  text-decoration: underline;
+}
+
+.formCard {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+}
+
+.formCard h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formActions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.records h2 {
+  margin-bottom: 1rem;
+}
+
+.empty {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.1rem;
+  color: #666;
+}
+
+.recordsList {
+  display: grid;
+  gap: 1rem;
+}
+
+.recordCard {
+  padding: 1.5rem;
+}
+
+.recordHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.recordHeader h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+}
+
+.recordDate {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.recordPrice {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #28a745;
+}
+
+.recordNotes {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.recordActions {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+@media (max-width: 768px) {
+  .history {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header > div {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .recordHeader {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+

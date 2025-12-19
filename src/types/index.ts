@@ -23,6 +23,47 @@ export interface BookingFormData {
   consent: boolean
 }
 
+export type BookingStatus = 'new' | 'awaiting' | 'completed' | 'cancelled'
+
+export interface Booking {
+  id: string
+  name: string
+  phone: string
+  email?: string
+  procedureId: string
+  procedureName: string
+  desiredDate: string
+  desiredTime: string
+  comment: string
+  status: BookingStatus
+  createdAt: Date
+}
+
+export interface Client {
+  id: string
+  phone: string
+  name: string
+  email?: string
+  createdAt: Date
+  lastVisit?: Date
+  totalVisits: number
+  notes?: string
+}
+
+export interface ServiceRecord {
+  id: string
+  clientId: string
+  clientPhone: string
+  clientName: string
+  procedureId: string
+  procedureName: string
+  date: Date
+  price?: number
+  notes?: string
+  createdAt: Date
+  bookingId?: string // Связь с заявкой, если процедура была оказана из заявки
+}
+
 export interface Review {
   id: string
   clientName: string

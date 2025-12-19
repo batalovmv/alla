@@ -20,6 +20,8 @@ const AdminReviews = lazy(() => import('./pages/Admin/Reviews/Reviews'))
 const AdminContacts = lazy(() => import('./pages/Admin/Contacts/Contacts'))
 const AdminAbout = lazy(() => import('./pages/Admin/About/About'))
 const AdminBookings = lazy(() => import('./pages/Admin/Bookings/Bookings'))
+const AdminClients = lazy(() => import('./pages/Admin/Clients/Clients'))
+const AdminClientHistory = lazy(() => import('./pages/Admin/Clients/ClientHistory'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -92,6 +94,16 @@ function App() {
         <Route path="bookings" element={
           <Suspense fallback={<PageLoader />}>
             <AdminBookings />
+          </Suspense>
+        } />
+        <Route path="clients" element={
+          <Suspense fallback={<PageLoader />}>
+            <AdminClients />
+          </Suspense>
+        } />
+        <Route path="clients/:clientId" element={
+          <Suspense fallback={<PageLoader />}>
+            <AdminClientHistory />
           </Suspense>
         } />
       </Route>

@@ -1,28 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import { bookingsService } from '../../../services/firebaseService'
+import { bookingsService, proceduresService } from '../../../services/firebaseService'
+import { Booking, BookingStatus } from '../../../types'
 import Card from '../../../components/common/Card/Card'
 import Button from '../../../components/common/Button/Button'
 import Select from '../../../components/common/Select/Select'
 import styles from './Bookings.module.css'
 
-interface Booking {
-  id: string
-  name: string
-  phone: string
-  email?: string
-  procedureId: string
-  procedureName: string
-  desiredDate: string
-  desiredTime: string
-  comment: string
-  status: 'new' | 'processed' | 'cancelled'
-  createdAt: Date
-}
-
 const Bookings: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
-  const [statusFilter, setStatusFilter] = useState<'all' | 'new' | 'processed' | 'cancelled'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | BookingStatus>('all')
 
   useEffect(() => {
     loadBookings()
@@ -34,8 +21,20 @@ const Bookings: React.FC = () => {
       const allBookings = await bookingsService.getAll()
       let filtered = allBookings as Booking[]
 
+      // Если у заявки нет procedureName, загружаем процедуры и добавляем название
+      const procedures = await proceduresService.getAll()
+      filtered = filtered.map((booking: Booking) => {
+        if (!booking.procedureName && booking.procedureId) {
+          const procedure = procedures.find((p) => p.id === booking.procedureId)
+          if (procedure) {
+            return { ...booking, procedureName: procedure.name }
+          }
+        }
+        return booking
+      })
+
       if (statusFilter !== 'all') {
-        filtered = allBookings.filter((b: Booking) => b.status === statusFilter) as Booking[]
+        filtered = filtered.filter((b: Booking) => b.status === statusFilter) as Booking[]
       }
 
       setBookings(filtered)
@@ -49,6 +48,15 @@ const Bookings: React.FC = () => {
   const handleStatusChange = async (id: string, newStatus: Booking['status']) => {
     try {
       await bookingsService.update(id, { status: newStatus })
+      
+      // Если статус изменен на 'completed', создаем запись в истории клиента
+      if (newStatus === 'completed') {
+        const booking = bookings.find((b) => b.id === id)
+        if (booking) {
+          await createServiceRecordFromBooking(booking)
+        }
+      }
+      
       await loadBookings()
     } catch (error) {
       console.error('Ошибка обновления статуса:', error)
@@ -56,10 +64,54 @@ const Bookings: React.FC = () => {
     }
   }
 
+  const createServiceRecordFromBooking = async (booking: Booking) => {
+    try {
+      const { clientsService, serviceRecordsService } = await import('../../../services/firebaseService')
+      
+      // Находим или создаем клиента
+      let client = await clientsService.getByPhone(booking.phone)
+      if (!client) {
+        const clientId = await clientsService.create({
+          phone: booking.phone,
+          name: booking.name,
+          email: booking.email,
+          totalVisits: 0,
+        })
+        client = await clientsService.get(clientId)
+      }
+
+      if (client) {
+        // Создаем запись об оказанной услуге
+        const serviceDate = new Date(booking.desiredDate)
+        await serviceRecordsService.create({
+          clientId: client.id,
+          clientPhone: booking.phone,
+          clientName: booking.name,
+          procedureId: booking.procedureId,
+          procedureName: booking.procedureName,
+          date: serviceDate,
+          notes: booking.comment || undefined,
+          bookingId: booking.id,
+        })
+
+        // Обновляем статистику клиента
+        const newTotalVisits = (client.totalVisits || 0) + 1
+        await clientsService.update(client.id, {
+          totalVisits: newTotalVisits,
+          lastVisit: serviceDate,
+        })
+      }
+    } catch (error) {
+      console.error('Ошибка создания записи об услуге:', error)
+      // Не показываем ошибку пользователю, так как заявка уже обновлена
+    }
+  }
+
   const statusOptions = [
     { value: 'all', label: 'Все заявки' },
     { value: 'new', label: 'Новые' },
-    { value: 'processed', label: 'Обработанные' },
+    { value: 'awaiting', label: 'Ожидание' },
+    { value: 'completed', label: 'Выполненные' },
     { value: 'cancelled', label: 'Отмененные' },
   ]
 
@@ -67,8 +119,10 @@ const Bookings: React.FC = () => {
     switch (status) {
       case 'new':
         return 'Новая'
-      case 'processed':
-        return 'Обработана'
+      case 'awaiting':
+        return 'Ожидание'
+      case 'completed':
+        return 'Выполнена'
       case 'cancelled':
         return 'Отменена'
       default:
@@ -80,8 +134,10 @@ const Bookings: React.FC = () => {
     switch (status) {
       case 'new':
         return styles.new
-      case 'processed':
-        return styles.processed
+      case 'awaiting':
+        return styles.awaiting || styles.processed
+      case 'completed':
+        return styles.completed
       case 'cancelled':
         return styles.cancelled
       default:
@@ -99,8 +155,9 @@ const Bookings: React.FC = () => {
         <h1 className={styles.title}>Заявки на запись</h1>
         <Select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as any)}
+          onChange={(e) => setStatusFilter(e.target.value as 'all' | BookingStatus)}
           options={statusOptions}
+          showDefaultOption={false}
         />
       </div>
 
@@ -162,9 +219,9 @@ const Bookings: React.FC = () => {
                   <>
                     <Button
                       size="small"
-                      onClick={() => handleStatusChange(booking.id, 'processed')}
+                      onClick={() => handleStatusChange(booking.id, 'awaiting')}
                     >
-                      Отметить обработанной
+                      В ожидание
                     </Button>
                     <Button
                       size="small"
@@ -175,10 +232,34 @@ const Bookings: React.FC = () => {
                     </Button>
                   </>
                 )}
-                {booking.status === 'processed' && (
+                {booking.status === 'awaiting' && (
+                  <>
+                    <Button
+                      size="small"
+                      onClick={() => handleStatusChange(booking.id, 'completed')}
+                    >
+                      Выполнена
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="secondary"
+                      onClick={() => handleStatusChange(booking.id, 'cancelled')}
+                    >
+                      Отменить
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outline"
+                      onClick={() => handleStatusChange(booking.id, 'new')}
+                    >
+                      Вернуть в новые
+                    </Button>
+                  </>
+                )}
+                {booking.status === 'completed' && (
                   <Button
                     size="small"
-                    variant="secondary"
+                    variant="outline"
                     onClick={() => handleStatusChange(booking.id, 'new')}
                   >
                     Вернуть в новые

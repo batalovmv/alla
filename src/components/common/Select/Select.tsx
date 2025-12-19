@@ -10,6 +10,7 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string
   error?: string
   options: SelectOption[]
+  showDefaultOption?: boolean // Показывать ли опцию "Выберите..." по умолчанию
 }
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
@@ -20,6 +21,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
   id,
   name: propName,
   value: propValue,
+  showDefaultOption = true,
   ...props
 }, ref) => {
   // Extract name, onChange, onBlur, value, and ref from props (they come from register via {...register('procedureId')})
@@ -74,7 +76,9 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
         onChange={handleChange}
         onBlur={handleBlur}
       >
-        <option value="">Выберите...</option>
+        {showDefaultOption && !selectValue && (
+          <option value="">Выберите...</option>
+        )}
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}

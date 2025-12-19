@@ -1,5 +1,5 @@
 import { Procedure, Review, BookingFormData } from '../types'
-import { proceduresService, reviewsService, bookingsService } from '../services/firebaseService'
+import { proceduresService, reviewsService, bookingsService, clientsService } from '../services/firebaseService'
 
 // Fallback на mock данные если Firebase не настроен
 const useFirebase = !!import.meta.env.VITE_FIREBASE_API_KEY
@@ -130,7 +130,38 @@ export const submitBooking = async (
 ): Promise<{ success: boolean; message: string }> => {
   if (useFirebase) {
     try {
-      await bookingsService.create(data)
+      // Получаем процедуру для добавления procedureName
+      const procedures = await proceduresService.getAll()
+      const procedure = procedures.find((p) => p.id === data.procedureId)
+      const procedureName = procedure?.name || 'Неизвестная процедура'
+
+      // Находим или создаем клиента по телефону
+      let client = await clientsService.getByPhone(data.phone)
+      if (!client) {
+        // Создаем нового клиента
+        const clientId = await clientsService.create({
+          phone: data.phone,
+          name: data.name,
+          email: data.email,
+          totalVisits: 0,
+        })
+        client = await clientsService.get(clientId)
+      } else {
+        // Обновляем информацию клиента, если она изменилась
+        const updateData: any = {}
+        if (client.name !== data.name) updateData.name = data.name
+        if (data.email && client.email !== data.email) updateData.email = data.email
+        if (Object.keys(updateData).length > 0) {
+          await clientsService.update(client.id, updateData)
+        }
+      }
+
+      // Создаем заявку с procedureName
+      await bookingsService.create({
+        ...data,
+        procedureName,
+      })
+
       return {
         success: true,
         message: 'Ваша заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.',
