@@ -12,6 +12,7 @@ interface ContactFormData {
   email: string
   address: string
   workingHours: string
+  mapEmbedUrl: string
   instagram: string
   vk: string
   telegram: string
@@ -44,6 +45,7 @@ const Contacts: React.FC = () => {
           email: data.email || CONTACT_INFO.email,
           address: data.address || CONTACT_INFO.address,
           workingHours: data.workingHours || CONTACT_INFO.workingHours,
+          mapEmbedUrl: data.mapEmbedUrl || '',
           instagram: data.socialMedia?.instagram || CONTACT_INFO.socialMedia.instagram,
           vk: data.socialMedia?.vk || CONTACT_INFO.socialMedia.vk,
           telegram: data.socialMedia?.telegram || CONTACT_INFO.socialMedia.telegram,
@@ -55,6 +57,7 @@ const Contacts: React.FC = () => {
           email: CONTACT_INFO.email,
           address: CONTACT_INFO.address,
           workingHours: CONTACT_INFO.workingHours,
+          mapEmbedUrl: '',
           instagram: CONTACT_INFO.socialMedia.instagram,
           vk: CONTACT_INFO.socialMedia.vk,
           telegram: CONTACT_INFO.socialMedia.telegram,
@@ -77,6 +80,7 @@ const Contacts: React.FC = () => {
         email: data.email,
         address: data.address,
         workingHours: data.workingHours,
+        mapEmbedUrl: data.mapEmbedUrl || '',
         socialMedia: {
           instagram: data.instagram,
           vk: data.vk,
@@ -131,6 +135,13 @@ const Contacts: React.FC = () => {
             label="Часы работы"
             {...register('workingHours', { required: 'Часы работы обязательны' })}
             error={errors.workingHours?.message}
+          />
+
+          <Input
+            label="Ссылка для встраивания карты (iframe src)"
+            type="url"
+            {...register('mapEmbedUrl')}
+            error={errors.mapEmbedUrl?.message}
           />
 
           <h3 className={styles.sectionTitle}>Социальные сети</h3>

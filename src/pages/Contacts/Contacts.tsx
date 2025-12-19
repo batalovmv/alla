@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useCallback } from 'react'
+import React, { useEffect, useMemo, useCallback, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
@@ -13,7 +13,8 @@ import { fetchProcedures } from '../../utils/api'
 import { submitBooking as submitBookingAPI } from '../../utils/api'
 import { isStale } from '../../utils/cache'
 import { CONTACT_INFO } from '../../config/constants'
-import { BookingFormData } from '../../types'
+import { getContactInfo } from '../../utils/contactInfo'
+import { BookingFormData, ContactInfo } from '../../types'
 import { validatePhone, validateEmail } from '../../utils/validation'
 import Card from '../../components/common/Card/Card'
 import Input from '../../components/common/Input/Input'
@@ -30,6 +31,10 @@ const Contacts: React.FC = () => {
   const { isSubmitting, success, error } = useAppSelector(
     (state) => state.booking
   )
+  const [contactInfo, setContactInfo] = useState<ContactInfo>({
+    ...CONTACT_INFO,
+    mapEmbedUrl: '',
+  })
 
   const {
     register,
@@ -85,6 +90,18 @@ const Contacts: React.FC = () => {
     }
   }, [success, reset, dispatch])
 
+  useEffect(() => {
+    let mounted = true
+    getContactInfo()
+      .then((ci) => {
+        if (mounted) setContactInfo(ci)
+      })
+      .catch(() => {})
+    return () => {
+      mounted = false
+    }
+  }, [])
+
   const procedureOptions = useMemo(
     () =>
       procedures.map((p) => ({
@@ -133,7 +150,8 @@ const Contacts: React.FC = () => {
     [dispatch]
   )
 
-  const mapEmbedUrl = (import.meta.env.VITE_MAP_EMBED_URL as string | undefined) || ''
+  const mapEmbedUrl =
+    contactInfo.mapEmbedUrl || (import.meta.env.VITE_MAP_EMBED_URL as string | undefined) || ''
 
   return (
     <>
@@ -152,58 +170,58 @@ const Contacts: React.FC = () => {
               <h2>Контактная информация</h2>
               <div className={styles.contactItem}>
                 <strong>Телефон:</strong>
-                <a href={`tel:${CONTACT_INFO.phone}`}>
-                  {CONTACT_INFO.phone}
+                <a href={`tel:${contactInfo.phone}`}>
+                  {contactInfo.phone}
                 </a>
               </div>
               <div className={styles.contactItem}>
                 <strong>Email:</strong>
-                <a href={`mailto:${CONTACT_INFO.email}`}>
-                  {CONTACT_INFO.email}
+                <a href={`mailto:${contactInfo.email}`}>
+                  {contactInfo.email}
                 </a>
               </div>
               <div className={styles.contactItem}>
                 <strong>Адрес:</strong>
-                <p>{CONTACT_INFO.address}</p>
+                <p>{contactInfo.address}</p>
               </div>
               <div className={styles.contactItem}>
                 <strong>Часы работы:</strong>
-                <p>{CONTACT_INFO.workingHours}</p>
+                <p>{contactInfo.workingHours}</p>
               </div>
 
               <div className={styles.social}>
                 <h3>Социальные сети</h3>
                 <div className={styles.socialLinks}>
-                  {CONTACT_INFO.socialMedia.instagram && (
+                  {contactInfo.socialMedia.instagram && (
                     <a
-                      href={CONTACT_INFO.socialMedia.instagram}
+                      href={contactInfo.socialMedia.instagram}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       Instagram
                     </a>
                   )}
-                  {CONTACT_INFO.socialMedia.vk && (
+                  {contactInfo.socialMedia.vk && (
                     <a
-                      href={CONTACT_INFO.socialMedia.vk}
+                      href={contactInfo.socialMedia.vk}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       VK
                     </a>
                   )}
-                  {CONTACT_INFO.socialMedia.telegram && (
+                  {contactInfo.socialMedia.telegram && (
                     <a
-                      href={CONTACT_INFO.socialMedia.telegram}
+                      href={contactInfo.socialMedia.telegram}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       Telegram
                     </a>
                   )}
-                  {CONTACT_INFO.socialMedia.whatsapp && (
+                  {contactInfo.socialMedia.whatsapp && (
                     <a
-                      href={CONTACT_INFO.socialMedia.whatsapp}
+                      href={contactInfo.socialMedia.whatsapp}
                       target="_blank"
                       rel="noopener noreferrer"
                     >

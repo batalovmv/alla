@@ -77,6 +77,22 @@ export interface Review {
   createdAt?: string
 }
 
+export interface ContactSocialMedia {
+  instagram: string
+  vk: string
+  telegram: string
+  whatsapp: string
+}
+
+export interface ContactInfo {
+  phone: string
+  email: string
+  address: string
+  workingHours: string
+  socialMedia: ContactSocialMedia
+  mapEmbedUrl: string
+}
+
 export interface ProceduresState {
   items: Procedure[]
   categories: string[]

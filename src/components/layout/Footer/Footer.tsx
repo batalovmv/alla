@@ -4,12 +4,18 @@ import { useAppSelector } from '../../../store/hooks'
 import { ROUTES } from '../../../config/routes'
 import { CONTACT_INFO } from '../../../config/constants'
 import { isAdminUid } from '../../../config/admin'
+import { ContactInfo } from '../../../types'
 import LoginModal from '../../auth/LoginModal/LoginModal'
 import styles from './Footer.module.css'
 
-const Footer: React.FC = () => {
+interface FooterProps {
+  contactInfo?: ContactInfo
+}
+
+const Footer: React.FC<FooterProps> = ({ contactInfo }) => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const { user } = useAppSelector((state) => state.auth)
+  const ci: ContactInfo = contactInfo || { ...CONTACT_INFO, mapEmbedUrl: '' }
 
   return (
     <footer className={styles.footer}>
@@ -34,19 +40,19 @@ const Footer: React.FC = () => {
           <div className={styles.section}>
             <h4>Контакты</h4>
             <div className={styles.contacts}>
-              <a href={`tel:${CONTACT_INFO.phone}`}>{CONTACT_INFO.phone}</a>
-              <a href={`mailto:${CONTACT_INFO.email}`}>{CONTACT_INFO.email}</a>
-              <p>{CONTACT_INFO.address}</p>
-              <p>{CONTACT_INFO.workingHours}</p>
+              <a href={`tel:${ci.phone}`}>{ci.phone}</a>
+              <a href={`mailto:${ci.email}`}>{ci.email}</a>
+              <p>{ci.address}</p>
+              <p>{ci.workingHours}</p>
             </div>
           </div>
 
           <div className={styles.section}>
             <h4>Социальные сети</h4>
             <div className={styles.social}>
-              {CONTACT_INFO.socialMedia.instagram && (
+              {ci.socialMedia.instagram && (
                 <a
-                  href={CONTACT_INFO.socialMedia.instagram}
+                  href={ci.socialMedia.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Instagram"
@@ -54,9 +60,9 @@ const Footer: React.FC = () => {
                   Instagram
                 </a>
               )}
-              {CONTACT_INFO.socialMedia.vk && (
+              {ci.socialMedia.vk && (
                 <a
-                  href={CONTACT_INFO.socialMedia.vk}
+                  href={ci.socialMedia.vk}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="VKontakte"
@@ -64,9 +70,9 @@ const Footer: React.FC = () => {
                   VK
                 </a>
               )}
-              {CONTACT_INFO.socialMedia.telegram && (
+              {ci.socialMedia.telegram && (
                 <a
-                  href={CONTACT_INFO.socialMedia.telegram}
+                  href={ci.socialMedia.telegram}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Telegram"
@@ -74,9 +80,9 @@ const Footer: React.FC = () => {
                   Telegram
                 </a>
               )}
-              {CONTACT_INFO.socialMedia.whatsapp && (
+              {ci.socialMedia.whatsapp && (
                 <a
-                  href={CONTACT_INFO.socialMedia.whatsapp}
+                  href={ci.socialMedia.whatsapp}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="WhatsApp"

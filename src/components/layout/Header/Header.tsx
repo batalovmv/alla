@@ -2,12 +2,18 @@ import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ROUTES } from '../../../config/routes'
 import { CONTACT_INFO } from '../../../config/constants'
+import { ContactInfo } from '../../../types'
 import Button from '../../common/Button/Button'
 import styles from './Header.module.css'
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  contactInfo?: ContactInfo
+}
+
+const Header: React.FC<HeaderProps> = ({ contactInfo }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
+  const ci: ContactInfo = contactInfo || { ...CONTACT_INFO, mapEmbedUrl: '' }
 
   const isActive = (path: string) => location.pathname === path
 
@@ -40,8 +46,8 @@ const Header: React.FC = () => {
         </nav>
 
         <div className={styles.actions}>
-          <a href={`tel:${CONTACT_INFO.phone}`} className={styles.phone}>
-            {CONTACT_INFO.phone}
+          <a href={`tel:${ci.phone}`} className={styles.phone}>
+            {ci.phone}
           </a>
           <Link to={ROUTES.CONTACTS}>
             <Button size="small">Записаться</Button>
