@@ -8,6 +8,9 @@
   /* Lux spa palette: dusty rose + champagne */
   --color-primary: #f29ab3;      /* dusty rose */
   --color-primary-2: #f7c1d0;    /* soft pink */
+  /* Strong accents (UI controls) */
+  --color-primary-strong: #e85f86;   /* deep rose (for buttons/CTAs) */
+  --color-primary-strong-2: #f29ab3; /* dusty rose */
   --color-accent: #d8b892;       /* champagne gold */
   --color-accent-2: #f3e7d6;     /* warm cream */
 
