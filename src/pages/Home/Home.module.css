@@ -3,7 +3,10 @@
 }
 
 .hero {
-  background: linear-gradient(135deg, #ffeef5 0%, #fff5f9 100%);
+  background:
+    radial-gradient(900px 420px at 20% 0%, rgba(255, 107, 157, 0.20), transparent 60%),
+    radial-gradient(900px 420px at 80% 0%, rgba(212, 165, 116, 0.18), transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.35));
   padding: 80px 20px;
   text-align: center;
 }
@@ -17,12 +20,12 @@
   font-size: 48px;
   font-weight: 700;
   margin: 0 0 24px;
-  color: #333;
+  color: var(--color-text);
   line-height: 1.2;
 }
 
 .heroSubtitle {
-  background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-2) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -30,7 +33,7 @@
 
 .heroDescription {
   font-size: 18px;
-  color: #666;
+  color: var(--color-text-light);
   margin: 0 0 32px;
   line-height: 1.6;
 }
@@ -56,7 +59,7 @@
   font-weight: 600;
   margin: 0 0 48px;
   text-align: center;
-  color: #333;
+  color: var(--color-text);
 }
 
 .proceduresGrid {
@@ -71,7 +74,7 @@
 }
 
 .aboutSection {
-  background: #f9f9f9;
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .aboutContent {
@@ -90,7 +93,7 @@
 .aboutText p {
   font-size: 16px;
   line-height: 1.6;
-  color: #666;
+  color: var(--color-text-light);
   margin: 0;
 }
 
@@ -101,12 +104,13 @@
 .imagePlaceholder {
   width: 100%;
   aspect-ratio: 1;
-  background: #e0e0e0;
+  background: radial-gradient(600px 400px at 30% 30%, rgba(255, 107, 157, 0.18), transparent 55%),
+    rgba(31, 41, 55, 0.06);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999;
+  color: rgba(31, 41, 55, 0.55);
   font-size: 18px;
 }
 
@@ -124,7 +128,7 @@
 .advantageIcon {
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-2) 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -138,17 +142,17 @@
 .advantageCard h3 {
   margin: 0 0 12px;
   font-size: 20px;
-  color: #333;
+  color: var(--color-text);
 }
 
 .advantageCard p {
   margin: 0;
-  color: #666;
+  color: var(--color-text-light);
   font-size: 14px;
 }
 
 .reviewsSection {
-  background: #f9f9f9;
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .reviewsHeader {
@@ -163,7 +167,7 @@
 .rating {
   margin: 8px 0 0;
   font-size: 18px;
-  color: #ff6b9d;
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -188,13 +192,13 @@
 .reviewHeader h4 {
   margin: 0 0 4px;
   font-size: 18px;
-  color: #333;
+  color: var(--color-text);
 }
 
 .reviewProcedure {
   margin: 0;
   font-size: 14px;
-  color: #666;
+  color: var(--color-text-light);
 }
 
 .reviewRating {
@@ -204,7 +208,7 @@
 
 .reviewText {
   margin: 0;
-  color: #666;
+  color: var(--color-text-light);
   line-height: 1.6;
   flex: 1;
 }
@@ -212,17 +216,19 @@
 .reviewDate {
   margin: 0;
   font-size: 12px;
-  color: #999;
+  color: rgba(31, 41, 55, 0.55);
 }
 
 .ctaSection {
-  background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+  background:
+    radial-gradient(1000px 400px at 20% 0%, rgba(255, 255, 255, 0.28), transparent 60%),
+    linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-2) 100%);
   padding: 80px 20px;
 }
 
 .ctaCard {
   text-align: center;
-  background: white;
+  background: rgba(255, 255, 255, 0.92);
   max-width: 600px;
   margin: 0 auto;
   padding: 48px;
@@ -231,13 +237,13 @@
 .ctaCard h2 {
   margin: 0 0 16px;
   font-size: 32px;
-  color: #333;
+  color: var(--color-text);
 }
 
 .ctaCard p {
   margin: 0 0 32px;
   font-size: 18px;
-  color: #666;
+  color: var(--color-text-light);
 }
 
 .ctaActions {

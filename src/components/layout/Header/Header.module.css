@@ -1,6 +1,7 @@
 .header {
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--color-border);
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -13,7 +14,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 80px;
+  height: 76px;
 }
 
 .logo {
@@ -23,9 +24,10 @@
 
 .logo h1 {
   margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: 0.2px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-2) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -46,11 +48,11 @@
 }
 
 .navLink:hover {
-  color: #ff6b9d;
+  color: var(--color-primary);
 }
 
 .navLink.active {
-  color: #ff6b9d;
+  color: var(--color-primary);
 }
 
 .navLink.active::after {
@@ -60,7 +62,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-2) 100%);
 }
 
 .actions {
@@ -71,13 +73,13 @@
 
 .phone {
   text-decoration: none;
-  color: #333;
+  color: var(--color-text);
   font-weight: 500;
   transition: color 0.3s ease;
 }
 
 .phone:hover {
-  color: #ff6b9d;
+  color: var(--color-primary);
 }
 
 .menuButton {
@@ -107,10 +109,11 @@
     top: 100%;
     left: 0;
     right: 0;
-    background: white;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
     flex-direction: column;
     padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid var(--color-border);
     transform: translateY(-100%);
     opacity: 0;
     pointer-events: none;
