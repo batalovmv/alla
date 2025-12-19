@@ -36,7 +36,6 @@ const Contacts: React.FC = () => {
     formState: { errors },
     reset,
     setValue,
-    watch,
     control,
   } = useForm<BookingFormData>({
     defaultValues: {
