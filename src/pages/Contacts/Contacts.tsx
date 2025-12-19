@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useCallback } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import {
@@ -37,6 +37,7 @@ const Contacts: React.FC = () => {
     reset,
     setValue,
     watch,
+    control,
   } = useForm<BookingFormData>({
     defaultValues: {
       consent: false,
@@ -61,18 +62,17 @@ const Contacts: React.FC = () => {
       // Проверяем, что процедура существует в списке
       const procedureExists = procedures.some((p) => p.id === procedureId)
       if (procedureExists) {
-        // Проверяем текущее значение через watch
-        const currentValue = watch('procedureId')
-        // Устанавливаем значение только если оно отличается от текущего
-        if (currentValue !== procedureId) {
+        // Устанавливаем значение с небольшой задержкой, чтобы убедиться, что DOM обновлен
+        const timer = setTimeout(() => {
           setValue('procedureId', procedureId, {
             shouldValidate: true,
             shouldDirty: true,
           })
-        }
+        }, 0)
+        return () => clearTimeout(timer)
       }
     }
-  }, [searchParams, procedures, setValue, watch])
+  }, [searchParams, procedures, setValue])
 
   useEffect(() => {
     if (success) {
@@ -250,13 +250,18 @@ const Contacts: React.FC = () => {
                   error={errors.email?.message}
                 />
 
-                <Select
-                  label="Процедура"
-                  options={procedureOptions}
-                  {...register('procedureId', {
-                    required: 'Выберите процедуру',
-                  })}
-                  error={errors.procedureId?.message}
+                <Controller
+                  name="procedureId"
+                  control={control}
+                  rules={{ required: 'Выберите процедуру' }}
+                  render={({ field }) => (
+                    <Select
+                      label="Процедура"
+                      options={procedureOptions}
+                      {...field}
+                      error={errors.procedureId?.message}
+                    />
+                  )}
                 />
 
                 <Input
