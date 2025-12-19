@@ -15,7 +15,7 @@ import {
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../config/firebase'
-import { Procedure, Review, BookingFormData, Client, ServiceRecord } from '../types'
+import { Procedure, Review, BookingFormData } from '../types'
 
 // Helper function to check if Firebase is initialized
 const checkFirebase = () => {
@@ -215,7 +215,7 @@ export const bookingsService = {
     }))
   },
 
-  async create(booking: BookingFormData): Promise<string> {
+  async create(booking: BookingFormData & { procedureName?: string }): Promise<string> {
     checkFirebase()
     const docRef = await addDoc(collection(db!, 'bookings'), {
       ...booking,
