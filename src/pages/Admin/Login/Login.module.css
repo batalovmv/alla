@@ -20,38 +20,6 @@
   border: 1px solid rgba(255, 255, 255, 0.55);
 }
 
-.heading {
-  margin: 0 0 0.5rem 0;
-  color: #111827;
-}
-
-.subheading {
-  margin: 0 0 1rem 0;
-  color: rgba(17, 24, 39, 0.72);
-  line-height: 1.45;
-}
-
-.notice {
-  margin: 0 0 1rem 0;
-  padding: 0.75rem;
-  border-radius: 12px;
-  background: rgba(17, 24, 39, 0.06);
-  color: rgba(17, 24, 39, 0.9);
-}
-
-.bootstrapBox {
-  display: grid;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-.bootstrapActions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  margin-top: 0.75rem;
-}
-
 @media (max-width: 480px) {
   .container {
     padding: 1rem;
@@ -59,10 +27,6 @@
 
   .panel {
     padding: 1rem;
-  }
-
-  .bootstrapActions {
-    grid-template-columns: 1fr;
   }
 }
 

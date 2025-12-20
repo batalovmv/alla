@@ -19,21 +19,32 @@ function isCallerAdmin(context: { auth?: { token?: Record<string, unknown> } } |
 }
 
 /**
- * Admin-only callable function: grants admin claim to another user.
+ * Callable function: grants admin claim to another user.
  *
- * Usage (from an already-admin signed-in client):
- *   httpsCallable(functions, 'grantAdmin')({ uid: '...' })
+ * Normal mode (default): only existing admins can grant.
+ * Bootstrap mode (temporary): allow ONLY self-grant when a valid secret is provided.
+ *
+ * Bootstrap call (from signed-in user, once):
+ *   httpsCallable(functions, 'grantAdmin')({ bootstrapSecret: '...' })
  */
-export const grantAdmin = onCall(async (request) => {
-  if (!isCallerAdmin({ auth: request.auth })) {
-    throw new HttpsError('permission-denied', 'Admin only.')
+export const grantAdmin = onCall({ secrets: [ADMIN_GRANT_SECRET] }, async (request) => {
+  const callerUid = request.auth?.uid || null
+  if (!callerUid) {
+    throw new HttpsError('unauthenticated', 'Sign in required.')
   }
 
-  const uid = String((request.data as unknown as { uid?: unknown })?.uid || '').trim()
-  if (!uid) throw new HttpsError('invalid-argument', 'uid is required.')
+  const data =
+    (request.data as unknown as { uid?: unknown; bootstrapSecret?: unknown }) || {}
+  const uid = String(data.uid ?? '').trim()
 
-  await admin.auth().setCustomUserClaims(uid, { admin: true })
-  return { ok: true }
+  // Normal path: only an existing admin can grant to any uid.
+  if (request.auth?.token?.admin === true) {
+    if (!uid) throw new HttpsError('invalid-argument', 'uid is required.')
+    await admin.auth().setCustomUserClaims(uid, { admin: true })
+    return { ok: true }
+  }
+
+  throw new HttpsError('permission-denied', 'Admin only.')
 })
 
 /**
