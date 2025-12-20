@@ -17,12 +17,15 @@ import Card from '../../components/common/Card/Card'
 import SEO from '../../components/common/SEO/SEO'
 import { useDelayedFlag } from '../../utils/useDelayedFlag'
 import { ProcedureCardSkeleton, ReviewCardSkeleton } from '../../components/common/Skeleton/SkeletonPresets'
-import { Reveal } from '../../components/common/Reveal/Reveal'
+import { Skeleton } from '../../components/common/Skeleton/Skeleton'
+import { LazyMount } from '../../components/common/LazyMount/LazyMount'
 import styles from './Home.module.css'
 
 const Home: React.FC = () => {
   const dispatch = useAppDispatch()
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null)
+  // Stage-based mounting: page “builds” as user scrolls.
+  const [stage, setStage] = useState(0)
   const { items: procedures, lastFetched: proceduresLastFetched, loading: proceduresLoading } = useAppSelector(
     (state) => state.procedures
   )
@@ -127,188 +130,255 @@ const Home: React.FC = () => {
           </div>
         </section>
 
-        {/* Popular Procedures */}
-        {showProceduresSkeleton ? (
-          <section className={styles.section}>
-            <div className={styles.container}>
-              <h2 className={styles.sectionTitle}>Популярные процедуры</h2>
-              <div className={styles.proceduresGrid}>
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <ProcedureCardSkeleton key={i} />
-                ))}
-              </div>
-            </div>
-          </section>
-        ) : popularProcedures.length > 0 ? (
-          <Reveal>
-            <section className={styles.section}>
-            <div className={styles.container}>
-              <h2 className={styles.sectionTitle}>Популярные процедуры</h2>
-              <div className={styles.proceduresGrid}>
-                {popularProcedures.map((procedure) => (
-                  <ProcedureCard key={procedure.id} procedure={procedure} />
-                ))}
-              </div>
-              <div className={styles.sectionAction}>
-                <Link to={ROUTES.PROCEDURES}>
-                  <Button variant="outline">Все процедуры</Button>
-                </Link>
-              </div>
-            </div>
-            </section>
-          </Reveal>
-        ) : null}
-
-        {/* About Section */}
-        <section className={`${styles.section} ${styles.aboutSection}`}>
-          <div className={styles.container}>
-            <div className={styles.aboutContent}>
-              <div className={styles.aboutText}>
-                <h2 className={styles.sectionTitle}>О специалисте</h2>
-                <p>
-                  Опытный косметолог с многолетним стажем работы. Постоянно
-                  повышаю квалификацию, посещаю семинары и мастер-классы ведущих
-                  специалистов индустрии красоты.
-                </p>
-                <p>
-                  Использую только сертифицированные препараты и современное
-                  оборудование. Индивидуальный подход к каждому клиенту и
-                  гарантия качества услуг.
-                </p>
-                <Link to={ROUTES.ABOUT}>
-                  <Button>Узнать больше</Button>
-                </Link>
-              </div>
-              <div className={styles.aboutImage}>
-                <div className={styles.imagePlaceholder}>
-                  <span>Фото специалиста</span>
+        {/* Popular Procedures (stage 0) */}
+        {stage >= 0 && (
+          <LazyMount
+            onEnter={() => setStage((s) => Math.max(s, 1))}
+            placeholder={
+              <section className={styles.section}>
+                <div className={styles.container}>
+                  <Skeleton variant="text" height={32} width={280} />
+                  <div style={{ marginTop: 24 }}>
+                    <Skeleton height={360} radius={16} />
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Advantages */}
-        <section className={styles.section}>
-          <div className={styles.container}>
-            <h2 className={styles.sectionTitle}>Почему выбирают нас</h2>
-            <div className={styles.advantagesGrid}>
-              <Card className={styles.advantageCard}>
-                <div className={styles.advantageIcon}>✓</div>
-                <h3>Опыт работы</h3>
-                <p>Более 10 лет успешной практики</p>
-              </Card>
-              <Card className={styles.advantageCard}>
-                <div className={styles.advantageIcon}>✓</div>
-                <h3>Сертификаты</h3>
-                <p>Регулярное повышение квалификации</p>
-              </Card>
-              <Card className={styles.advantageCard}>
-                <div className={styles.advantageIcon}>✓</div>
-                <h3>Индивидуальный подход</h3>
-                <p>Персональная программа для каждого клиента</p>
-              </Card>
-              <Card className={styles.advantageCard}>
-                <div className={styles.advantageIcon}>✓</div>
-                <h3>Современное оборудование</h3>
-                <p>Использование новейших технологий</p>
-              </Card>
-            </div>
-          </div>
-        </section>
-
-        {/* Reviews Preview */}
-        {showReviewsSkeleton ? (
-          <section className={`${styles.section} ${styles.reviewsSection}`}>
-            <div className={styles.container}>
-              <div className={styles.reviewsHeader}>
-                <div>
-                  <h2 className={styles.sectionTitle}>Отзывы клиентов</h2>
+              </section>
+            }
+          >
+            {showProceduresSkeleton ? (
+              <section className={styles.section}>
+                <div className={styles.container}>
+                  <h2 className={styles.sectionTitle}>Популярные процедуры</h2>
+                  <div className={styles.proceduresGrid}>
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <ProcedureCardSkeleton key={i} />
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className={styles.reviewsGrid}>
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <ReviewCardSkeleton key={i} />
-                ))}
-              </div>
-            </div>
-          </section>
-        ) : featuredReviews.length > 0 ? (
-          <Reveal>
-            <section className={`${styles.section} ${styles.reviewsSection}`}>
-            <div className={styles.container}>
-              <div className={styles.reviewsHeader}>
-                <div>
-                  <h2 className={styles.sectionTitle}>Отзывы клиентов</h2>
-                  {averageRating > 0 && (
-                    <p className={styles.rating}>
-                      Средняя оценка: {averageRating.toFixed(1)} ⭐
+              </section>
+            ) : popularProcedures.length > 0 ? (
+              <section className={styles.section}>
+                <div className={styles.container}>
+                  <h2 className={styles.sectionTitle}>Популярные процедуры</h2>
+                  <div className={styles.proceduresGrid}>
+                    {popularProcedures.map((procedure) => (
+                      <ProcedureCard key={procedure.id} procedure={procedure} />
+                    ))}
+                  </div>
+                  <div className={styles.sectionAction}>
+                    <Link to={ROUTES.PROCEDURES}>
+                      <Button variant="outline">Все процедуры</Button>
+                    </Link>
+                  </div>
+                </div>
+              </section>
+            ) : null}
+          </LazyMount>
+        )}
+
+        {/* About Section (stage 1) */}
+        {stage >= 1 && (
+          <LazyMount
+            onEnter={() => setStage((s) => Math.max(s, 2))}
+            placeholder={
+              <section className={`${styles.section} ${styles.aboutSection}`}>
+                <div className={styles.container}>
+                  <Skeleton variant="text" height={32} width={240} />
+                  <div style={{ marginTop: 24 }}>
+                    <Skeleton height={420} radius={16} />
+                  </div>
+                </div>
+              </section>
+            }
+          >
+            <section className={`${styles.section} ${styles.aboutSection}`}>
+              <div className={styles.container}>
+                <div className={styles.aboutContent}>
+                  <div className={styles.aboutText}>
+                    <h2 className={styles.sectionTitle}>О специалисте</h2>
+                    <p>
+                      Опытный косметолог с многолетним стажем работы. Постоянно
+                      повышаю квалификацию, посещаю семинары и мастер-классы ведущих
+                      специалистов индустрии красоты.
                     </p>
-                  )}
-                </div>
-                <Link to={ROUTES.REVIEWS}>
-                  <Button variant="outline">Все отзывы</Button>
-                </Link>
-              </div>
-              <div className={styles.reviewsGrid}>
-                {featuredReviews.map((review) => (
-                  <Card key={review.id} className={styles.reviewCard}>
-                    <div className={styles.reviewHeader}>
-                      <div>
-                        <h4>{review.clientName}</h4>
-                        <p className={styles.reviewProcedure}>
-                          {review.procedureName}
-                        </p>
-                      </div>
-                      <div className={styles.reviewRating}>
-                        {'⭐'.repeat(review.rating)}
-                      </div>
+                    <p>
+                      Использую только сертифицированные препараты и современное
+                      оборудование. Индивидуальный подход к каждому клиенту и
+                      гарантия качества услуг.
+                    </p>
+                    <Link to={ROUTES.ABOUT}>
+                      <Button>Узнать больше</Button>
+                    </Link>
+                  </div>
+                  <div className={styles.aboutImage}>
+                    <div className={styles.imagePlaceholder}>
+                      <span>Фото специалиста</span>
                     </div>
-                    <p className={styles.reviewText}>{review.text}</p>
-                    <p className={styles.reviewDate}>{review.date}</p>
-                  </Card>
-                ))}
+                  </div>
+                </div>
               </div>
-            </div>
             </section>
-          </Reveal>
-        ) : null}
+          </LazyMount>
+        )}
+
+        {/* Advantages (stage 2) */}
+        {stage >= 2 && (
+          <LazyMount
+            onEnter={() => setStage((s) => Math.max(s, 3))}
+            placeholder={
+              <section className={styles.section}>
+                <div className={styles.container}>
+                  <Skeleton variant="text" height={32} width={320} />
+                  <div style={{ marginTop: 24 }}>
+                    <Skeleton height={320} radius={16} />
+                  </div>
+                </div>
+              </section>
+            }
+          >
+            <section className={styles.section}>
+              <div className={styles.container}>
+                <h2 className={styles.sectionTitle}>Почему выбирают нас</h2>
+                <div className={styles.advantagesGrid}>
+                  <Card className={styles.advantageCard}>
+                    <div className={styles.advantageIcon}>✓</div>
+                    <h3>Опыт работы</h3>
+                    <p>Более 10 лет успешной практики</p>
+                  </Card>
+                  <Card className={styles.advantageCard}>
+                    <div className={styles.advantageIcon}>✓</div>
+                    <h3>Сертификаты</h3>
+                    <p>Регулярное повышение квалификации</p>
+                  </Card>
+                  <Card className={styles.advantageCard}>
+                    <div className={styles.advantageIcon}>✓</div>
+                    <h3>Индивидуальный подход</h3>
+                    <p>Персональная программа для каждого клиента</p>
+                  </Card>
+                  <Card className={styles.advantageCard}>
+                    <div className={styles.advantageIcon}>✓</div>
+                    <h3>Современное оборудование</h3>
+                    <p>Использование новейших технологий</p>
+                  </Card>
+                </div>
+              </div>
+            </section>
+          </LazyMount>
+        )}
+
+        {/* Reviews Preview (stage 3) */}
+        {stage >= 3 && (
+          <LazyMount
+            onEnter={() => setStage((s) => Math.max(s, 4))}
+            placeholder={
+              <section className={`${styles.section} ${styles.reviewsSection}`}>
+                <div className={styles.container}>
+                  <Skeleton variant="text" height={32} width={260} />
+                  <div style={{ marginTop: 24 }}>
+                    <Skeleton height={360} radius={16} />
+                  </div>
+                </div>
+              </section>
+            }
+          >
+            {showReviewsSkeleton ? (
+              <section className={`${styles.section} ${styles.reviewsSection}`}>
+                <div className={styles.container}>
+                  <div className={styles.reviewsHeader}>
+                    <div>
+                      <h2 className={styles.sectionTitle}>Отзывы клиентов</h2>
+                    </div>
+                  </div>
+                  <div className={styles.reviewsGrid}>
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <ReviewCardSkeleton key={i} />
+                    ))}
+                  </div>
+                </div>
+              </section>
+            ) : featuredReviews.length > 0 ? (
+              <section className={`${styles.section} ${styles.reviewsSection}`}>
+                <div className={styles.container}>
+                  <div className={styles.reviewsHeader}>
+                    <div>
+                      <h2 className={styles.sectionTitle}>Отзывы клиентов</h2>
+                      {averageRating > 0 && (
+                        <p className={styles.rating}>
+                          Средняя оценка: {averageRating.toFixed(1)} ⭐
+                        </p>
+                      )}
+                    </div>
+                    <Link to={ROUTES.REVIEWS}>
+                      <Button variant="outline">Все отзывы</Button>
+                    </Link>
+                  </div>
+                  <div className={styles.reviewsGrid}>
+                    {featuredReviews.map((review) => (
+                      <Card key={review.id} className={styles.reviewCard}>
+                        <div className={styles.reviewHeader}>
+                          <div>
+                            <h4>{review.clientName}</h4>
+                            <p className={styles.reviewProcedure}>{review.procedureName}</p>
+                          </div>
+                          <div className={styles.reviewRating}>{'⭐'.repeat(review.rating)}</div>
+                        </div>
+                        <p className={styles.reviewText}>{review.text}</p>
+                        <p className={styles.reviewDate}>{review.date}</p>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            ) : null}
+          </LazyMount>
+        )}
 
         {/* Contact CTA */}
-        <Reveal>
-          <section className={`${styles.section} ${styles.ctaSection}`}>
-            <div className={styles.container}>
-              <Card className={styles.ctaCard}>
-                <h2>Готовы начать?</h2>
-                <p>Запишитесь на консультацию и узнайте, как мы можем помочь</p>
-                <div className={styles.ctaActions}>
-                  <Link to={ROUTES.CONTACTS}>
-                    <Button size="large">Записаться</Button>
-                  </Link>
-                  <a href={`tel:${ci.phone}`}>
-                    <Button variant="outline" size="large">
-                      Позвонить
-                    </Button>
-                  </a>
-                  {whatsappHref && (
-                    <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline" size="large">
-                        WhatsApp
-                      </Button>
-                    </a>
-                  )}
-                  {telegramHref && (
-                    <a href={telegramHref} target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline" size="large">
-                        Telegram
-                      </Button>
-                    </a>
-                  )}
+        {/* Contact CTA (stage 4) */}
+        {stage >= 4 && (
+          <LazyMount
+            placeholder={
+              <section className={`${styles.section} ${styles.ctaSection}`}>
+                <div className={styles.container}>
+                  <Skeleton height={220} radius={16} />
                 </div>
-              </Card>
-            </div>
-          </section>
-        </Reveal>
+              </section>
+            }
+          >
+            <section className={`${styles.section} ${styles.ctaSection}`}>
+              <div className={styles.container}>
+                <Card className={styles.ctaCard}>
+                  <h2>Готовы начать?</h2>
+                  <p>Запишитесь на консультацию и узнайте, как мы можем помочь</p>
+                  <div className={styles.ctaActions}>
+                    <Link to={ROUTES.CONTACTS}>
+                      <Button size="large">Записаться</Button>
+                    </Link>
+                    <a href={`tel:${ci.phone}`}>
+                      <Button variant="outline" size="large">
+                        Позвонить
+                      </Button>
+                    </a>
+                    {whatsappHref && (
+                      <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="large">
+                          WhatsApp
+                        </Button>
+                      </a>
+                    )}
+                    {telegramHref && (
+                      <a href={telegramHref} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="large">
+                          Telegram
+                        </Button>
+                      </a>
+                    )}
+                  </div>
+                </Card>
+              </div>
+            </section>
+          </LazyMount>
+        )}
       </div>
     </>
   )

@@ -1,0 +1,30 @@
+.root {
+  width: 100%;
+}
+
+.content {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 420ms cubic-bezier(0.2, 0.75, 0.2, 1),
+    transform 520ms cubic-bezier(0.2, 0.75, 0.2, 1);
+  will-change: opacity, transform;
+}
+
+.contentVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content {
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
+  .contentVisible {
+    transform: none;
+  }
+}
+
+
