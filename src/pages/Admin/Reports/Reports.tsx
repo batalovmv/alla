@@ -9,7 +9,7 @@ import {
   reviewsService,
   serviceRecordsService,
 } from '../../../services/firebaseService'
-import { db } from '../../../config/firebase'
+import { auth, db } from '../../../config/firebase'
 import { deleteDoc, doc } from 'firebase/firestore'
 import {
   ResponsiveContainer,
@@ -45,6 +45,36 @@ type DemoSeed = {
 }
 
 const DEMO_SEED_KEY = 'akbeauty_demo_seed_v1'
+
+function formatDemoSeedError(e: unknown): string {
+  const anyErr = e as any
+  const code = typeof anyErr?.code === 'string' ? anyErr.code : ''
+  const msg = typeof anyErr?.message === 'string' ? anyErr.message : ''
+
+  const uid = auth?.currentUser?.uid
+
+  const header = 'Не удалось создать тестовые данные.'
+  const details = [
+    code ? `code: ${code}` : null,
+    msg ? `message: ${msg}` : null,
+    uid ? `UID: ${uid}` : null,
+  ].filter(Boolean)
+
+  // Most common root-cause for admin-only writes
+  if (code === 'permission-denied' || code === 'unauthenticated' || msg.toLowerCase().includes('insufficient permissions')) {
+    return (
+      `${header}\n\n` +
+      (details.length ? `${details.join('\n')}\n\n` : '') +
+      'Похоже, Firestore Rules не пускают запись.\n' +
+      'Проверь в Firebase Console → Firestore Database → Rules:\n' +
+      '- Замени "ADMIN_UID_1" на свой UID (или добавь UID в список)\n' +
+      '- Нажми Publish\n' +
+      'И убедись, что ты вошёл в админку под этим аккаунтом.'
+    )
+  }
+
+  return `${header}${details.length ? `\n\n${details.join('\n')}` : ''}`
+}
 
 function startOfMonth(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0)
@@ -141,6 +171,10 @@ const Reports: React.FC = () => {
     if (!db) {
       alert('Firebase не настроен. Заполните .env / secrets и задеплойте.' )
       throw new Error('Firebase not configured')
+    }
+    if (!auth?.currentUser) {
+      alert('Вы не авторизованы. Перезайдите в админку и попробуйте снова.')
+      throw new Error('Not authenticated')
     }
   }
 
@@ -318,7 +352,7 @@ const Reports: React.FC = () => {
       alert('Тестовые данные созданы.')
     } catch (e) {
       console.error(e)
-      alert('Ошибка создания тестовых данных')
+      alert(formatDemoSeedError(e))
     } finally {
       setSeeding(false)
     }
@@ -356,7 +390,7 @@ const Reports: React.FC = () => {
       alert('Тестовые данные удалены.')
     } catch (e) {
       console.error(e)
-      alert('Ошибка удаления тестовых данных')
+      alert(formatDemoSeedError(e))
     } finally {
       setSeeding(false)
     }
