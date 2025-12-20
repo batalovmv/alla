@@ -18,12 +18,13 @@ export const LazyMount: React.FC<LazyMountProps> = ({
   placeholder,
   children,
   className,
-  // Shrink the observer viewport to avoid “pre-triggering” everything at once on initial load.
-  // This makes sections mount only when user is actually approaching them.
-  rootMargin = '0px 0px -45% 0px',
+  // Strict rootMargin: only trigger when element is actually close to viewport.
+  // Negative bottom margin means element must be at least 50% visible from bottom.
+  rootMargin = '0px 0px -50% 0px',
   onEnter,
 }) => {
-  const { ref, inView } = useInView<HTMLDivElement>({ once: true, rootMargin })
+  // Use threshold > 0 so element must be at least 5% visible, not just 1px.
+  const { ref, inView } = useInView<HTMLDivElement>({ once: true, rootMargin, threshold: 0.05 })
   const [mounted, setMounted] = useState(false)
   const [animateIn, setAnimateIn] = useState(false)
   const [enteredOnce, setEnteredOnce] = useState(false)
