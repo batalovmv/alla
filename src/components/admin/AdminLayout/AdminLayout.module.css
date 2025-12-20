@@ -10,6 +10,17 @@
   margin-left: 250px;
 }
 
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 900;
+}
+
+.mobileToggle {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .adminLayout {
     flex-direction: column;
@@ -18,6 +29,34 @@
   .content {
     margin-left: 0;
     padding: 1rem;
+    padding-top: 3.25rem; /* room for the floating toggle */
+  }
+
+  .mobileToggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    left: 10px;
+    top: calc(10px + env(safe-area-inset-top, 0px));
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(44, 62, 80, 0.92);
+    color: #fff;
+    z-index: 1100; /* above sidebar */
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobileToggle:active {
+    transform: scale(0.98);
+  }
+
+  .mobileToggleIcon {
+    font-size: 18px;
+    line-height: 1;
   }
 }
 
