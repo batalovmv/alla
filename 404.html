@@ -4,31 +4,29 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Косметология</title>
-    <script>
-      // Single Page Apps for GitHub Pages
-      // https://github.com/rafgraph/spa-github-pages
-      (function (l) {
-        if (l.search[1] === '/' && l.search) {
-          var decoded = l.search
-            .slice(1)
-            .split('&')
-            .map(function (s) {
-              return s.replace(/~and~/g, '&')
-            })
-            .join('?')
-          window.history.replaceState(
-            null,
-            null,
-            l.pathname.slice(0, -1) + decoded + l.hash
-          )
-        }
-      })(window.location)
-    </script>
   </head>
   <body>
     <script>
-      // Redirect to index.html
-      window.location.replace('/alla/')
+      // Single Page Apps for GitHub Pages
+      // https://github.com/rafgraph/spa-github-pages
+      //
+      // We deploy under /alla/ (1 segment after domain), so segmentCount = 1.
+      // This redirects unknown routes (e.g. /alla/procedures) to /alla/?/procedures
+      // preserving query/hash, and index.html will restore the original route.
+      ;(function () {
+        var segmentCount = 1
+        var l = window.location
+        var base =
+          l.pathname
+            .split('/')
+            .slice(0, 1 + segmentCount)
+            .join('/') + '/'
+
+        var path = l.pathname.split('/').slice(1 + segmentCount).join('/')
+        var search = l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : ''
+        var target = base + '?/' + path + search + l.hash
+        window.location.replace(target)
+      })()
     </script>
   </body>
 </html>
