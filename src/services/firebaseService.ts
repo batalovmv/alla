@@ -151,7 +151,10 @@ export const reviewsService = {
     checkFirebase()
     const docRef = await addDoc(collection(db!, 'reviews'), {
       ...review,
-      createdAt: serverTimestamp(),
+      // IMPORTANT:
+      // Firestore rules validate `createdAt is timestamp` for public create.
+      // `serverTimestamp()` is a transform sentinel and can fail strict rules.
+      createdAt: Timestamp.now(),
     })
     return docRef.id
   },
@@ -175,7 +178,8 @@ export const reviewMetaService = {
       doc(db!, 'reviewMeta', reviewId),
       {
         phone: data.phone,
-        createdAt: serverTimestamp(),
+        // IMPORTANT: rules validate `createdAt is timestamp` on create
+        createdAt: Timestamp.now(),
       },
       { merge: true }
     )
@@ -255,7 +259,8 @@ export const bookingsService = {
       ...booking,
       comment: booking.comment || '',
       status: 'new',
-      createdAt: serverTimestamp(),
+      // IMPORTANT: rules validate `createdAt is timestamp` on create
+      createdAt: Timestamp.now(),
     })
     return docRef.id
   },
