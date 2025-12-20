@@ -59,120 +59,28 @@ npm run build
 
 ## Firebase: Auth / Firestore / Storage
 
-1. Откройте Firebase Console и выберите проект `alla-cosmetology` (или создайте свой).
+1. Создайте/выберите **свой** проект Firebase (не коммитьте и не публикуйте приватные данные проекта).
 2. Включите Email/Password в Authentication.
-3. Создайте пользователя администратора и сохраните его UID (понадобится для `VITE_ADMIN_UID(S)`).
-4. Включите Firestore Database (режим тестирования на старте) и Storage.
-5. Загрузите изображения процедур/о специалисте в Storage и настройте правила (см. ниже).
+3. Создайте пользователя администратора и добавьте его UID в allowlist через `VITE_ADMIN_UID` или `VITE_ADMIN_UIDS`.
+4. Включите Firestore Database и Storage.
+5. Примените правила безопасности:
+   - Firestore: `firebase.rules/firestore.rules`
+   - Storage: `firebase.rules/storage.rules`
 
-## Firestore Security Rules
+> Важно: этот репозиторий публичный. Не добавляйте в README/код реальные UID админов, реальные контакты клиентов, токены или любые приватные данные.
 
-Скопируйте/вставьте (замените `ADMIN_UID_1` на UID админа):
+### Firestore indexes
 
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    function isAdmin() {
-      return request.auth != null
-        && request.auth.uid in [
-          "ADMIN_UID_1"
-        ];
-    }
-
-    match /procedures/{procedureId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /reviews/{reviewId} {
-      allow read: if resource.data.approved == true || isAdmin();
-      allow create: if
-        request.resource.data.keys().hasOnly([
-          'clientName',
-          'procedureId',
-          'procedureName',
-          'rating',
-          'text',
-          'date',
-          'createdAt'
-        ])
-        && !request.resource.data.keys().hasAny(['approved']);
-      allow update, delete: if isAdmin();
-    }
-
-    match /reviewMeta/{reviewId} {
-      allow create: if request.resource.data.keys().hasOnly(['phone', 'createdAt']);
-      allow read, update, delete: if isAdmin();
-    }
-
-    match /bookings/{bookingId} {
-      allow create: if
-        request.resource.data.keys().hasOnly([
-          'name',
-          'phone',
-          'email',
-          'procedureId',
-          'desiredDate',
-          'desiredTime',
-          'comment',
-          'consent',
-          'procedureName',
-          'status',
-          'createdAt'
-        ])
-        && request.resource.data.consent == true
-        && request.resource.data.status == 'new'
-        && request.resource.data.createdAt is timestamp
-        && request.resource.data.createdAt >= request.time - duration.value(10, 'm');
-      allow read, update, delete: if isAdmin();
-    }
-
-    match /clients/{clientId} {
-      allow read, write: if isAdmin();
-    }
-
-    match /serviceRecords/{recordId} {
-      allow read, write: if isAdmin();
-    }
-
-    match /contactInfo/{document} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /aboutInfo/{document} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-  }
-}
-```
-
-## Firestore Indexes
-
-- При `The query requires an index` используйте ссылку из ошибки (`.../firestore/indexes?create_composite=...`) и создайте индекс.
-- Ручное создание (Firestore → Indexes):
-  - `serviceRecords` по `clientId` (Asc) + `date` (Desc)
-  - `serviceRecords` по `clientPhone` (Asc) + `date` (Desc)
+Если Firebase просит индекс (`The query requires an index`) — используйте ссылку из ошибки или создайте нужный composite index в Firebase Console (Firestore → Indexes).
 
 ## GitHub Secrets (CI/CD)
 
-Настройте эти секреты в `Settings → Secrets and variables → Actions` (значения из Firebase Console и `.env.local`):
+Workflow `.github/workflows/deploy.yml` передаёт переменные окружения в сборку.
 
-- `VITE_FIREBASE_API_KEY`
-- `VITE_FIREBASE_AUTH_DOMAIN`
-- `VITE_FIREBASE_PROJECT_ID`
-- `VITE_FIREBASE_STORAGE_BUCKET`
-- `VITE_FIREBASE_MESSAGING_SENDER_ID`
-- `VITE_FIREBASE_APP_ID`
-- `VITE_ADMIN_UID` или `VITE_ADMIN_UIDS`
-- `VITE_SITE_URL`, `VITE_SITE_NAME`, `VITE_SITE_DESCRIPTION`
-- `VITE_CONTACT_PHONE`, `VITE_CONTACT_EMAIL`, `VITE_CONTACT_ADDRESS`, `VITE_CONTACT_WORKING_HOURS`
-- `VITE_SOCIAL_INSTAGRAM`, `VITE_SOCIAL_VK`, `VITE_SOCIAL_TELEGRAM`, `VITE_SOCIAL_WHATSAPP`
-- `VITE_MAP_EMBED_URL`
+- Список поддерживаемых переменных: `env.local.template`
+- В GitHub: `Settings → Secrets and variables → Actions` → добавьте необходимые `VITE_*`
 
-GitHub Actions передаёт их в `npm run build`. Помните: `VITE_*` попадают в браузер, поэтому не храните в них приватные ключи (безопасность обеспечивает Firestore/Storage Rules и allowlist admin UID).
+> Помните: любые `VITE_*` **видны в браузере** (это часть фронтенда). Не храните в них приватные ключи/токены. Реальная защита — Firestore/Storage rules + allowlist админов.
 
 ## GitHub Pages (важно)
 
