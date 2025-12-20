@@ -7,6 +7,7 @@ import { isStale } from '../../utils/cache'
 import { ROUTES } from '../../config/routes'
 import { getContactInfo } from '../../utils/contactInfo'
 import { buildWhatsAppHref } from '../../utils/whatsapp'
+import { buildTelegramHref } from '../../utils/telegram'
 import { CONTACT_INFO, SITE_NAME } from '../../config/constants'
 import { ContactInfo } from '../../types'
 import Card from '../../components/common/Card/Card'
@@ -71,6 +72,10 @@ const ProcedureDetail: React.FC = () => {
     return buildWhatsAppHref({ whatsappPhone: ci.whatsappPhone, text })
   }, [ci.whatsappPhone, procedure.name])
 
+  const telegramHref = useMemo(() => {
+    return buildTelegramHref({ telegramLink: ci.socialMedia.telegram })
+  }, [ci.socialMedia.telegram])
+
   return (
     <>
       <SEO
@@ -130,6 +135,13 @@ const ProcedureDetail: React.FC = () => {
               <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
                 <Button variant="outline" size="large" className={styles.bookButton}>
                   WhatsApp
+                </Button>
+              </a>
+            )}
+            {telegramHref && (
+              <a href={telegramHref} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="large" className={styles.bookButton}>
+                  Telegram
                 </Button>
               </a>
             )}

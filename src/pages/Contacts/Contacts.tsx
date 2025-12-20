@@ -15,6 +15,7 @@ import { isStale } from '../../utils/cache'
 import { CONTACT_INFO } from '../../config/constants'
 import { getContactInfo } from '../../utils/contactInfo'
 import { buildWhatsAppHref } from '../../utils/whatsapp'
+import { buildTelegramHref } from '../../utils/telegram'
 import { BookingFormData, ContactInfo } from '../../types'
 import { validatePhone, validateEmail } from '../../utils/validation'
 import Card from '../../components/common/Card/Card'
@@ -127,6 +128,10 @@ const Contacts: React.FC = () => {
     return buildWhatsAppHref({ whatsappPhone: contactInfo.whatsappPhone, text })
   }, [contactInfo.whatsappEnabled, contactInfo.whatsappPhone, selectedProcedureName])
 
+  const telegramHref = useMemo(() => {
+    return buildTelegramHref({ telegramLink: contactInfo.socialMedia.telegram })
+  }, [contactInfo.socialMedia.telegram])
+
   const onSubmit = useCallback(
     async (data: BookingFormData) => {
       // Honeypot field: если бот заполнил скрытое поле — имитируем успех без записи в базу
@@ -194,6 +199,14 @@ const Contacts: React.FC = () => {
                   <strong>WhatsApp:</strong>
                   <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
                     Написать в WhatsApp
+                  </a>
+                </div>
+              )}
+              {telegramHref && (
+                <div className={styles.contactItem}>
+                  <strong>Telegram:</strong>
+                  <a href={telegramHref} target="_blank" rel="noopener noreferrer">
+                    Написать в Telegram
                   </a>
                 </div>
               )}
@@ -287,6 +300,15 @@ const Contacts: React.FC = () => {
                       <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
                         <Button variant="outline" size="small">
                           Написать в WhatsApp сейчас
+                        </Button>
+                      </a>
+                    </div>
+                  )}
+                  {telegramHref && (
+                    <div style={{ marginTop: 12 }}>
+                      <a href={telegramHref} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="small">
+                          Написать в Telegram сейчас
                         </Button>
                       </a>
                     </div>

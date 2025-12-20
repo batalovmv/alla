@@ -9,6 +9,7 @@ import { ROUTES } from '../../config/routes'
 import { CONTACT_INFO, SITE_NAME } from '../../config/constants'
 import { getContactInfo } from '../../utils/contactInfo'
 import { buildWhatsAppHref } from '../../utils/whatsapp'
+import { buildTelegramHref } from '../../utils/telegram'
 import { ContactInfo } from '../../types'
 import ProcedureCard from '../../components/procedures/ProcedureCard/ProcedureCard'
 import Button from '../../components/common/Button/Button'
@@ -69,6 +70,10 @@ const Home: React.FC = () => {
     const text = `Здравствуйте! Хочу записаться в ${SITE_NAME}.`
     return buildWhatsAppHref({ whatsappPhone: ci.whatsappPhone, text })
   }, [ci.whatsappPhone])
+
+  const telegramHref = useMemo(() => {
+    return buildTelegramHref({ telegramLink: ci.socialMedia.telegram })
+  }, [ci.socialMedia.telegram])
 
   return (
     <>
@@ -239,6 +244,13 @@ const Home: React.FC = () => {
                   <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
                     <Button variant="outline" size="large">
                       WhatsApp
+                    </Button>
+                  </a>
+                )}
+                {telegramHref && (
+                  <a href={telegramHref} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="large">
+                      Telegram
                     </Button>
                   </a>
                 )}
