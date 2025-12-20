@@ -1,250 +1,133 @@
-# Сайт косметолога
+# Сайт косметолога (SPA + админ‑панель)
 
-Современный сайт-визитка для косметолога на React + Redux с формой записи на процедуры.
+Сайт‑визитка косметолога: публичные страницы + админ‑панель для управления контентом.
+
+- **Публичная часть**: `/`, `/procedures`, `/procedures/:id`, `/about`, `/reviews`, `/contacts`, `/privacy`
+- **Админ‑панель**: `/admin/*` (требуется Firebase Auth)
+- **Деплой**: GitHub Pages (base path **`/alla/`**)
 
 ## Технологии
 
-- React 18 + TypeScript
-- Redux Toolkit для управления состоянием
-- React Router v6 для навигации
-- React Hook Form для работы с формами
-- Firebase (Authentication, Firestore, Storage) для админ-панели
-- Vite для сборки
-- CSS Modules для стилизации
-- GitHub Actions для CI/CD
-- gh-pages для деплоя
+- **React 18 + TypeScript (strict)**
+- **React Router DOM v6** + ленивые страницы через `React.lazy`
+- **Redux Toolkit** (slices: auth / procedures / booking / reviews)
+- **react-hook-form**
+- **Firebase** (Auth, Firestore, Storage) через `src/services/firebaseService.ts`
+- **Vite 5** (manual chunks в `vite.config.ts`)
+- **CSS Modules** + глобальные стили `src/assets/styles/index.css`
 
-## Функциональность
+## Что уже сделано (ключевые фичи)
 
-### Публичная часть сайта
+### Публичная часть
 
-- ✅ Главная страница с Hero-секцией и популярными процедурами
-- ✅ Каталог процедур с фильтрацией и поиском
-- ✅ Детальные страницы процедур
-- ✅ Форма записи на сеанс с валидацией
-- ✅ Страница "О специалисте"
-- ✅ Система реальных отзывов с формой добавления
-- ✅ Хранение отзывов в Firebase и localStorage (fallback)
-- ✅ Контакты с формой записи
-- ✅ SEO оптимизация (мета-теги, Schema.org, sitemap)
-- ✅ Адаптивный дизайн
-- ✅ Автодеплой на GitHub Pages через CI/CD
-- ✅ Оптимизация производительности (React.memo, code splitting, lazy loading)
+- **Каталог и карточки процедур** + страница детали процедуры
+- **Отзывы**: публичное создание, отображение только одобренных (при наличии Firebase)
+- **Контакты** + форма заявки (с валидацией, анти‑бот honeypot)
+- **SEO**: мета‑теги, OG/Twitter, `robots.txt`, `sitemap.xml`
+- **Fallback без Firebase**: публичная часть работает на mock‑данных (динамический import, не попадает в prod bundle) — `src/utils/api.ts`
 
-### Админ-панель
+### Админ‑панель
 
-- ✅ Авторизация через Firebase Authentication
-- ✅ Управление процедурами (CRUD операции)
-- ✅ Загрузка изображений процедур в Firebase Storage
-- ✅ Модерация отзывов (одобрение, отклонение, удаление)
-- ✅ Редактирование контактной информации
-- ✅ Редактирование информации "О специалисте" с загрузкой фото
-- ✅ Просмотр и управление заявками на запись
-- ✅ Дашборд со статистикой
+- **Логин** через Firebase Auth
+- **CRUD**: процедуры, контакты, “О специалисте”
+- **Модерация отзывов**
+- **Заявки / клиенты / история услуг / отчёты**
 
-## Установка
+### UX загрузок и производительность
+
+- **Без “white screens” при lazy‑чанках**: per‑route `Suspense` fallback с **skeleton + top progress bar** (`src/components/common/PageFallback`, `TopProgress`, `Skeleton`)
+- **Анти‑flicker** для микро‑загрузок: `useDelayedFlag`
+- **Prefetch** lazy‑страниц:
+  - по hover/focus в хедере (`src/components/layout/Header/Header.tsx`)
+  - консервативно в idle после смены маршрута (`src/utils/idleCallback.ts`, `src/utils/prefetchPages.ts`)
+- **Анимации появления**: `Reveal` (с уважением `prefers-reduced-motion`)
+- **Главная “строится при скролле”**: прогрессивный маунт секций `LazyMount`
+
+## Установка и запуск
 
 ```bash
 npm install
-```
-
-### Настройка Firebase (для админ-панели)
-
-**Для локальной разработки:**
-1. Создайте файл `.env.local` в корне проекта
-2. Скопируйте содержимое из `env.local.template` в `.env.local`
-3. Следуйте инструкциям в `QUICK_START.md` для настройки Firebase
-
-**Для CI/CD (GitHub Pages):**
-1. Настройте GitHub Secrets (см. `GITHUB_SECRETS_SETUP.md`)
-2. Настройте Firebase в консоли (см. `FIREBASE_SETUP.md`)
-3. После push изменения автоматически задеплоятся
-
-## Запуск в режиме разработки
-
-```bash
 npm run dev
 ```
 
-Приложение будет доступно по адресу `http://localhost:5173`
+Приложение: `http://localhost:5173`
 
-## Сборка для продакшена
+### Сборка / предпросмотр
 
 ```bash
 npm run build
+npm run preview
 ```
 
-Собранные файлы будут в папке `dist/`
+## Переменные окружения
 
-## Деплой на GitHub Pages
+- Локально: `.env.local` (скопировать из `env.local.template`)
+- В CI/CD: GitHub Secrets (см. `GITHUB_SECRETS_SETUP.md`)
 
-### Ручной деплой
+В `env.local.template` перечислены все поддерживаемые переменные (Firebase, контакты, соцсети, `VITE_MAP_EMBED_URL`, и т.д.).
 
-```bash
-npm run deploy
-```
+## GitHub Pages (важно)
 
-### Автоматический деплой
+- **base path**: `vite.config.ts` → `base: '/alla/'`
+- **Router basename**: `src/main.tsx` → `<BrowserRouter basename={import.meta.env.BASE_URL}>`
+- **Deep links на Pages**: `public/404.html` + скрипт в `index.html` (паттерн `rafgraph/spa-github-pages`)
 
-При каждом push в ветку `main` автоматически запускается GitHub Actions workflow, который собирает и деплоит сайт на GitHub Pages.
+## Деплой
 
-## Настройка контента
+- **Авто‑деплой**: `.github/workflows/deploy.yml` (запускается на `push` в `main`)
+- **Скрипты**:
+  - `npm run build`
+  - `npm run deploy` (локальный ручной деплой через `gh-pages`, обычно не нужен при CI)
 
-### Контактная информация
+## Управление контентом
 
-Отредактируйте файл `src/config/constants.ts`:
+- **Рекомендуется**: через админку `/admin/login`
+- **Fallback (без Firebase)**:
+  - процедуры/отзывы: `src/utils/mockData.ts` (подключается динамически из `src/utils/api.ts`)
+  - контакты: `src/config/constants.ts` (и/или env)
 
-```typescript
-export const CONTACT_INFO = {
-  phone: '+7 (XXX) XXX-XX-XX',
-  email: 'info@example.com',
-  address: 'г. [Название города], ул. [Название улицы], д. [Номер]',
-  // ...
-}
-```
-
-### Управление контентом
-
-**Через админ-панель (рекомендуется):**
-1. Войдите в админку по адресу `/admin/login`
-2. Используйте интерфейс для управления:
-   - Добавление и редактирование процедур
-   - Модерация отзывов
-   - Обновление контактной информации
-   - Редактирование информации "О специалисте"
-
-**Через код (fallback, если Firebase не настроен):**
-- Процедуры: `src/utils/api.ts` → `mockProcedures`
-- Отзывы: `src/utils/api.ts` → `mockReviews`
-- Контакты: `src/config/constants.ts` → `CONTACT_INFO`
-
-При наличии Firebase все данные хранятся в Firestore и автоматически синхронизируются.
-
-## Структура проекта
+## Структура проекта (кратко)
 
 ```
 src/
-  components/          # Переиспользуемые компоненты
-    common/           # UI компоненты (Button, Input, Card и т.д.)
-    layout/           # Header, Footer, Layout
-    procedures/       # Компоненты для процедур
-    reviews/          # Компоненты для отзывов
-    admin/            # Компоненты админ-панели
-      AdminLayout/    # Layout админки
-      AdminSidebar/   # Боковое меню
-      ImageUpload/    # Загрузка изображений
-    auth/             # Компоненты авторизации
-      LoginForm/      # Форма входа
-  pages/              # Страницы приложения
-    Home/             # Главная страница
-    Procedures/       # Каталог процедур
-    ProcedureDetail/  # Детальная страница процедуры
-    About/            # О специалисте
-    Reviews/          # Отзывы
-    Contacts/         # Контакты и форма записи
-    Admin/            # Страницы админ-панели
-      Login/          # Страница входа
-      Dashboard/      # Дашборд
-      Procedures/     # Управление процедурами
-      Reviews/        # Модерация отзывов
-      Contacts/       # Редактирование контактов
-      About/          # Редактирование "О специалисте"
-      Bookings/       # Просмотр заявок
-  store/              # Redux store
-    slices/           # Redux Toolkit slices
-      authSlice.ts    # Авторизация
-      proceduresSlice.ts
-      bookingSlice.ts
-      reviewsSlice.ts
-    hooks.ts          # Типизированные хуки
-  services/           # Сервисы
-    firebaseService.ts # Работа с Firebase
-  utils/              # Утилиты
-    api.ts            # API (Firebase + fallback на mock)
-    validation.ts     # Валидация форм
-    reviewsStorage.ts # Хранение отзывов в localStorage
-  assets/             # Статические ресурсы
-    styles/           # Глобальные стили
-  config/             # Конфигурация
-    routes.ts         # Маршруты
-    constants.ts      # Константы
-    firebase.ts       # Конфигурация Firebase
-  types/              # TypeScript типы
+  pages/                 # публичные страницы + Admin/*
+  components/            # UI, layout, admin, domain-компоненты
+  store/                 # Redux store + slices
+  services/              # firebaseService (единая точка работы с Firebase)
+  utils/                 # api (firebase + mock), prefetch, in-view, validation, etc.
+  config/                # routes, constants, firebase config
+  assets/styles/         # глобальные стили
 ```
-
-## SEO
-
-Сайт оптимизирован для поисковых систем:
-
-- Мета-теги для каждой страницы
-- Open Graph теги для социальных сетей
-- Schema.org разметка (LocalBusiness)
-- Sitemap.xml
-- Robots.txt
-- Semantic HTML
-
-## Адаптивность
-
-Сайт полностью адаптирован для всех устройств:
-- Desktop (1200px+)
-- Tablet (768px - 1199px)
-- Mobile (< 768px)
-
-## Оптимизации производительности
-
-- React.memo для компонентов
-- useMemo/useCallback для дорогих вычислений
-- Lazy loading изображений
-- Code splitting с React.lazy
-- Оптимизация Vite bundle (manual chunks)
-- Resource hints (preconnect, dns-prefetch)
-
-## Админ-панель
-
-Сайт включает админ-панель для управления контентом. Для работы админки требуется настройка Firebase.
-
-### Настройка для CI/CD (GitHub Pages)
-
-Если вы используете автоматический деплой через GitHub Actions:
-
-1. Настройте GitHub Secrets (см. `GITHUB_SECRETS_SETUP.md`)
-2. Настройте Firebase в консоли (см. `FIREBASE_SETUP.md`)
-3. После следующего push админка будет работать на GitHub Pages
-
-### Настройка для локальной разработки
-
-1. Создайте файл `.env.local` (см. `QUICK_START.md`)
-2. Настройте Firebase в консоли (см. `FIREBASE_SETUP.md`)
-3. Запустите `npm run dev`
-
-### Доступ к админке
-
-- URL: `/admin/login` (на GitHub Pages: `https://batalovmv.github.io/alla/admin/login`)
-- Войдите с email и паролем, созданными в Firebase Authentication
-
-### Функции админки
-
-- Управление процедурами (добавление, редактирование, удаление)
-- Модерация отзывов (одобрение, отклонение, удаление)
-- Редактирование контактной информации
-- Редактирование информации "О специалисте"
-- Просмотр и управление заявками на запись
 
 ## Документация
 
-- `QUICK_START.md` - Быстрый старт с Firebase
-- `FIREBASE_SETUP.md` - Подробная инструкция по настройке Firebase
-- `GITHUB_SECRETS_SETUP.md` - Настройка GitHub Secrets для CI/CD
-- `env.local.template` - Шаблон конфигурации Firebase
+- `QUICK_START.md` — быстрый старт
+- `FIREBASE_SETUP.md` — настройка Firebase (Auth/Firestore/Storage)
+- `FIRESTORE_RULES_SETUP.md` / `FIRESTORE_INDEXES_SETUP.md` — правила/индексы Firestore
+- `GITHUB_SECRETS_SETUP.md` — секреты для CI
+- `env.local.template` — список env‑переменных
 
-## Будущие улучшения
+## Roadmap (куда развивать дальше)
 
-- Интеграция с календарем для записи
-- Интеграция с Яндекс.Картами или Google Maps
-- Блог/статьи для SEO
-- Галерея работ (до/после)
-- Service Worker для PWA
-- Расширенная аналитика в админ-панели
+### UX/перф (приоритетно)
+
+- **Тонкая настройка `LazyMount`**: пер‑секционный `rootMargin` (например, 200–600px в зависимости от блока), чтобы “строилось” и при этом не было задержек
+- **Lighthouse/Perf budget**: добавить `Lighthouse CI`, бюджет по LCP/CLS/JS size
+- **Bundle analysis**: подключить `rollup-plugin-visualizer` в отдельный скрипт (без влияния на prod)
+- **Изображения**: WebP/AVIF, responsive `srcset`, preloading hero‑изображений, лимиты/сжатие при upload в админке
+
+### Качество и стабильность
+
+- **Error Boundary** на уровне страниц (чтобы не падало всё приложение)
+- **E2E** (Playwright) для критических сценариев: навигация, форма записи, логин админки
+- **Логи/мониторинг**: минимум — сбор ошибок (Sentry/LogRocket аналоги) + отключение PII
+
+### Продуктовые фичи
+
+- **Календарь записи** (слоты/расписание)
+- **Галерея работ “до/после”**
+- **Блог/статьи** (SEO‑контент)
+- **PWA** (service worker) — только после оценки рисков кеширования/обновлений
 
 ## Лицензия
 
