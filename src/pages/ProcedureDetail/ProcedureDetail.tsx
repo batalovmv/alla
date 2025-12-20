@@ -1,10 +1,14 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { setProcedures } from '../../store/slices/proceduresSlice'
 import { fetchProcedures } from '../../utils/api'
 import { isStale } from '../../utils/cache'
 import { ROUTES } from '../../config/routes'
+import { getContactInfo } from '../../utils/contactInfo'
+import { buildWhatsAppHref } from '../../utils/whatsapp'
+import { CONTACT_INFO, SITE_NAME } from '../../config/constants'
+import { ContactInfo } from '../../types'
 import Card from '../../components/common/Card/Card'
 import Button from '../../components/common/Button/Button'
 import ProcedureCard from '../../components/procedures/ProcedureCard/ProcedureCard'
@@ -15,6 +19,7 @@ const ProcedureDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const dispatch = useAppDispatch()
   const { items: procedures, lastFetched } = useAppSelector((state) => state.procedures)
+  const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null)
 
   useEffect(() => {
     const loadProcedures = async () => {
@@ -26,6 +31,18 @@ const ProcedureDetail: React.FC = () => {
       loadProcedures()
     }
   }, [dispatch, procedures.length, lastFetched])
+
+  useEffect(() => {
+    let mounted = true
+    getContactInfo()
+      .then((ci) => {
+        if (mounted) setContactInfo(ci)
+      })
+      .catch(() => {})
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const procedure = procedures.find((p) => p.id === id)
 
@@ -47,6 +64,12 @@ const ProcedureDetail: React.FC = () => {
       (p) => p.category === procedure.category && p.id !== procedure.id
     )
     .slice(0, 3)
+
+  const ci = contactInfo || { ...CONTACT_INFO, mapEmbedUrl: '', whatsappPhone: '' }
+  const whatsappHref = useMemo(() => {
+    const text = `Здравствуйте! Хочу записаться в ${SITE_NAME} на процедуру "${procedure.name}".`
+    return buildWhatsAppHref({ whatsappPhone: ci.whatsappPhone, text })
+  }, [ci.whatsappPhone, procedure.name])
 
   return (
     <>
@@ -103,6 +126,13 @@ const ProcedureDetail: React.FC = () => {
                 Записаться на процедуру
               </Button>
             </Link>
+            {whatsappHref && (
+              <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="large" className={styles.bookButton}>
+                  WhatsApp
+                </Button>
+              </a>
+            )}
           </div>
         </div>
 

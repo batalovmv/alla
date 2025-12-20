@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useCallback, useState } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, useWatch } from 'react-hook-form'
 import { useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import {
@@ -14,6 +14,7 @@ import { submitBooking as submitBookingAPI } from '../../utils/api'
 import { isStale } from '../../utils/cache'
 import { CONTACT_INFO } from '../../config/constants'
 import { getContactInfo } from '../../utils/contactInfo'
+import { buildWhatsAppHref } from '../../utils/whatsapp'
 import { BookingFormData, ContactInfo } from '../../types'
 import { validatePhone, validateEmail } from '../../utils/validation'
 import Card from '../../components/common/Card/Card'
@@ -34,6 +35,7 @@ const Contacts: React.FC = () => {
   const [contactInfo, setContactInfo] = useState<ContactInfo>({
     ...CONTACT_INFO,
     mapEmbedUrl: '',
+    whatsappPhone: '',
   })
 
   const {
@@ -48,6 +50,7 @@ const Contacts: React.FC = () => {
       consent: false,
     },
   })
+  const selectedProcedureId = useWatch({ control, name: 'procedureId' })
 
   const loadProcedures = useCallback(async () => {
     const data = await fetchProcedures()
@@ -111,6 +114,19 @@ const Contacts: React.FC = () => {
     [procedures]
   )
 
+  const selectedProcedureName = useMemo(() => {
+    if (!selectedProcedureId) return ''
+    const p = procedures.find((x) => x.id === selectedProcedureId)
+    return p?.name || ''
+  }, [procedures, selectedProcedureId])
+
+  const whatsappHref = useMemo(() => {
+    if (contactInfo.whatsappEnabled === false) return null
+    const base = 'Здравствуйте! Хочу записаться в A.K.beauty.'
+    const text = selectedProcedureName ? `${base} Процедура: "${selectedProcedureName}".` : base
+    return buildWhatsAppHref({ whatsappPhone: contactInfo.whatsappPhone, text })
+  }, [contactInfo.whatsappEnabled, contactInfo.whatsappPhone, selectedProcedureName])
+
   const onSubmit = useCallback(
     async (data: BookingFormData) => {
       // Honeypot field: если бот заполнил скрытое поле — имитируем успех без записи в базу
@@ -150,8 +166,7 @@ const Contacts: React.FC = () => {
     [dispatch]
   )
 
-  const mapEmbedUrl =
-    contactInfo.mapEmbedUrl || (import.meta.env.VITE_MAP_EMBED_URL as string | undefined) || ''
+  const mapEmbedUrl = contactInfo.mapEmbedUrl || ''
 
   return (
     <>
@@ -174,6 +189,14 @@ const Contacts: React.FC = () => {
                   {contactInfo.phone}
                 </a>
               </div>
+              {whatsappHref && (
+                <div className={styles.contactItem}>
+                  <strong>WhatsApp:</strong>
+                  <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
+                    Написать в WhatsApp
+                  </a>
+                </div>
+              )}
               <div className={styles.contactItem}>
                 <strong>Email:</strong>
                 <a href={`mailto:${contactInfo.email}`}>
@@ -259,6 +282,15 @@ const Contacts: React.FC = () => {
                 <div className={styles.successMessage}>
                   ✓ Ваша заявка успешно отправлена! Мы свяжемся с вами в
                   ближайшее время.
+                  {whatsappHref && (
+                    <div style={{ marginTop: 12 }}>
+                      <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="small">
+                          Написать в WhatsApp сейчас
+                        </Button>
+                      </a>
+                    </div>
+                  )}
                 </div>
               )}
               {error && (

@@ -4,6 +4,7 @@ import Footer from './Footer/Footer'
 import styles from './Layout.module.css'
 import { ContactInfo } from '../../types'
 import { getContactInfo } from '../../utils/contactInfo'
+import StickyActions from './StickyActions/StickyActions'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -29,6 +30,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <Header contactInfo={contactInfo || undefined} />
       <main className={styles.main}>{children}</main>
       <Footer contactInfo={contactInfo || undefined} />
+      {contactInfo && <StickyActions contactInfo={contactInfo} />}
     </div>
   )
 }

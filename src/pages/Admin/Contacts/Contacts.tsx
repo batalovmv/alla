@@ -9,6 +9,7 @@ import styles from './Contacts.module.css'
 
 interface ContactFormData {
   phone: string
+  whatsappPhone: string
   email: string
   address: string
   workingHours: string
@@ -42,6 +43,7 @@ const Contacts: React.FC = () => {
       if (data) {
         reset({
           phone: data.phone || CONTACT_INFO.phone,
+          whatsappPhone: data.whatsappPhone || '',
           email: data.email || CONTACT_INFO.email,
           address: data.address || CONTACT_INFO.address,
           workingHours: data.workingHours || CONTACT_INFO.workingHours,
@@ -54,6 +56,7 @@ const Contacts: React.FC = () => {
       } else {
         reset({
           phone: CONTACT_INFO.phone,
+          whatsappPhone: '',
           email: CONTACT_INFO.email,
           address: CONTACT_INFO.address,
           workingHours: CONTACT_INFO.workingHours,
@@ -77,6 +80,7 @@ const Contacts: React.FC = () => {
     try {
       await contactInfoService.update({
         phone: data.phone,
+        whatsappPhone: String(data.whatsappPhone || '').replace(/\D/g, ''),
         email: data.email,
         address: data.address,
         workingHours: data.workingHours,
@@ -116,6 +120,21 @@ const Contacts: React.FC = () => {
             label="Телефон"
             {...register('phone', { required: 'Телефон обязателен' })}
             error={errors.phone?.message}
+          />
+
+          <Input
+            label="WhatsApp номер (для wa.me, формат 7700..., без + и пробелов)"
+            {...register('whatsappPhone', {
+              validate: (value) => {
+                if (!value) return true
+                const digits = String(value).replace(/\D/g, '')
+                // KZ обычно 11 цифр: 7 + 10
+                if (digits.length !== 11) return 'Введите номер из 11 цифр (например 77001234567)'
+                if (!digits.startsWith('7')) return 'Номер должен начинаться с 7'
+                return true
+              },
+            })}
+            error={errors.whatsappPhone?.message}
           />
 
           <Input

@@ -12,6 +12,7 @@ function normalize(raw: any | null | undefined): ContactInfo {
   const social = raw?.socialMedia || {}
   return {
     phone: raw?.phone || CONTACT_INFO.phone,
+    whatsappPhone: raw?.whatsappPhone || '',
     email: raw?.email || CONTACT_INFO.email,
     address: raw?.address || CONTACT_INFO.address,
     workingHours: raw?.workingHours || CONTACT_INFO.workingHours,
@@ -22,6 +23,7 @@ function normalize(raw: any | null | undefined): ContactInfo {
       whatsapp: social.whatsapp || CONTACT_INFO.socialMedia.whatsapp || '',
     },
     mapEmbedUrl: raw?.mapEmbedUrl || '',
+    whatsappEnabled: raw?.whatsappEnabled !== false,
   }
 }
 

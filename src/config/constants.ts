@@ -12,7 +12,7 @@ export const CONTACT_INFO = {
   },
 }
 
-export const SITE_NAME = (import.meta.env.VITE_SITE_NAME as string | undefined) || 'Косметология'
+export const SITE_NAME = (import.meta.env.VITE_SITE_NAME as string | undefined) || 'A.K.beauty'
 export const SITE_DESCRIPTION =
   (import.meta.env.VITE_SITE_DESCRIPTION as string | undefined) ||
   'Профессиональные косметологические процедуры'

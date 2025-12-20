@@ -1,0 +1,36 @@
+.wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 12px;
+  z-index: 1100;
+  pointer-events: none;
+}
+
+.bar {
+  width: min(720px, calc(100% - 0px));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 10px;
+  box-shadow: var(--shadow-soft);
+  pointer-events: all;
+}
+
+.link {
+  text-decoration: none;
+}
+
+@media (min-width: 769px) {
+  .wrap {
+    display: none;
+  }
+}
+
+

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ROUTES } from '../../../config/routes'
-import { CONTACT_INFO } from '../../../config/constants'
+import { CONTACT_INFO, SITE_NAME } from '../../../config/constants'
 import { ContactInfo } from '../../../types'
 import Button from '../../common/Button/Button'
 import styles from './Header.module.css'
@@ -13,7 +13,8 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ contactInfo }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
-  const ci: ContactInfo = contactInfo || { ...CONTACT_INFO, mapEmbedUrl: '' }
+  const ci: ContactInfo =
+    contactInfo || { ...CONTACT_INFO, mapEmbedUrl: '', whatsappPhone: '' }
 
   const isActive = (path: string) => location.pathname === path
 
@@ -29,7 +30,7 @@ const Header: React.FC<HeaderProps> = ({ contactInfo }) => {
     <header className={styles.header}>
       <div className={styles.container}>
         <Link to={ROUTES.HOME} className={styles.logo}>
-          <h1>Косметология</h1>
+          <h1>{SITE_NAME}</h1>
         </Link>
 
         <nav className={`${styles.nav} ${isMenuOpen ? styles.navOpen : ''}`}>

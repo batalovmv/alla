@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppSelector } from '../../../store/hooks'
 import { ROUTES } from '../../../config/routes'
-import { CONTACT_INFO } from '../../../config/constants'
+import { CONTACT_INFO, SITE_NAME, SITE_DESCRIPTION } from '../../../config/constants'
 import { isAdminUid } from '../../../config/admin'
 import { ContactInfo } from '../../../types'
 import LoginModal from '../../auth/LoginModal/LoginModal'
@@ -15,15 +15,16 @@ interface FooterProps {
 const Footer: React.FC<FooterProps> = ({ contactInfo }) => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const { user } = useAppSelector((state) => state.auth)
-  const ci: ContactInfo = contactInfo || { ...CONTACT_INFO, mapEmbedUrl: '' }
+  const ci: ContactInfo =
+    contactInfo || { ...CONTACT_INFO, mapEmbedUrl: '', whatsappPhone: '' }
 
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
         <div className={styles.content}>
           <div className={styles.section}>
-            <h3>Косметология</h3>
-            <p>Профессиональные косметологические процедуры</p>
+            <h3>{SITE_NAME}</h3>
+            <p>{SITE_DESCRIPTION}</p>
           </div>
 
           <div className={styles.section}>
@@ -95,7 +96,7 @@ const Footer: React.FC<FooterProps> = ({ contactInfo }) => {
         </div>
 
         <div className={styles.copyright}>
-          <p>&copy; {new Date().getFullYear()} Косметология. Все права защищены.</p>
+          <p>&copy; {new Date().getFullYear()} {SITE_NAME}. Все права защищены.</p>
           <Link to={ROUTES.PRIVACY} className={styles.adminLink}>
             Политика конфиденциальности
           </Link>

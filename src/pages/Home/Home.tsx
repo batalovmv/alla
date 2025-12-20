@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useCallback } from 'react'
+import React, { useEffect, useMemo, useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { setProcedures } from '../../store/slices/proceduresSlice'
@@ -6,7 +6,10 @@ import { setReviews } from '../../store/slices/reviewsSlice'
 import { fetchProcedures, fetchReviews } from '../../utils/api'
 import { isStale } from '../../utils/cache'
 import { ROUTES } from '../../config/routes'
-import { CONTACT_INFO } from '../../config/constants'
+import { CONTACT_INFO, SITE_NAME } from '../../config/constants'
+import { getContactInfo } from '../../utils/contactInfo'
+import { buildWhatsAppHref } from '../../utils/whatsapp'
+import { ContactInfo } from '../../types'
 import ProcedureCard from '../../components/procedures/ProcedureCard/ProcedureCard'
 import Button from '../../components/common/Button/Button'
 import Card from '../../components/common/Card/Card'
@@ -15,6 +18,7 @@ import styles from './Home.module.css'
 
 const Home: React.FC = () => {
   const dispatch = useAppDispatch()
+  const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null)
   const { items: procedures, lastFetched: proceduresLastFetched } = useAppSelector(
     (state) => state.procedures
   )
@@ -41,12 +45,30 @@ const Home: React.FC = () => {
     loadData()
   }, [loadData])
 
+  useEffect(() => {
+    let mounted = true
+    getContactInfo()
+      .then((ci) => {
+        if (mounted) setContactInfo(ci)
+      })
+      .catch(() => {})
+    return () => {
+      mounted = false
+    }
+  }, [])
+
   const popularProcedures = useMemo(
     () => procedures.filter((p) => p.popular).slice(0, 4),
     [procedures]
   )
 
   const featuredReviews = useMemo(() => reviews.slice(0, 3), [reviews])
+  const ci = contactInfo || { ...CONTACT_INFO, mapEmbedUrl: '', whatsappPhone: '' }
+
+  const whatsappHref = useMemo(() => {
+    const text = `Здравствуйте! Хочу записаться в ${SITE_NAME}.`
+    return buildWhatsAppHref({ whatsappPhone: ci.whatsappPhone, text })
+  }, [ci.whatsappPhone])
 
   return (
     <>
@@ -208,11 +230,18 @@ const Home: React.FC = () => {
                 <Link to={ROUTES.CONTACTS}>
                   <Button size="large">Записаться</Button>
                 </Link>
-                <a href={`tel:${CONTACT_INFO.phone}`}>
+                <a href={`tel:${ci.phone}`}>
                   <Button variant="outline" size="large">
-                    {CONTACT_INFO.phone}
+                    Позвонить
                   </Button>
                 </a>
+                {whatsappHref && (
+                  <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="large">
+                      WhatsApp
+                    </Button>
+                  </a>
+                )}
               </div>
             </Card>
           </div>

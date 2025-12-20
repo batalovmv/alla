@@ -86,11 +86,14 @@ export interface ContactSocialMedia {
 
 export interface ContactInfo {
   phone: string
+  // For wa.me links: digits only, e.g. 77001234567 (no +, spaces, brackets)
+  whatsappPhone: string
   email: string
   address: string
   workingHours: string
   socialMedia: ContactSocialMedia
   mapEmbedUrl: string
+  whatsappEnabled?: boolean
 }
 
 export interface ProceduresState {
