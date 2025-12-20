@@ -23,6 +23,7 @@ const AdminAbout = lazy(() => import('./pages/Admin/About/About'))
 const AdminBookings = lazy(() => import('./pages/Admin/Bookings/Bookings'))
 const AdminClients = lazy(() => import('./pages/Admin/Clients/Clients'))
 const AdminClientHistory = lazy(() => import('./pages/Admin/Clients/ClientHistory'))
+const AdminReports = lazy(() => import('./pages/Admin/Reports/Reports'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -106,6 +107,11 @@ function App() {
         <Route path="clients/:clientId" element={
           <Suspense fallback={<PageLoader />}>
             <AdminClientHistory />
+          </Suspense>
+        } />
+        <Route path="reports" element={
+          <Suspense fallback={<PageLoader />}>
+            <AdminReports />
           </Suspense>
         } />
       </Route>

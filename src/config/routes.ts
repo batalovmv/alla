@@ -15,6 +15,7 @@ export const ROUTES = {
   ADMIN_ABOUT: '/admin/about',
   ADMIN_BOOKINGS: '/admin/bookings',
   ADMIN_CLIENTS: '/admin/clients',
+  ADMIN_REPORTS: '/admin/reports',
   ADMIN_CLIENT_HISTORY: (clientId: string) => `/admin/clients/${clientId}`,
 } as const
 

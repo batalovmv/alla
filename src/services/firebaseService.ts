@@ -372,6 +372,25 @@ export const serviceRecordsService = {
     }))
   },
 
+  async getByDateRange(start: Date, end: Date): Promise<any[]> {
+    checkFirebase()
+    const startTs = Timestamp.fromDate(start)
+    const endTs = Timestamp.fromDate(end)
+    const q = query(
+      collection(db!, 'serviceRecords'),
+      where('date', '>=', startTs),
+      where('date', '<', endTs),
+      orderBy('date', 'asc')
+    )
+    const querySnapshot = await getDocs(q)
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      date: doc.data().date?.toDate(),
+      createdAt: doc.data().createdAt?.toDate(),
+    }))
+  },
+
   async create(record: any): Promise<string> {
     checkFirebase()
     const docRef = await addDoc(collection(db!, 'serviceRecords'), {

@@ -70,6 +70,8 @@ const Bookings: React.FC = () => {
   const createServiceRecordFromBooking = async (booking: Booking) => {
     try {
       const { clientsService, serviceRecordsService } = await import('../../../services/firebaseService')
+      const procedures = await proceduresService.getAll()
+      const procedure = procedures.find((p) => p.id === booking.procedureId)
       
       // Находим или создаем клиента
       let client = await clientsService.getByPhone(booking.phone)
@@ -93,6 +95,8 @@ const Bookings: React.FC = () => {
           procedureId: booking.procedureId,
           procedureName: booking.procedureName,
           date: serviceDate,
+          // Фиксируем цену на момент выполнения (для отчётов)
+          price: procedure?.price ?? 0,
           notes: booking.comment || undefined,
           bookingId: booking.id,
         })

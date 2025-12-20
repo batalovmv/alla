@@ -83,7 +83,8 @@ const ClientHistory: React.FC = () => {
         procedureId: procedure.id,
         procedureName: procedure.name,
         date: serviceDate,
-        price: data.price ? parseFloat(data.price) : undefined,
+        // Фиксируем цену в записи услуги (для отчётов), если админ не указал вручную — берём текущую цену процедуры
+        price: data.price ? parseFloat(data.price) : procedure.price,
         notes: data.notes || undefined,
       })
 
