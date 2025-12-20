@@ -293,7 +293,7 @@ const Contacts: React.FC = () => {
                   <div className={styles.mapPlaceholder}>
                     <p>Карта местоположения</p>
                     <p className={styles.mapNote}>
-                      Укажите VITE_MAP_EMBED_URL в .env.local, чтобы встроить карту
+                      Укажите VITE_MAP_EMBED_URL в .env.local (или заполните ссылку в админке → Контакты), чтобы встроить карту
                     </p>
                   </div>
                 )}

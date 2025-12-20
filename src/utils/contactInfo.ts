@@ -11,6 +11,7 @@ let inflight: Promise<ContactInfo> | null = null
 
 function normalize(raw: any | null | undefined): ContactInfo {
   const social = raw?.socialMedia || {}
+  const envMapEmbedUrl = safeIframeSrc(import.meta.env.VITE_MAP_EMBED_URL || '')
   return {
     phone: raw?.phone || CONTACT_INFO.phone,
     whatsappPhone: raw?.whatsappPhone || '',
@@ -23,7 +24,8 @@ function normalize(raw: any | null | undefined): ContactInfo {
       telegram: social.telegram || CONTACT_INFO.socialMedia.telegram || '',
       whatsapp: safeHttpUrl(social.whatsapp || CONTACT_INFO.socialMedia.whatsapp || ''),
     },
-    mapEmbedUrl: safeIframeSrc(raw?.mapEmbedUrl || ''),
+    // Priority: Firestore value (admin-managed) -> env fallback (for no-Firebase / initial setup)
+    mapEmbedUrl: safeIframeSrc(raw?.mapEmbedUrl || '') || envMapEmbedUrl,
     whatsappEnabled: raw?.whatsappEnabled !== false,
   }
 }
