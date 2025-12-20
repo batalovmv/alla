@@ -45,6 +45,9 @@ type DemoSeed = {
 }
 
 const DEMO_SEED_KEY = 'akbeauty_demo_seed_v1'
+const DEMO_SEED_ENABLED =
+  (import.meta.env.VITE_ENABLE_DEMO_SEED as string | undefined) === 'true' &&
+  import.meta.env.DEV
 
 function formatDemoSeedError(e: unknown): string {
   const anyErr = e as any
@@ -501,9 +504,11 @@ const Reports: React.FC = () => {
         <div>
           <h1 className={styles.title}>Отчёты</h1>
           <p className={styles.subtitle}>Выручка считается по факту выполнено.</p>
-          <div className={styles.seedNote}>
-            Для демонстрации можно создать тестовые данные (заявки, отзывы и услуги). Их можно удалить одним кликом.
-          </div>
+          {DEMO_SEED_ENABLED && (
+            <div className={styles.seedNote}>
+              Для демонстрации можно создать тестовые данные (заявки, отзывы и услуги). Их можно удалить одним кликом.
+            </div>
+          )}
         </div>
         <div className={styles.controls}>
           <label className={styles.control}>
@@ -518,15 +523,16 @@ const Reports: React.FC = () => {
           <Button onClick={handleCsvExport} disabled={records.length === 0}>
             Скачать CSV
           </Button>
-          {!seedInfo ? (
-            <Button onClick={seedDemoData} disabled={seeding} variant="outline">
-              Создать тестовые данные
-            </Button>
-          ) : (
-            <Button onClick={deleteDemoData} disabled={seeding} variant="secondary">
-              Удалить тестовые данные
-            </Button>
-          )}
+          {DEMO_SEED_ENABLED &&
+            (!seedInfo ? (
+              <Button onClick={seedDemoData} disabled={seeding} variant="outline">
+                Создать тестовые данные
+              </Button>
+            ) : (
+              <Button onClick={deleteDemoData} disabled={seeding} variant="secondary">
+                Удалить тестовые данные
+              </Button>
+            ))}
         </div>
       </div>
 

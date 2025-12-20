@@ -1,6 +1,7 @@
 import { CONTACT_INFO } from '../config/constants'
 import { contactInfoService } from '../services/firebaseService'
 import { ContactInfo } from '../types'
+import { safeHttpUrl, safeIframeSrc } from './url'
 
 const useFirebase =
   !!import.meta.env.VITE_FIREBASE_API_KEY && !!import.meta.env.VITE_FIREBASE_PROJECT_ID
@@ -17,12 +18,12 @@ function normalize(raw: any | null | undefined): ContactInfo {
     address: raw?.address || CONTACT_INFO.address,
     workingHours: raw?.workingHours || CONTACT_INFO.workingHours,
     socialMedia: {
-      instagram: social.instagram || CONTACT_INFO.socialMedia.instagram || '',
-      vk: social.vk || CONTACT_INFO.socialMedia.vk || '',
+      instagram: safeHttpUrl(social.instagram || CONTACT_INFO.socialMedia.instagram || ''),
+      vk: safeHttpUrl(social.vk || CONTACT_INFO.socialMedia.vk || ''),
       telegram: social.telegram || CONTACT_INFO.socialMedia.telegram || '',
-      whatsapp: social.whatsapp || CONTACT_INFO.socialMedia.whatsapp || '',
+      whatsapp: safeHttpUrl(social.whatsapp || CONTACT_INFO.socialMedia.whatsapp || ''),
     },
-    mapEmbedUrl: raw?.mapEmbedUrl || '',
+    mapEmbedUrl: safeIframeSrc(raw?.mapEmbedUrl || ''),
     whatsappEnabled: raw?.whatsappEnabled !== false,
   }
 }

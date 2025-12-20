@@ -22,7 +22,9 @@ if (auth) {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Provider store={store}>
-      <BrowserRouter>
+      {/* Vite sets import.meta.env.BASE_URL from `vite.config.ts` `base` option.
+          This is required for correct routing on GitHub Pages (e.g. /alla/...). */}
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <App />
       </BrowserRouter>
     </Provider>

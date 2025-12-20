@@ -60,6 +60,9 @@ service cloud.firestore {
     // - писать может любой (при отправке отзыва), но читать/менять может только админ
     match /reviewMeta/{reviewId} {
       allow create: if
+        // Reduce PII abuse: require matching review document to exist.
+        exists(/databases/$(database)/documents/reviews/$(reviewId))
+        &&
         request.resource.data.keys().hasOnly([
           "phone",
           "createdAt"

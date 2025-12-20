@@ -69,7 +69,7 @@ export const submitBooking = async (
   }
   // Симуляция отправки данных
   await new Promise((resolve) => setTimeout(resolve, 1000))
-  console.log('Booking submitted:', data)
+  // Важно: не логируем PII (телефон/почту) даже в fallback/mock режиме.
   return {
     success: true,
     message: 'Ваша заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.',

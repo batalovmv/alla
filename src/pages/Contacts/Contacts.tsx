@@ -16,6 +16,7 @@ import { CONTACT_INFO } from '../../config/constants'
 import { getContactInfo } from '../../utils/contactInfo'
 import { buildWhatsAppHref } from '../../utils/whatsapp'
 import { buildTelegramHref } from '../../utils/telegram'
+import { safeHttpUrl } from '../../utils/url'
 import { BookingFormData, ContactInfo } from '../../types'
 import { validatePhone, validateEmail } from '../../utils/validation'
 import Card from '../../components/common/Card/Card'
@@ -132,6 +133,18 @@ const Contacts: React.FC = () => {
     return buildTelegramHref({ telegramLink: contactInfo.socialMedia.telegram })
   }, [contactInfo.socialMedia.telegram])
 
+  const instagramHref = useMemo(() => {
+    return safeHttpUrl(contactInfo.socialMedia.instagram)
+  }, [contactInfo.socialMedia.instagram])
+
+  const vkHref = useMemo(() => {
+    return safeHttpUrl(contactInfo.socialMedia.vk)
+  }, [contactInfo.socialMedia.vk])
+
+  const whatsappSocialHref = useMemo(() => {
+    return safeHttpUrl(contactInfo.socialMedia.whatsapp)
+  }, [contactInfo.socialMedia.whatsapp])
+
   const onSubmit = useCallback(
     async (data: BookingFormData) => {
       // Honeypot field: если бот заполнил скрытое поле — имитируем успех без записи в базу
@@ -228,36 +241,36 @@ const Contacts: React.FC = () => {
               <div className={styles.social}>
                 <h3>Социальные сети</h3>
                 <div className={styles.socialLinks}>
-                  {contactInfo.socialMedia.instagram && (
+                  {instagramHref && (
                     <a
-                      href={contactInfo.socialMedia.instagram}
+                      href={instagramHref}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       Instagram
                     </a>
                   )}
-                  {contactInfo.socialMedia.vk && (
+                  {vkHref && (
                     <a
-                      href={contactInfo.socialMedia.vk}
+                      href={vkHref}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       VK
                     </a>
                   )}
-                  {contactInfo.socialMedia.telegram && (
+                  {telegramHref && (
                     <a
-                      href={contactInfo.socialMedia.telegram}
+                      href={telegramHref}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       Telegram
                     </a>
                   )}
-                  {contactInfo.socialMedia.whatsapp && (
+                  {whatsappSocialHref && (
                     <a
-                      href={contactInfo.socialMedia.whatsapp}
+                      href={whatsappSocialHref}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
