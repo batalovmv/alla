@@ -1,0 +1,23 @@
+{
+  "name": "alla-functions",
+  "private": true,
+  "type": "module",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "deploy": "npm run build && firebase deploy --only functions",
+    "lint": "node -e \"process.exit(0)\""
+  },
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^6.3.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  }
+}
+
+

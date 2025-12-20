@@ -82,6 +82,41 @@ Workflow `.github/workflows/deploy.yml` передаёт переменные о
 
 > Помните: любые `VITE_*` **видны в браузере** (это часть фронтенда). Не храните в них приватные ключи/токены. Реальная защита — Firestore/Storage rules + allowlist админов.
 
+## Admin access (Custom Claims)
+
+Админ-доступ определяется **custom claim** `admin: true` в Firebase ID token.
+
+### 1) Выдать права первому админу (bootstrap)
+
+1. Установите Firebase CLI и войдите:
+
+```bash
+firebase login
+firebase use --add
+```
+
+2. Задайте одноразовый secret для Cloud Functions:
+
+```bash
+firebase functions:secrets:set ADMIN_GRANT_SECRET
+```
+
+3. Деплой функций:
+
+```bash
+cd functions
+npm install
+npm run build
+firebase deploy --only functions
+```
+
+4. В Firebase Console → Authentication найдите UID нужного пользователя и вызовите `bootstrapGrantAdmin` (HTTP) с секретом.
+   - Важно: после успешного выдачи прав **удалите/смените** `ADMIN_GRANT_SECRET`.
+
+### 2) Выдавать админ-права дальше (только админ)
+
+После bootstrap используйте `grantAdmin` (callable) — вызывать может только пользователь с `admin: true`.
+
 ## GitHub Pages (важно)
 
 - `vite.config.ts` → `base: '/alla/'`
