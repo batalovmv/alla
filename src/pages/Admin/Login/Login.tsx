@@ -2,11 +2,11 @@ import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { useAppDispatch, useAppSelector } from '../../../store/hooks'
-import { setUser, setLoading, setError } from '../../../store/slices/authSlice'
+import { setAdminState, setUser, setLoading, setError } from '../../../store/slices/authSlice'
 import { auth } from '../../../config/firebase'
 import { ROUTES } from '../../../config/routes'
-import { isAdminUid } from '../../../config/admin'
 import LoginForm from '../../../components/auth/LoginForm/LoginForm'
+import { isAdminByClaims } from '../../../utils/adminClaims'
 import styles from './Login.module.css'
 
 const Login: React.FC = () => {
@@ -25,16 +25,16 @@ const Login: React.FC = () => {
       dispatch(setUser(user))
       dispatch(setLoading(false))
       if (user) {
-        if (isAdminUid(user.uid)) {
-          navigate(ROUTES.ADMIN)
-        } else {
-          dispatch(
-            setError(
-              `У этого аккаунта нет прав администратора. UID: ${user.uid}. Добавьте этот UID в allowlist (VITE_ADMIN_UID(S)) и в Firebase Rules.`
-            )
-          )
-          signOut(auth!).catch(() => {})
-        }
+        dispatch(setAdminState({ adminLoading: true, isAdmin: false }))
+        isAdminByClaims(user).then((ok) => {
+          dispatch(setAdminState({ adminLoading: false, isAdmin: ok }))
+          if (ok) {
+            navigate(ROUTES.ADMIN)
+          } else {
+            dispatch(setError('У этого аккаунта нет прав администратора.'))
+            signOut(auth!).catch(() => {})
+          }
+        })
       }
     })
 

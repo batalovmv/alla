@@ -2,7 +2,6 @@ import React from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAppSelector } from '../../../store/hooks'
 import { ROUTES } from '../../../config/routes'
-import { isAdminUid } from '../../../config/admin'
 import { PageFallback } from '../PageFallback/PageFallback'
 
 interface ProtectedRouteProps {
@@ -10,9 +9,9 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user, loading } = useAppSelector((state) => state.auth)
+  const { user, loading, adminLoading, isAdmin } = useAppSelector((state) => state.auth)
 
-  if (loading) {
+  if (loading || adminLoading) {
     return <PageFallback variant="admin" />
   }
 
@@ -20,7 +19,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to={ROUTES.ADMIN_LOGIN} replace />
   }
 
-  if (!isAdminUid(user.uid)) {
+  if (!isAdmin) {
     // Важно: это НЕ заменяет Firebase Security Rules. Это только UX-барьер.
     return (
       <div
@@ -37,9 +36,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
           <h2 style={{ marginBottom: 8 }}>Доступ запрещён</h2>
           <p style={{ marginBottom: 16 }}>
             Этот аккаунт не имеет прав администратора.
-          </p>
-          <p style={{ marginBottom: 16, opacity: 0.8 }}>
-            UID: <code>{user.uid}</code>
           </p>
           <Link to={ROUTES.ADMIN_LOGIN}>Перейти на страницу входа</Link>
         </div>

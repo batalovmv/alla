@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { useAppSelector } from '../../../store/hooks'
 import { ROUTES } from '../../../config/routes'
 import { CONTACT_INFO, SITE_NAME, SITE_DESCRIPTION } from '../../../config/constants'
-import { isAdminUid } from '../../../config/admin'
 import { ContactInfo } from '../../../types'
 import LoginModal from '../../auth/LoginModal/LoginModal'
 import styles from './Footer.module.css'
@@ -14,7 +13,7 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ contactInfo }) => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
-  const { user } = useAppSelector((state) => state.auth)
+  const { user, isAdmin } = useAppSelector((state) => state.auth)
   const ci: ContactInfo =
     contactInfo || { ...CONTACT_INFO, mapEmbedUrl: '', whatsappPhone: '' }
 
@@ -109,7 +108,7 @@ const Footer: React.FC<FooterProps> = ({ contactInfo }) => {
               Вход для администратора
             </button>
           )}
-          {user && isAdminUid(user.uid) && (
+          {user && isAdmin && (
             <Link to={ROUTES.ADMIN} className={styles.adminLink}>
               Админ-панель
             </Link>

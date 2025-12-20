@@ -2,12 +2,10 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // Замените ADMIN_UID_1 на реальный UID администратора.
+    // Admin access should be based on Firebase Custom Claims:
+    // set `admin: true` on the user via Firebase Admin SDK / Cloud Function / CLI tooling.
     function isAdmin() {
-      return request.auth != null
-        && request.auth.uid in [
-          "ADMIN_UID_1"
-        ];
+      return request.auth != null && request.auth.token.admin == true;
     }
 
     // Изображения процедур - читать все, писать только админ
