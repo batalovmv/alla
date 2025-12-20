@@ -11,6 +11,10 @@
 }
 
 @media (max-width: 768px) {
+  .adminLayout {
+    flex-direction: column;
+  }
+
   .content {
     margin-left: 0;
     padding: 1rem;
