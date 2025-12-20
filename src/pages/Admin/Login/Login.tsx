@@ -130,15 +130,13 @@ const Login: React.FC = () => {
     return null
   }
 
-  const handleSuccess = () => {
-    navigate(ROUTES.ADMIN)
-  }
-
   return (
     <div className={styles.loginPage}>
       <div className={styles.container}>
         <div className={styles.panel}>
-        <LoginForm onSuccess={handleSuccess} />
+        {/* Do NOT auto-navigate on login.
+            We need to stay on /admin/login to show bootstrap UI for the first admin. */}
+        <LoginForm />
         </div>
       </div>
     </div>
