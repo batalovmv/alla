@@ -18,13 +18,13 @@ export const LazyMount: React.FC<LazyMountProps> = ({
   placeholder,
   children,
   className,
-  // Strict rootMargin: only trigger when element is actually close to viewport.
-  // Negative bottom margin means element must be at least 50% visible from bottom.
-  rootMargin = '0px 0px -50% 0px',
+  // Positive bottom margin means trigger when element is still 300px below viewport.
+  // This way content mounts before user scrolls to it, making it feel instant.
+  rootMargin = '0px 0px 300px 0px',
   onEnter,
 }) => {
-  // Use threshold > 0 so element must be at least 5% visible, not just 1px.
-  const { ref, inView } = useInView<HTMLDivElement>({ once: true, rootMargin, threshold: 0.05 })
+  // Threshold 0 means trigger as soon as any part enters the expanded viewport.
+  const { ref, inView } = useInView<HTMLDivElement>({ once: true, rootMargin, threshold: 0 })
   const [mounted, setMounted] = useState(false)
   const [animateIn, setAnimateIn] = useState(false)
   const [enteredOnce, setEnteredOnce] = useState(false)
