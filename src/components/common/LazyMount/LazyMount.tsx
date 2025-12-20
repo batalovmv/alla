@@ -18,10 +18,12 @@ export const LazyMount: React.FC<LazyMountProps> = ({
   placeholder,
   children,
   className,
-  rootMargin = '700px 0px',
+  // Shrink the observer viewport to avoid “pre-triggering” everything at once on initial load.
+  // This makes sections mount only when user is actually approaching them.
+  rootMargin = '0px 0px -45% 0px',
   onEnter,
 }) => {
-  const { ref, inView } = useInView<HTMLDivElement>({ once: false, rootMargin })
+  const { ref, inView } = useInView<HTMLDivElement>({ once: true, rootMargin })
   const [mounted, setMounted] = useState(false)
   const [animateIn, setAnimateIn] = useState(false)
   const [enteredOnce, setEnteredOnce] = useState(false)
