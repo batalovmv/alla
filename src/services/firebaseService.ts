@@ -12,6 +12,7 @@ import {
   limit,
   Timestamp,
   setDoc,
+  serverTimestamp,
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../config/firebase'
@@ -60,8 +61,8 @@ export const proceduresService = {
     checkFirebase()
     const docRef = await addDoc(collection(db!, 'procedures'), {
       ...procedure,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     })
     return docRef.id
   },
@@ -71,7 +72,7 @@ export const proceduresService = {
     const docRef = doc(db!, 'procedures', id)
     await updateDoc(docRef, {
       ...procedure,
-      updatedAt: Timestamp.now(),
+      updatedAt: serverTimestamp(),
     })
   },
 
@@ -150,7 +151,7 @@ export const reviewsService = {
     checkFirebase()
     const docRef = await addDoc(collection(db!, 'reviews'), {
       ...review,
-      createdAt: Timestamp.now(),
+      createdAt: serverTimestamp(),
     })
     return docRef.id
   },
@@ -174,7 +175,7 @@ export const reviewMetaService = {
       doc(db!, 'reviewMeta', reviewId),
       {
         phone: data.phone,
-        createdAt: Timestamp.now(),
+        createdAt: serverTimestamp(),
       },
       { merge: true }
     )
@@ -254,7 +255,7 @@ export const bookingsService = {
       ...booking,
       comment: booking.comment || '',
       status: 'new',
-      createdAt: Timestamp.now(),
+      createdAt: serverTimestamp(),
     })
     return docRef.id
   },
@@ -315,7 +316,7 @@ export const clientsService = {
     const docRef = await addDoc(collection(db!, 'clients'), {
       ...client,
       totalVisits: client.totalVisits || 0,
-      createdAt: Timestamp.now(),
+      createdAt: serverTimestamp(),
     })
     return docRef.id
   },
@@ -396,7 +397,7 @@ export const serviceRecordsService = {
     const docRef = await addDoc(collection(db!, 'serviceRecords'), {
       ...record,
       date: Timestamp.fromDate(record.date),
-      createdAt: Timestamp.now(),
+      createdAt: serverTimestamp(),
     })
     return docRef.id
   },
