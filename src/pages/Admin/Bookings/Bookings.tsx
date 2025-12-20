@@ -3,6 +3,7 @@ import { bookingsService, proceduresService } from '../../../services/firebaseSe
 import { Booking, BookingStatus } from '../../../types'
 import Card from '../../../components/common/Card/Card'
 import Button from '../../../components/common/Button/Button'
+import { PageFallback } from '../../../components/common/PageFallback/PageFallback'
 import styles from './Bookings.module.css'
 
 const Bookings: React.FC = () => {
@@ -152,7 +153,7 @@ const Bookings: React.FC = () => {
   }
 
   if (loading) {
-    return <div className={styles.loading}>Загрузка...</div>
+    return <PageFallback variant="admin" />
   }
 
   return (

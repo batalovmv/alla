@@ -3,6 +3,13 @@ import { Link, useLocation } from 'react-router-dom'
 import { ROUTES } from '../../../config/routes'
 import { CONTACT_INFO, SITE_NAME } from '../../../config/constants'
 import { ContactInfo } from '../../../types'
+import {
+  prefetchHomePage,
+  prefetchProceduresPage,
+  prefetchAboutPage,
+  prefetchReviewsPage,
+  prefetchContactsPage,
+} from '../../../utils/prefetchPages'
 import Button from '../../common/Button/Button'
 import styles from './Header.module.css'
 
@@ -17,6 +24,14 @@ const Header: React.FC<HeaderProps> = ({ contactInfo }) => {
     contactInfo || { ...CONTACT_INFO, mapEmbedUrl: '', whatsappPhone: '' }
 
   const isActive = (path: string) => location.pathname === path
+
+  const prefetchByPath: Record<string, () => void> = {
+    [ROUTES.HOME]: prefetchHomePage,
+    [ROUTES.PROCEDURES]: prefetchProceduresPage,
+    [ROUTES.ABOUT]: prefetchAboutPage,
+    [ROUTES.REVIEWS]: prefetchReviewsPage,
+    [ROUTES.CONTACTS]: prefetchContactsPage,
+  }
 
   const navItems = [
     { path: ROUTES.HOME, label: 'Главная' },
@@ -40,6 +55,9 @@ const Header: React.FC<HeaderProps> = ({ contactInfo }) => {
               to={item.path}
               className={`${styles.navLink} ${isActive(item.path) ? styles.active : ''}`}
               onClick={() => setIsMenuOpen(false)}
+              onMouseEnter={() => prefetchByPath[item.path]?.()}
+              onFocus={() => prefetchByPath[item.path]?.()}
+              onTouchStart={() => prefetchByPath[item.path]?.()}
             >
               {item.label}
             </Link>

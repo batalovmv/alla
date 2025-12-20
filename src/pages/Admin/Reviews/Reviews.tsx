@@ -4,6 +4,7 @@ import { Review } from '../../../types'
 import Card from '../../../components/common/Card/Card'
 import Button from '../../../components/common/Button/Button'
 import Select from '../../../components/common/Select/Select'
+import { PageFallback } from '../../../components/common/PageFallback/PageFallback'
 import styles from './Reviews.module.css'
 
 const Reviews: React.FC = () => {
@@ -123,7 +124,7 @@ const Reviews: React.FC = () => {
   ]
 
   if (loading) {
-    return <div className={styles.loading}>Загрузка...</div>
+    return <PageFallback variant="admin" />
   }
 
   return (

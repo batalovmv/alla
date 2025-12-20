@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
-import { setProcedures } from '../../store/slices/proceduresSlice'
+import { setProcedures, setLoading as setProceduresLoading } from '../../store/slices/proceduresSlice'
 import { fetchProcedures } from '../../utils/api'
 import { isStale } from '../../utils/cache'
 import { ROUTES } from '../../config/routes'
@@ -14,18 +14,25 @@ import Card from '../../components/common/Card/Card'
 import Button from '../../components/common/Button/Button'
 import ProcedureCard from '../../components/procedures/ProcedureCard/ProcedureCard'
 import SEO from '../../components/common/SEO/SEO'
+import { useDelayedFlag } from '../../utils/useDelayedFlag'
+import { PageFallback } from '../../components/common/PageFallback/PageFallback'
 import styles from './ProcedureDetail.module.css'
 
 const ProcedureDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const dispatch = useAppDispatch()
-  const { items: procedures, lastFetched } = useAppSelector((state) => state.procedures)
+  const { items: procedures, lastFetched, loading } = useAppSelector((state) => state.procedures)
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null)
 
   useEffect(() => {
     const loadProcedures = async () => {
-      const data = await fetchProcedures()
-      dispatch(setProcedures(data))
+      dispatch(setProceduresLoading(true))
+      try {
+        const data = await fetchProcedures()
+        dispatch(setProcedures(data))
+      } finally {
+        dispatch(setProceduresLoading(false))
+      }
     }
     const ttlMs = 5 * 60 * 1000
     if (procedures.length === 0 || isStale(lastFetched, ttlMs)) {
@@ -46,6 +53,11 @@ const ProcedureDetail: React.FC = () => {
   }, [])
 
   const procedure = procedures.find((p) => p.id === id)
+  const showSkeleton = useDelayedFlag(loading && procedures.length === 0, 160)
+
+  if (showSkeleton) {
+    return <PageFallback variant="procedureDetail" />
+  }
 
   if (!procedure) {
     return (

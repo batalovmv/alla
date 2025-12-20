@@ -4,6 +4,7 @@ import { Procedure } from '../../../types'
 import ProceduresList from './ProceduresList'
 import ProcedureForm from './ProcedureForm'
 import Button from '../../../components/common/Button/Button'
+import { PageFallback } from '../../../components/common/PageFallback/PageFallback'
 import styles from './Procedures.module.css'
 
 const Procedures: React.FC = () => {
@@ -79,7 +80,7 @@ const Procedures: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className={styles.loading}>Загрузка...</div>
+        <PageFallback variant="admin" />
       ) : (
         <ProceduresList
           procedures={procedures}

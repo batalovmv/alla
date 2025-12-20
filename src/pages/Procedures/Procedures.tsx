@@ -1,23 +1,30 @@
 import React, { useEffect, useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
-import { setProcedures } from '../../store/slices/proceduresSlice'
+import { setProcedures, setLoading } from '../../store/slices/proceduresSlice'
 import { fetchProcedures } from '../../utils/api'
 import { isStale } from '../../utils/cache'
 import ProcedureCard from '../../components/procedures/ProcedureCard/ProcedureCard'
 import ProcedureFilters from '../../components/procedures/ProcedureFilters/ProcedureFilters'
 import SEO from '../../components/common/SEO/SEO'
+import { useDelayedFlag } from '../../utils/useDelayedFlag'
+import { ProcedureCardSkeleton } from '../../components/common/Skeleton/SkeletonPresets'
 import styles from './Procedures.module.css'
 
 const Procedures: React.FC = () => {
   const dispatch = useAppDispatch()
-  const { items: procedures, filters, lastFetched } = useAppSelector(
+  const { items: procedures, filters, lastFetched, loading } = useAppSelector(
     (state) => state.procedures
   )
 
   useEffect(() => {
     const loadProcedures = async () => {
-      const data = await fetchProcedures()
-      dispatch(setProcedures(data))
+      dispatch(setLoading(true))
+      try {
+        const data = await fetchProcedures()
+        dispatch(setProcedures(data))
+      } finally {
+        dispatch(setLoading(false))
+      }
     }
     const ttlMs = 5 * 60 * 1000
     if (procedures.length === 0 || isStale(lastFetched, ttlMs)) {
@@ -67,6 +74,8 @@ const Procedures: React.FC = () => {
     return result
   }, [procedures, filters])
 
+  const showSkeleton = useDelayedFlag(loading && procedures.length === 0, 160)
+
   return (
     <>
       <SEO
@@ -83,7 +92,13 @@ const Procedures: React.FC = () => {
 
         <ProcedureFilters />
 
-        {filteredProcedures.length > 0 ? (
+        {showSkeleton ? (
+          <div className={styles.grid}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <ProcedureCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : filteredProcedures.length > 0 ? (
           <div className={styles.grid}>
             {filteredProcedures.map((procedure) => (
               <ProcedureCard key={procedure.id} procedure={procedure} />

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { proceduresService, reviewsService, bookingsService } from '../../../services/firebaseService'
 import { ROUTES } from '../../../config/routes'
 import Card from '../../../components/common/Card/Card'
+import { PageFallback } from '../../../components/common/PageFallback/PageFallback'
 import styles from './Dashboard.module.css'
 
 const Dashboard: React.FC = () => {
@@ -45,7 +46,7 @@ const Dashboard: React.FC = () => {
   }, [])
 
   if (loading) {
-    return <div className={styles.loading}>Загрузка...</div>
+    return <PageFallback variant="admin" />
   }
 
   return (

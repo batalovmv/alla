@@ -9,6 +9,7 @@ import Button from '../../../components/common/Button/Button'
 import Input from '../../../components/common/Input/Input'
 import Textarea from '../../../components/common/Textarea/Textarea'
 import Select from '../../../components/common/Select/Select'
+import { PageFallback } from '../../../components/common/PageFallback/PageFallback'
 import styles from './ClientHistory.module.css'
 
 interface ServiceRecordFormData {
@@ -131,7 +132,7 @@ const ClientHistory: React.FC = () => {
   const totalAmount = records.reduce((sum, record) => sum + (record.price || 0), 0)
 
   if (loading) {
-    return <div className={styles.loading}>Загрузка...</div>
+    return <PageFallback variant="admin" />
   }
 
   if (!client) {

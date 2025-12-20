@@ -5,6 +5,7 @@ import { CONTACT_INFO } from '../../../config/constants'
 import Input from '../../../components/common/Input/Input'
 import Button from '../../../components/common/Button/Button'
 import Card from '../../../components/common/Card/Card'
+import { PageFallback } from '../../../components/common/PageFallback/PageFallback'
 import styles from './Contacts.module.css'
 
 interface ContactFormData {
@@ -103,7 +104,7 @@ const Contacts: React.FC = () => {
   }
 
   if (loading) {
-    return <div className={styles.loading}>Загрузка...</div>
+    return <PageFallback variant="admin" />
   }
 
   return (

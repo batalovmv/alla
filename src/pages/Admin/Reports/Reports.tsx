@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import Card from '../../../components/common/Card/Card'
 import Button from '../../../components/common/Button/Button'
+import { Skeleton } from '../../../components/common/Skeleton/Skeleton'
 import {
   bookingsService,
   clientsService,
@@ -548,7 +549,9 @@ const Reports: React.FC = () => {
       </div>
 
       {loading ? (
-        <Card className={styles.loading}>Загрузка…</Card>
+        <Card className={styles.loading}>
+          <Skeleton variant="text" height={18} width={160} />
+        </Card>
       ) : records.length === 0 ? (
         <Card className={styles.empty}>За выбранный месяц данных нет.</Card>
       ) : (

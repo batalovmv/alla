@@ -6,6 +6,7 @@ import { ROUTES } from '../../../config/routes'
 import Card from '../../../components/common/Card/Card'
 import Button from '../../../components/common/Button/Button'
 import Input from '../../../components/common/Input/Input'
+import { PageFallback } from '../../../components/common/PageFallback/PageFallback'
 import styles from './Clients.module.css'
 
 const Clients: React.FC = () => {
@@ -47,7 +48,7 @@ const Clients: React.FC = () => {
   }
 
   if (loading) {
-    return <div className={styles.loading}>Загрузка...</div>
+    return <PageFallback variant="admin" />
   }
 
   return (

@@ -5,6 +5,7 @@ import Input from '../../../components/common/Input/Input'
 import Textarea from '../../../components/common/Textarea/Textarea'
 import Button from '../../../components/common/Button/Button'
 import Card from '../../../components/common/Card/Card'
+import { PageFallback } from '../../../components/common/PageFallback/PageFallback'
 import styles from './About.module.css'
 
 interface AboutFormData {
@@ -116,7 +117,7 @@ const About: React.FC = () => {
   }
 
   if (loading) {
-    return <div className={styles.loading}>Загрузка...</div>
+    return <PageFallback variant="admin" />
   }
 
   return (

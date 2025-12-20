@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
-import { setProcedures } from '../../store/slices/proceduresSlice'
-import { setReviews } from '../../store/slices/reviewsSlice'
+import { setProcedures, setLoading as setProceduresLoading } from '../../store/slices/proceduresSlice'
+import { setReviews, setLoading as setReviewsLoading } from '../../store/slices/reviewsSlice'
 import { fetchProcedures, fetchReviews } from '../../utils/api'
 import { isStale } from '../../utils/cache'
 import { ROUTES } from '../../config/routes'
@@ -15,15 +15,17 @@ import ProcedureCard from '../../components/procedures/ProcedureCard/ProcedureCa
 import Button from '../../components/common/Button/Button'
 import Card from '../../components/common/Card/Card'
 import SEO from '../../components/common/SEO/SEO'
+import { useDelayedFlag } from '../../utils/useDelayedFlag'
+import { ProcedureCardSkeleton, ReviewCardSkeleton } from '../../components/common/Skeleton/SkeletonPresets'
 import styles from './Home.module.css'
 
 const Home: React.FC = () => {
   const dispatch = useAppDispatch()
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null)
-  const { items: procedures, lastFetched: proceduresLastFetched } = useAppSelector(
+  const { items: procedures, lastFetched: proceduresLastFetched, loading: proceduresLoading } = useAppSelector(
     (state) => state.procedures
   )
-  const { items: reviews, averageRating, lastFetched: reviewsLastFetched } = useAppSelector(
+  const { items: reviews, averageRating, lastFetched: reviewsLastFetched, loading: reviewsLoading } = useAppSelector(
     (state) => state.reviews
   )
 
@@ -32,13 +34,23 @@ const Home: React.FC = () => {
     const reviewsTtlMs = 3 * 60 * 1000
 
     if (procedures.length === 0 || isStale(proceduresLastFetched, proceduresTtlMs)) {
-      const proceduresData = await fetchProcedures()
-      dispatch(setProcedures(proceduresData))
+      dispatch(setProceduresLoading(true))
+      try {
+        const proceduresData = await fetchProcedures()
+        dispatch(setProcedures(proceduresData))
+      } finally {
+        dispatch(setProceduresLoading(false))
+      }
     }
 
     if (reviews.length === 0 || isStale(reviewsLastFetched, reviewsTtlMs)) {
-      const reviewsData = await fetchReviews()
-      dispatch(setReviews(reviewsData))
+      dispatch(setReviewsLoading(true))
+      try {
+        const reviewsData = await fetchReviews()
+        dispatch(setReviews(reviewsData))
+      } finally {
+        dispatch(setReviewsLoading(false))
+      }
     }
   }, [dispatch, procedures.length, proceduresLastFetched, reviews.length, reviewsLastFetched])
 
@@ -65,6 +77,12 @@ const Home: React.FC = () => {
 
   const featuredReviews = useMemo(() => reviews.slice(0, 3), [reviews])
   const ci = contactInfo || { ...CONTACT_INFO, mapEmbedUrl: '', whatsappPhone: '' }
+
+  const showProceduresSkeleton = useDelayedFlag(
+    proceduresLoading && procedures.length === 0,
+    160
+  )
+  const showReviewsSkeleton = useDelayedFlag(reviewsLoading && reviews.length === 0, 160)
 
   const whatsappHref = useMemo(() => {
     const text = `Здравствуйте! Хочу записаться в ${SITE_NAME}.`
@@ -109,7 +127,18 @@ const Home: React.FC = () => {
         </section>
 
         {/* Popular Procedures */}
-        {popularProcedures.length > 0 && (
+        {showProceduresSkeleton ? (
+          <section className={styles.section}>
+            <div className={styles.container}>
+              <h2 className={styles.sectionTitle}>Популярные процедуры</h2>
+              <div className={styles.proceduresGrid}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <ProcedureCardSkeleton key={i} />
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : popularProcedures.length > 0 ? (
           <section className={styles.section}>
             <div className={styles.container}>
               <h2 className={styles.sectionTitle}>Популярные процедуры</h2>
@@ -125,7 +154,7 @@ const Home: React.FC = () => {
               </div>
             </div>
           </section>
-        )}
+        ) : null}
 
         {/* About Section */}
         <section className={`${styles.section} ${styles.aboutSection}`}>
@@ -186,7 +215,22 @@ const Home: React.FC = () => {
         </section>
 
         {/* Reviews Preview */}
-        {featuredReviews.length > 0 && (
+        {showReviewsSkeleton ? (
+          <section className={`${styles.section} ${styles.reviewsSection}`}>
+            <div className={styles.container}>
+              <div className={styles.reviewsHeader}>
+                <div>
+                  <h2 className={styles.sectionTitle}>Отзывы клиентов</h2>
+                </div>
+              </div>
+              <div className={styles.reviewsGrid}>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <ReviewCardSkeleton key={i} />
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : featuredReviews.length > 0 ? (
           <section className={`${styles.section} ${styles.reviewsSection}`}>
             <div className={styles.container}>
               <div className={styles.reviewsHeader}>
@@ -223,7 +267,7 @@ const Home: React.FC = () => {
               </div>
             </div>
           </section>
-        )}
+        ) : null}
 
         {/* Contact CTA */}
         <section className={`${styles.section} ${styles.ctaSection}`}>

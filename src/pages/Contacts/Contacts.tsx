@@ -8,7 +8,7 @@ import {
   submitBookingFailure,
   resetForm,
 } from '../../store/slices/bookingSlice'
-import { setProcedures } from '../../store/slices/proceduresSlice'
+import { setProcedures, setLoading as setProceduresLoading } from '../../store/slices/proceduresSlice'
 import { fetchProcedures } from '../../utils/api'
 import { submitBooking as submitBookingAPI } from '../../utils/api'
 import { isStale } from '../../utils/cache'
@@ -19,18 +19,20 @@ import { buildTelegramHref } from '../../utils/telegram'
 import { safeHttpUrl } from '../../utils/url'
 import { BookingFormData, ContactInfo } from '../../types'
 import { validatePhone, validateEmail } from '../../utils/validation'
+import { useDelayedFlag } from '../../utils/useDelayedFlag'
 import Card from '../../components/common/Card/Card'
 import Input from '../../components/common/Input/Input'
 import Textarea from '../../components/common/Textarea/Textarea'
 import Select from '../../components/common/Select/Select'
 import Button from '../../components/common/Button/Button'
 import SEO from '../../components/common/SEO/SEO'
+import { Skeleton } from '../../components/common/Skeleton/Skeleton'
 import styles from './Contacts.module.css'
 
 const Contacts: React.FC = () => {
   const dispatch = useAppDispatch()
   const [searchParams] = useSearchParams()
-  const { items: procedures, lastFetched } = useAppSelector((state) => state.procedures)
+  const { items: procedures, lastFetched, loading: proceduresLoading } = useAppSelector((state) => state.procedures)
   const { isSubmitting, success, error } = useAppSelector(
     (state) => state.booking
   )
@@ -55,8 +57,13 @@ const Contacts: React.FC = () => {
   const selectedProcedureId = useWatch({ control, name: 'procedureId' })
 
   const loadProcedures = useCallback(async () => {
-    const data = await fetchProcedures()
-    dispatch(setProcedures(data))
+    dispatch(setProceduresLoading(true))
+    try {
+      const data = await fetchProcedures()
+      dispatch(setProcedures(data))
+    } finally {
+      dispatch(setProceduresLoading(false))
+    }
   }, [dispatch])
 
   useEffect(() => {
@@ -185,6 +192,10 @@ const Contacts: React.FC = () => {
   )
 
   const mapEmbedUrl = contactInfo.mapEmbedUrl || ''
+  const showProcedureSkeleton = useDelayedFlag(
+    proceduresLoading && procedures.length === 0,
+    160
+  )
 
   return (
     <>
@@ -381,12 +392,19 @@ const Contacts: React.FC = () => {
                   control={control}
                   rules={{ required: 'Выберите процедуру' }}
                   render={({ field }) => (
-                    <Select
-                      label="Процедура"
-                      options={procedureOptions}
-                      {...field}
-                      error={errors.procedureId?.message}
-                    />
+                    showProcedureSkeleton ? (
+                      <div style={{ display: 'grid', gap: 6 }}>
+                        <label style={{ fontWeight: 600, fontSize: 14 }}>Процедура</label>
+                        <Skeleton height={56} radius={12} />
+                      </div>
+                    ) : (
+                      <Select
+                        label="Процедура"
+                        options={procedureOptions}
+                        {...field}
+                        error={errors.procedureId?.message}
+                      />
+                    )
                   )}
                 />
 

@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { setReviews, addReview, setLoading } from '../../store/slices/reviewsSlice'
 import { fetchReviews, submitReview as submitReviewAPI } from '../../utils/api'
 import { isStale } from '../../utils/cache'
+import { useDelayedFlag } from '../../utils/useDelayedFlag'
 import {
   loadReviewsFromStorage,
   saveReviewsToStorage,
@@ -14,11 +15,13 @@ import Card from '../../components/common/Card/Card'
 import Select from '../../components/common/Select/Select'
 import AddReviewForm from '../../components/reviews/AddReviewForm/AddReviewForm'
 import SEO from '../../components/common/SEO/SEO'
+import { ReviewCardSkeleton } from '../../components/common/Skeleton/SkeletonPresets'
+import { Skeleton } from '../../components/common/Skeleton/Skeleton'
 import styles from './Reviews.module.css'
 
 const Reviews: React.FC = () => {
   const dispatch = useAppDispatch()
-  const { items: reviews, averageRating, lastFetched } = useAppSelector(
+  const { items: reviews, averageRating, lastFetched, loading } = useAppSelector(
     (state) => state.reviews
   )
   const { items: procedures } = useAppSelector((state) => state.procedures)
@@ -101,6 +104,8 @@ const Reviews: React.FC = () => {
     [approvedReviews, filteredProcedure]
   )
 
+  const showListSkeleton = useDelayedFlag(loading && reviews.length === 0, 160)
+
   const handleAddReview = useCallback(
     async (formData: {
       clientName: string
@@ -175,7 +180,24 @@ const Reviews: React.FC = () => {
 
           <AddReviewForm onSubmit={handleAddReview} isSubmitting={isSubmitting} />
 
-        {approvedReviews.length > 0 && (
+        {showListSkeleton ? (
+          <div className={styles.header}>
+            <div className={styles.ratingSection}>
+              <div className={styles.averageRating}>
+                <Skeleton variant="text" height={26} width={56} />
+                <div className={styles.stars} style={{ marginTop: 6 }}>
+                  <Skeleton variant="text" height={16} width={120} />
+                </div>
+                <p className={styles.ratingText} style={{ marginTop: 8 }}>
+                  <Skeleton variant="text" height={12} width={180} />
+                </p>
+              </div>
+            </div>
+            <div className={styles.filter}>
+              <Skeleton height={56} radius={12} />
+            </div>
+          </div>
+        ) : approvedReviews.length > 0 ? (
           <div className={styles.header}>
             <div className={styles.ratingSection}>
               <div className={styles.averageRating}>
@@ -201,9 +223,15 @@ const Reviews: React.FC = () => {
               />
             </div>
           </div>
-        )}
+        ) : null}
 
-        {filteredReviews.length > 0 ? (
+        {showListSkeleton ? (
+          <div className={styles.reviewsGrid}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <ReviewCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : filteredReviews.length > 0 ? (
           <div className={styles.reviewsGrid}>
             {filteredReviews.map((review) => (
               <Card key={review.id} className={styles.reviewCard}>
