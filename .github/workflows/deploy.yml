@@ -2,12 +2,16 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
+# Needed to push to gh-pages branch via GITHUB_TOKEN
 permissions:
   contents: write
+
+concurrency:
+  group: gh-pages
+  cancel-in-progress: true
 
 jobs:
   build-and-deploy:
@@ -15,47 +19,48 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
+          cache: npm
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Create .env.local file
-        run: |
-          echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> .env.local
-          echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" >> .env.local
-          echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}" >> .env.local
-          echo "VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}" >> .env.local
-          echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> .env.local
-          echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> .env.local
-          echo "VITE_ADMIN_UID=${{ secrets.VITE_ADMIN_UID }}" >> .env.local
-          echo "VITE_ADMIN_UIDS=${{ secrets.VITE_ADMIN_UIDS }}" >> .env.local
-          echo "VITE_SITE_URL=${{ secrets.VITE_SITE_URL }}" >> .env.local
-          echo "VITE_SITE_NAME=${{ secrets.VITE_SITE_NAME }}" >> .env.local
-          echo "VITE_SITE_DESCRIPTION=${{ secrets.VITE_SITE_DESCRIPTION }}" >> .env.local
-          echo "VITE_CONTACT_PHONE=${{ secrets.VITE_CONTACT_PHONE }}" >> .env.local
-          echo "VITE_CONTACT_EMAIL=${{ secrets.VITE_CONTACT_EMAIL }}" >> .env.local
-          echo "VITE_CONTACT_ADDRESS=${{ secrets.VITE_CONTACT_ADDRESS }}" >> .env.local
-          echo "VITE_CONTACT_WORKING_HOURS=${{ secrets.VITE_CONTACT_WORKING_HOURS }}" >> .env.local
-          echo "VITE_SOCIAL_INSTAGRAM=${{ secrets.VITE_SOCIAL_INSTAGRAM }}" >> .env.local
-          echo "VITE_SOCIAL_VK=${{ secrets.VITE_SOCIAL_VK }}" >> .env.local
-          echo "VITE_SOCIAL_TELEGRAM=${{ secrets.VITE_SOCIAL_TELEGRAM }}" >> .env.local
-          echo "VITE_SOCIAL_WHATSAPP=${{ secrets.VITE_SOCIAL_WHATSAPP }}" >> .env.local
-          echo "VITE_MAP_EMBED_URL=${{ secrets.VITE_MAP_EMBED_URL }}" >> .env.local
+      - name: Install
+        run: npm ci
 
       - name: Build
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_ADMIN_UID: ${{ secrets.VITE_ADMIN_UID }}
+          VITE_ADMIN_UIDS: ${{ secrets.VITE_ADMIN_UIDS }}
+          VITE_SITE_URL: ${{ secrets.VITE_SITE_URL }}
+          VITE_SITE_NAME: ${{ secrets.VITE_SITE_NAME }}
+          VITE_SITE_DESCRIPTION: ${{ secrets.VITE_SITE_DESCRIPTION }}
+          VITE_CONTACT_PHONE: ${{ secrets.VITE_CONTACT_PHONE }}
+          VITE_CONTACT_EMAIL: ${{ secrets.VITE_CONTACT_EMAIL }}
+          VITE_CONTACT_ADDRESS: ${{ secrets.VITE_CONTACT_ADDRESS }}
+          VITE_CONTACT_WORKING_HOURS: ${{ secrets.VITE_CONTACT_WORKING_HOURS }}
+          VITE_SOCIAL_INSTAGRAM: ${{ secrets.VITE_SOCIAL_INSTAGRAM }}
+          VITE_SOCIAL_VK: ${{ secrets.VITE_SOCIAL_VK }}
+          VITE_SOCIAL_TELEGRAM: ${{ secrets.VITE_SOCIAL_TELEGRAM }}
+          VITE_SOCIAL_WHATSAPP: ${{ secrets.VITE_SOCIAL_WHATSAPP }}
+          VITE_MAP_EMBED_URL: ${{ secrets.VITE_MAP_EMBED_URL }}
         run: npm run build
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-          publish_branch: gh-pages
-          cname: false
+          force_orphan: true
+          enable_jekyll: false
 
 

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { bookingsService, proceduresService } from '../../../services/firebaseService'
 import { Booking, BookingStatus } from '../../../types'
 import Card from '../../../components/common/Card/Card'
 import Button from '../../../components/common/Button/Button'
+import { ROUTES } from '../../../config/routes'
 import styles from './Bookings.module.css'
 
 const Bookings: React.FC = () => {
@@ -174,6 +176,13 @@ const Bookings: React.FC = () => {
       {bookings.length === 0 ? (
         <Card className={styles.empty}>
           <p>Заявок нет</p>
+          <p className={styles.seedHint}>
+            Для демонстрации можно создать тестовые данные в разделе{' '}
+            <Link to={ROUTES.ADMIN_REPORTS} className={styles.seedLink}>
+              Отчёты
+            </Link>
+            .
+          </p>
         </Card>
       ) : (
         <div className={styles.list}>

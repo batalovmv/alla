@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { reviewsService, reviewMetaService, serviceRecordsService } from '../../../services/firebaseService'
 import { Review } from '../../../types'
 import Card from '../../../components/common/Card/Card'
 import Button from '../../../components/common/Button/Button'
 import Select from '../../../components/common/Select/Select'
+import { ROUTES } from '../../../config/routes'
 import styles from './Reviews.module.css'
 
 const Reviews: React.FC = () => {
@@ -140,6 +142,13 @@ const Reviews: React.FC = () => {
       {reviews.length === 0 ? (
         <Card className={styles.empty}>
           <p>Отзывов нет</p>
+          <p className={styles.seedHint}>
+            Для демонстрации можно создать тестовые данные в разделе{' '}
+            <Link to={ROUTES.ADMIN_REPORTS} className={styles.seedLink}>
+              Отчёты
+            </Link>
+            .
+          </p>
         </Card>
       ) : (
         <div className={styles.list}>

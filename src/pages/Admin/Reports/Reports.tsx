@@ -1,7 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import Card from '../../../components/common/Card/Card'
 import Button from '../../../components/common/Button/Button'
-import { serviceRecordsService } from '../../../services/firebaseService'
+import {
+  bookingsService,
+  clientsService,
+  proceduresService,
+  reviewMetaService,
+  reviewsService,
+  serviceRecordsService,
+} from '../../../services/firebaseService'
+import { db } from '../../../config/firebase'
+import { deleteDoc, doc } from 'firebase/firestore'
 import {
   ResponsiveContainer,
   AreaChart,
@@ -24,6 +33,18 @@ type ServiceRecordLite = {
   clientName?: string
   clientPhone?: string
 }
+
+type DemoSeed = {
+  createdAt: string
+  month: string
+  procedureIds: string[]
+  bookingIds: string[]
+  serviceRecordIds: string[]
+  reviewIds: string[]
+  clientIds: string[]
+}
+
+const DEMO_SEED_KEY = 'akbeauty_demo_seed_v1'
 
 function startOfMonth(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0)
@@ -64,12 +85,31 @@ const Reports: React.FC = () => {
   const [month, setMonth] = useState(() => formatMonthValue(new Date()))
   const [loading, setLoading] = useState(true)
   const [records, setRecords] = useState<ServiceRecordLite[]>([])
+  const [seeding, setSeeding] = useState(false)
+  const [seedInfo, setSeedInfo] = useState<DemoSeed | null>(null)
+
+  const loadSeedInfo = useMemo(() => {
+    return (): DemoSeed | null => {
+      try {
+        const raw = localStorage.getItem(DEMO_SEED_KEY)
+        if (!raw) return null
+        const parsed = JSON.parse(raw) as DemoSeed
+        if (!parsed || typeof parsed !== 'object') return null
+        if (!Array.isArray(parsed.bookingIds)) return null
+        return parsed
+      } catch {
+        return null
+      }
+    }
+  }, [])
 
   useEffect(() => {
     let mounted = true
     const load = async () => {
       try {
         setLoading(true)
+        const demo = loadSeedInfo()
+        if (mounted) setSeedInfo(demo)
         const base = parseMonthValue(month)
         const start = startOfMonth(base)
         const end = startOfNextMonth(base)
@@ -96,6 +136,231 @@ const Reports: React.FC = () => {
       mounted = false
     }
   }, [month])
+
+  const ensureFirebase = () => {
+    if (!db) {
+      alert('Firebase не настроен. Заполните .env / secrets и задеплойте.' )
+      throw new Error('Firebase not configured')
+    }
+  }
+
+  const seedDemoData = async () => {
+    try {
+      ensureFirebase()
+      setSeeding(true)
+
+      const baseMonth = parseMonthValue(month)
+      const monthLabel = formatMonthValue(baseMonth)
+
+      // If seed already exists, ask to delete first
+      const existing = loadSeedInfo()
+      if (existing) {
+        alert('Тестовые данные уже созданы. Сначала удалите их.')
+        return
+      }
+
+      // 1) Create demo procedures
+      const procedureTemplates = [
+        { name: 'Чистка лица (ультразвук)', category: 'Лицо', price: 12000, duration: 60 },
+        { name: 'Пилинг (поверхностный)', category: 'Лицо', price: 15000, duration: 50 },
+        { name: 'Брови (коррекция + окрашивание)', category: 'Брови', price: 8000, duration: 40 },
+        { name: 'Ламинирование ресниц', category: 'Ресницы', price: 18000, duration: 70 },
+      ]
+
+      const procedureIds: string[] = []
+      for (const p of procedureTemplates) {
+        const id = await proceduresService.create({
+          name: `DEMO • ${p.name}`,
+          category: p.category,
+          description: 'Демо-описание для тестовых данных.',
+          fullDescription:
+            'Демо-полное описание процедуры для проверки интерфейса и отчётов.',
+          price: p.price,
+          duration: p.duration,
+          images: ['/images/placeholder.jpg'],
+          indications: ['Демо показание 1', 'Демо показание 2'],
+          contraindications: ['Демо противопоказание'],
+          popular: p.price >= 15000,
+        })
+        procedureIds.push(id)
+      }
+
+      // Load created procedures to reuse names/prices
+      const procedures = await Promise.all(
+        procedureIds.map(async (id) => await proceduresService.getById(id))
+      )
+      const validProcedures = procedures.filter(Boolean) as any[]
+
+      // 2) Create demo clients
+      const clientTemplates = [
+        { name: 'Алия', phone: '+7 777 000 00 01' },
+        { name: 'Айгерим', phone: '+7 777 000 00 02' },
+        { name: 'Динара', phone: '+7 777 000 00 03' },
+        { name: 'Мария', phone: '+7 777 000 00 04' },
+        { name: 'Ольга', phone: '+7 777 000 00 05' },
+      ]
+      const clientIds: string[] = []
+      for (const c of clientTemplates) {
+        const id = await clientsService.create({
+          name: c.name,
+          phone: c.phone,
+          totalVisits: 0,
+        })
+        clientIds.push(id)
+      }
+
+      // 3) Create demo bookings
+      const bookingIds: string[] = []
+      const totalDays = daysInMonth(baseMonth)
+      const pickDay = (n: number) =>
+        new Date(baseMonth.getFullYear(), baseMonth.getMonth(), Math.max(1, Math.min(totalDays, n)))
+      const fmtDate = (d: Date) => d.toISOString().split('T')[0]
+
+      const bookingTemplates = [
+        { clientIdx: 0, procIdx: 0, day: 2, time: '11:00', status: 'new' },
+        { clientIdx: 1, procIdx: 1, day: 3, time: '15:00', status: 'awaiting' },
+        { clientIdx: 2, procIdx: 2, day: 5, time: '10:00', status: 'completed' },
+        { clientIdx: 3, procIdx: 3, day: 7, time: '13:30', status: 'completed' },
+        { clientIdx: 4, procIdx: 1, day: 9, time: '18:00', status: 'cancelled' },
+        { clientIdx: 0, procIdx: 0, day: 12, time: '12:00', status: 'completed' },
+        { clientIdx: 1, procIdx: 3, day: 14, time: '16:00', status: 'awaiting' },
+      ] as const
+
+      for (const b of bookingTemplates) {
+        const client = clientTemplates[b.clientIdx]
+        const proc = validProcedures[b.procIdx] || validProcedures[0]
+        const bookingId = await bookingsService.create({
+          name: client.name,
+          phone: client.phone,
+          procedureId: proc.id,
+          procedureName: proc.name,
+          desiredDate: fmtDate(pickDay(b.day)),
+          desiredTime: b.time,
+          comment: '[DEMO] Демо заявка',
+          consent: true,
+        })
+        bookingIds.push(bookingId)
+        if (b.status !== 'new') {
+          await bookingsService.update(bookingId, { status: b.status })
+        }
+      }
+
+      // 4) Create demo service records (drives charts)
+      const serviceRecordIds: string[] = []
+      const randomFrom = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)]
+      const times = ['10:00', '11:30', '13:00', '15:00', '17:30']
+
+      for (let i = 0; i < 22; i += 1) {
+        const day = 1 + ((i * 2) % Math.max(1, totalDays))
+        const proc = randomFrom(validProcedures)
+        const client = randomFrom(clientTemplates)
+        const d = pickDay(day)
+        // keep some spread by adding hour component
+        const [hh, mm] = randomFrom(times).split(':').map((x) => Number(x))
+        d.setHours(hh || 10, mm || 0, 0, 0)
+        const price = Number(proc.price) || 0
+        const id = await serviceRecordsService.create({
+          clientId: clientIds[clientTemplates.findIndex((x) => x.phone === client.phone)] || '',
+          clientPhone: client.phone,
+          clientName: client.name,
+          procedureId: proc.id,
+          procedureName: proc.name,
+          date: d,
+          price,
+          notes: '[DEMO] Демо услуга',
+        })
+        serviceRecordIds.push(id)
+      }
+
+      // 5) Create demo reviews (+ meta phone)
+      const reviewIds: string[] = []
+      const reviewTexts = [
+        'Очень понравилось, всё аккуратно и приятно.',
+        'Результат заметен сразу, спасибо!',
+        'Комфортно, профессионально, вернусь ещё.',
+        'Хорошая атмосфера и внимательный подход.',
+        'Всё супер, рекомендую!',
+      ]
+
+      for (let i = 0; i < 10; i += 1) {
+        const client = clientTemplates[i % clientTemplates.length]
+        const proc = validProcedures[i % validProcedures.length]
+        const rating = 3 + (i % 3) // 3..5
+        const reviewId = await reviewsService.create({
+          clientName: client.name,
+          procedureId: proc.id,
+          procedureName: proc.name,
+          rating,
+          text: `[DEMO] ${randomFrom(reviewTexts)}`,
+          date: fmtDate(pickDay(1 + (i % Math.max(1, totalDays)))),
+        })
+        reviewIds.push(reviewId)
+        await reviewMetaService.upsert(reviewId, { phone: client.phone })
+
+        // Approve часть отзывов, остальные остаются pending
+        if (i % 2 === 0) {
+          await reviewsService.update(reviewId, { approved: true })
+        }
+      }
+
+      const seed: DemoSeed = {
+        createdAt: new Date().toISOString(),
+        month: monthLabel,
+        procedureIds,
+        bookingIds,
+        serviceRecordIds,
+        reviewIds,
+        clientIds,
+      }
+
+      localStorage.setItem(DEMO_SEED_KEY, JSON.stringify(seed))
+      setSeedInfo(seed)
+      alert('Тестовые данные созданы.')
+    } catch (e) {
+      console.error(e)
+      alert('Ошибка создания тестовых данных')
+    } finally {
+      setSeeding(false)
+    }
+  }
+
+  const deleteDemoData = async () => {
+    try {
+      ensureFirebase()
+      setSeeding(true)
+      const seed = loadSeedInfo()
+      if (!seed) {
+        alert('Тестовые данные не найдены.')
+        return
+      }
+
+      const safeDeleteMany = async (col: string, ids: string[]) => {
+        for (const id of ids) {
+          try {
+            await deleteDoc(doc(db!, col, id))
+          } catch (e) {
+            // ignore missing/permission issues
+          }
+        }
+      }
+
+      await safeDeleteMany('serviceRecords', seed.serviceRecordIds || [])
+      await safeDeleteMany('bookings', seed.bookingIds || [])
+      await safeDeleteMany('reviews', seed.reviewIds || [])
+      await safeDeleteMany('reviewMeta', seed.reviewIds || [])
+      await safeDeleteMany('procedures', seed.procedureIds || [])
+      await safeDeleteMany('clients', seed.clientIds || [])
+
+      localStorage.removeItem(DEMO_SEED_KEY)
+      setSeedInfo(null)
+      alert('Тестовые данные удалены.')
+    } catch (e) {
+      console.error(e)
+      alert('Ошибка удаления тестовых данных')
+    } finally {
+      setSeeding(false)
+    }
+  }
 
   const totalRevenue = useMemo(
     () => records.reduce((sum, r) => sum + (r.price || 0), 0),
@@ -186,6 +451,9 @@ const Reports: React.FC = () => {
         <div>
           <h1 className={styles.title}>Отчёты</h1>
           <p className={styles.subtitle}>Выручка считается по факту выполнено.</p>
+          <div className={styles.seedNote}>
+            Для демонстрации можно создать тестовые данные (заявки, отзывы и услуги). Их можно удалить одним кликом.
+          </div>
         </div>
         <div className={styles.controls}>
           <label className={styles.control}>
@@ -200,6 +468,15 @@ const Reports: React.FC = () => {
           <Button onClick={handleCsvExport} disabled={records.length === 0}>
             Скачать CSV
           </Button>
+          {!seedInfo ? (
+            <Button onClick={seedDemoData} disabled={seeding} variant="outline">
+              Создать тестовые данные
+            </Button>
+          ) : (
+            <Button onClick={deleteDemoData} disabled={seeding} variant="secondary">
+              Удалить тестовые данные
+            </Button>
+          )}
         </div>
       </div>
 

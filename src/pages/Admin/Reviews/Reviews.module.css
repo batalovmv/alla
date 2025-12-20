@@ -25,6 +25,22 @@
   color: #999;
 }
 
+.seedHint {
+  margin: 0.75rem 0 0;
+  font-size: 0.95rem;
+  color: #777;
+}
+
+.seedLink {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.seedLink:hover {
+  text-decoration: underline;
+}
+
 .list {
   display: flex;
   flex-direction: column;
