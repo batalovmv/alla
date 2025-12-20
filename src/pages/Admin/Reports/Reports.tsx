@@ -352,7 +352,16 @@ const Reports: React.FC = () => {
       alert('Тестовые данные созданы.')
     } catch (e) {
       console.error(e)
-      alert(formatDemoSeedError(e))
+      const msg = formatDemoSeedError(e)
+      console.error(msg)
+      try {
+        // Best UX: auto-copy so user can paste it to support/dev
+        await navigator.clipboard.writeText(msg)
+        alert('Ошибка создания тестовых данных.\n\nТекст ошибки скопирован в буфер обмена — просто вставьте сюда (Ctrl+V).')
+      } catch {
+        // Fallback: prompt is selectable/copyable
+        window.prompt('Скопируйте текст ошибки (Ctrl+C) и пришлите сюда:', msg)
+      }
     } finally {
       setSeeding(false)
     }
@@ -390,7 +399,14 @@ const Reports: React.FC = () => {
       alert('Тестовые данные удалены.')
     } catch (e) {
       console.error(e)
-      alert(formatDemoSeedError(e))
+      const msg = formatDemoSeedError(e)
+      console.error(msg)
+      try {
+        await navigator.clipboard.writeText(msg)
+        alert('Ошибка удаления тестовых данных.\n\nТекст ошибки скопирован в буфер обмена — просто вставьте сюда (Ctrl+V).')
+      } catch {
+        window.prompt('Скопируйте текст ошибки (Ctrl+C) и пришлите сюда:', msg)
+      }
     } finally {
       setSeeding(false)
     }
