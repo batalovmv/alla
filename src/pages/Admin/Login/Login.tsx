@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { onAuthStateChanged, signOut } from 'firebase/auth'
+import { onAuthStateChanged } from 'firebase/auth'
 import { useAppDispatch, useAppSelector } from '../../../store/hooks'
 import { setAdminState, setUser, setLoading, setError } from '../../../store/slices/authSlice'
 import { auth } from '../../../config/firebase'
@@ -31,8 +31,10 @@ const Login: React.FC = () => {
           if (ok) {
             navigate(ROUTES.ADMIN)
           } else {
+            // Important: do NOT auto sign-out here.
+            // We may need the user to stay signed in to run the one-time bootstrap
+            // grantAdmin call and receive the admin claim.
             dispatch(setError('У этого аккаунта нет прав администратора.'))
-            signOut(auth!).catch(() => {})
           }
         })
       }
