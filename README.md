@@ -1,133 +1,230 @@
-# Сайт косметолога (SPA + админ‑панель)
+# Сайт косметолога (SPA + админ-панель)
 
-Сайт‑визитка косметолога: публичные страницы + админ‑панель для управления контентом.
-
-- **Публичная часть**: `/`, `/procedures`, `/procedures/:id`, `/about`, `/reviews`, `/contacts`, `/privacy`
-- **Админ‑панель**: `/admin/*` (требуется Firebase Auth)
-- **Деплой**: GitHub Pages (base path **`/alla/`**)
+Сайт-визитка для косметолога: публичная часть + админ-панель для управления процедурами, отзывами и заявками. Приложение собирается через Vite и деплоится на GitHub Pages под базовым путем `/alla/` (см. `vite.config.ts`).
 
 ## Технологии
 
-- **React 18 + TypeScript (strict)**
-- **React Router DOM v6** + ленивые страницы через `React.lazy`
-- **Redux Toolkit** (slices: auth / procedures / booking / reviews)
-- **react-hook-form**
-- **Firebase** (Auth, Firestore, Storage) через `src/services/firebaseService.ts`
-- **Vite 5** (manual chunks в `vite.config.ts`)
-- **CSS Modules** + глобальные стили `src/assets/styles/index.css`
+- React 18 + TypeScript (strict)
+- React Router DOM v6 + `React.lazy` для ленивой загрузки страниц
+- Redux Toolkit + `react-redux`
+- React Hook Form для форм
+- Firebase (Auth, Firestore, Storage) через `src/services/firebaseService.ts`
+- Vite 5 с ручным разбиением на чанки (`vite.config.ts`)
+- CSS Modules + глобальные стили в `src/assets/styles/index.css`
+- GitHub Actions → GitHub Pages (`.github/workflows/deploy.yml`)
 
-## Что уже сделано (ключевые фичи)
+## Что уже сделано
 
 ### Публичная часть
 
-- **Каталог и карточки процедур** + страница детали процедуры
-- **Отзывы**: публичное создание, отображение только одобренных (при наличии Firebase)
-- **Контакты** + форма заявки (с валидацией, анти‑бот honeypot)
-- **SEO**: мета‑теги, OG/Twitter, `robots.txt`, `sitemap.xml`
-- **Fallback без Firebase**: публичная часть работает на mock‑данных (динамический import, не попадает в prod bundle) — `src/utils/api.ts`
+- Главная (`/`) с Hero, списком процедур и отзывами (+ `LazyMount`/Reveal для плавного появления)
+- Каталог процедур `/procedures` (фильтры, бесконечный скролл, Skeleton, Reveal, карусель)
+- Детальная страница процедуры (`/procedures/:id`) с CTA и похожими процедурами
+- Страница “О специалисте”, отзывы и контакты (с формой записи и картой `VITE_MAP_EMBED_URL`)
+- SEO: индивидуальные мета-теги, OG/Twitter, Schema.org, `robots.txt`, `sitemap.xml`
+- Без Firebase сайт работает на mock-данных (`src/utils/api.ts`, `mockData.ts`)
+- Загрузка новых страниц без “white screens”: `Suspense` → `PageFallback` (Skeleton + TopProgress)
+- Prefetch lazy-чанков и кеширование (hover/focus на навигации, `requestIdleCallback`)
+- Аналитика UX: skeletons, `Reveal`, `useDelayedFlag`, `LazyMount` (#home “строится при скролле”)
 
-### Админ‑панель
+### Админ-панель
 
-- **Логин** через Firebase Auth
-- **CRUD**: процедуры, контакты, “О специалисте”
-- **Модерация отзывов**
-- **Заявки / клиенты / история услуг / отчёты**
+- Вход через Firebase Auth (`/admin/login`)
+- CRUD: процедуры, отзывы, контакты, “О специалисте”, заявки, клиенты
+- Модерация отзывов, отчёты, загрузка изображений (Firebase Storage)
+- Обработка заявок/клиентов/истории услуг с защитой PII
 
-### UX загрузок и производительность
+## Getting Started
 
-- **Без “white screens” при lazy‑чанках**: per‑route `Suspense` fallback с **skeleton + top progress bar** (`src/components/common/PageFallback`, `TopProgress`, `Skeleton`)
-- **Анти‑flicker** для микро‑загрузок: `useDelayedFlag`
-- **Prefetch** lazy‑страниц:
-  - по hover/focus в хедере (`src/components/layout/Header/Header.tsx`)
-  - консервативно в idle после смены маршрута (`src/utils/idleCallback.ts`, `src/utils/prefetchPages.ts`)
-- **Анимации появления**: `Reveal` (с уважением `prefers-reduced-motion`)
-- **Главная “строится при скролле”**: прогрессивный маунт секций `LazyMount`
+### Подготовка окружения
 
-## Установка и запуск
+1. Создайте `.env.local` в корне, скопируйте содержимое `env.local.template`
+2. Заполните `VITE_FIREBASE_*`, `VITE_ADMIN_UID(S)` и публичные переменные (контакты, соцсети, `VITE_MAP_EMBED_URL`). Эти `VITE_*` значения попадут в собранный бандл, поэтому держите в них только то, что не секретно.
+3. Файл `.env.local` не должен коммититься (`.gitignore` уже настроен).
+
+### Установка и запуск
 
 ```bash
 npm install
 npm run dev
 ```
 
-Приложение: `http://localhost:5173`
+Открыть `http://localhost:5173`. Для предпросмотра `npm run preview` после `npm run build`.
 
-### Сборка / предпросмотр
+### Сборка
 
 ```bash
 npm run build
-npm run preview
 ```
 
-## Переменные окружения
+## Firebase: Auth / Firestore / Storage
 
-- Локально: `.env.local` (скопировать из `env.local.template`)
-- В CI/CD: GitHub Secrets (см. `GITHUB_SECRETS_SETUP.md`)
+1. Откройте Firebase Console и выберите проект `alla-cosmetology` (или создайте свой).
+2. Включите Email/Password в Authentication.
+3. Создайте пользователя администратора и сохраните его UID (понадобится для `VITE_ADMIN_UID(S)`).
+4. Включите Firestore Database (режим тестирования на старте) и Storage.
+5. Загрузите изображения процедур/о специалисте в Storage и настройте правила (см. ниже).
 
-В `env.local.template` перечислены все поддерживаемые переменные (Firebase, контакты, соцсети, `VITE_MAP_EMBED_URL`, и т.д.).
+## Firestore Security Rules
+
+Скопируйте/вставьте (замените `ADMIN_UID_1` на UID админа):
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.uid in [
+          "ADMIN_UID_1"
+        ];
+    }
+
+    match /procedures/{procedureId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if resource.data.approved == true || isAdmin();
+      allow create: if
+        request.resource.data.keys().hasOnly([
+          'clientName',
+          'procedureId',
+          'procedureName',
+          'rating',
+          'text',
+          'date',
+          'createdAt'
+        ])
+        && !request.resource.data.keys().hasAny(['approved']);
+      allow update, delete: if isAdmin();
+    }
+
+    match /reviewMeta/{reviewId} {
+      allow create: if request.resource.data.keys().hasOnly(['phone', 'createdAt']);
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /bookings/{bookingId} {
+      allow create: if
+        request.resource.data.keys().hasOnly([
+          'name',
+          'phone',
+          'email',
+          'procedureId',
+          'desiredDate',
+          'desiredTime',
+          'comment',
+          'consent',
+          'procedureName',
+          'status',
+          'createdAt'
+        ])
+        && request.resource.data.consent == true
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.createdAt >= request.time - duration.value(10, 'm');
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /clients/{clientId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /serviceRecords/{recordId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /contactInfo/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /aboutInfo/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
+```
+
+## Firestore Indexes
+
+- При `The query requires an index` используйте ссылку из ошибки (`.../firestore/indexes?create_composite=...`) и создайте индекс.
+- Ручное создание (Firestore → Indexes):
+  - `serviceRecords` по `clientId` (Asc) + `date` (Desc)
+  - `serviceRecords` по `clientPhone` (Asc) + `date` (Desc)
+
+## GitHub Secrets (CI/CD)
+
+Настройте эти секреты в `Settings → Secrets and variables → Actions` (значения из Firebase Console и `.env.local`):
+
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+- `VITE_ADMIN_UID` или `VITE_ADMIN_UIDS`
+- `VITE_SITE_URL`, `VITE_SITE_NAME`, `VITE_SITE_DESCRIPTION`
+- `VITE_CONTACT_PHONE`, `VITE_CONTACT_EMAIL`, `VITE_CONTACT_ADDRESS`, `VITE_CONTACT_WORKING_HOURS`
+- `VITE_SOCIAL_INSTAGRAM`, `VITE_SOCIAL_VK`, `VITE_SOCIAL_TELEGRAM`, `VITE_SOCIAL_WHATSAPP`
+- `VITE_MAP_EMBED_URL`
+
+GitHub Actions передаёт их в `npm run build`. Помните: `VITE_*` попадают в браузер, поэтому не храните в них приватные ключи (безопасность обеспечивает Firestore/Storage Rules и allowlist admin UID).
 
 ## GitHub Pages (важно)
 
-- **base path**: `vite.config.ts` → `base: '/alla/'`
-- **Router basename**: `src/main.tsx` → `<BrowserRouter basename={import.meta.env.BASE_URL}>`
-- **Deep links на Pages**: `public/404.html` + скрипт в `index.html` (паттерн `rafgraph/spa-github-pages`)
+- `vite.config.ts` → `base: '/alla/'`
+- `src/main.tsx` → `<BrowserRouter basename={import.meta.env.BASE_URL}>`
+- `public/404.html` + `index.html` используют `rafgraph/spa-github-pages` для Deep Link.
 
 ## Деплой
 
-- **Авто‑деплой**: `.github/workflows/deploy.yml` (запускается на `push` в `main`)
-- **Скрипты**:
-  - `npm run build`
-  - `npm run deploy` (локальный ручной деплой через `gh-pages`, обычно не нужен при CI)
+- `npm run build`
+- `npm run deploy` (для ручного деплоя через `gh-pages`, обычно CI делает `npm run build` и пушит `dist`)
+- GitHub Actions workflow `.github/workflows/deploy.yml` запускается на `push` в `main` и публикует `dist` через `peaceiris/actions-gh-pages`.
 
 ## Управление контентом
 
-- **Рекомендуется**: через админку `/admin/login`
-- **Fallback (без Firebase)**:
-  - процедуры/отзывы: `src/utils/mockData.ts` (подключается динамически из `src/utils/api.ts`)
-  - контакты: `src/config/constants.ts` (и/или env)
+- Через админку `/admin/login` (требует Firebase Auth + allowlist UID)
+- Без Firebase (fallback): процедуры/отзывы из `src/utils/mockData.ts` (динамический import), контакты — `src/config/constants.ts` или env.
+- `src/utils/api.ts` переключает между Firebase и mock автоматически.
 
 ## Структура проекта (кратко)
 
 ```
 src/
   pages/                 # публичные страницы + Admin/*
-  components/            # UI, layout, admin, domain-компоненты
+  components/            # common, layout, admin, domain-компоненты
   store/                 # Redux store + slices
-  services/              # firebaseService (единая точка работы с Firebase)
-  utils/                 # api (firebase + mock), prefetch, in-view, validation, etc.
+  services/              # firebaseService
+  utils/                 # api (firebase + mock), hooks, prefetch utilities
   config/                # routes, constants, firebase config
   assets/styles/         # глобальные стили
 ```
 
-## Документация
+## Roadmap
 
-- `QUICK_START.md` — быстрый старт
-- `FIREBASE_SETUP.md` — настройка Firebase (Auth/Firestore/Storage)
-- `FIRESTORE_RULES_SETUP.md` / `FIRESTORE_INDEXES_SETUP.md` — правила/индексы Firestore
-- `GITHUB_SECRETS_SETUP.md` — секреты для CI
-- `env.local.template` — список env‑переменных
+### UX и производительность
 
-## Roadmap (куда развивать дальше)
-
-### UX/перф (приоритетно)
-
-- **Тонкая настройка `LazyMount`**: пер‑секционный `rootMargin` (например, 200–600px в зависимости от блока), чтобы “строилось” и при этом не было задержек
-- **Lighthouse/Perf budget**: добавить `Lighthouse CI`, бюджет по LCP/CLS/JS size
-- **Bundle analysis**: подключить `rollup-plugin-visualizer` в отдельный скрипт (без влияния на prod)
-- **Изображения**: WebP/AVIF, responsive `srcset`, preloading hero‑изображений, лимиты/сжатие при upload в админке
+- Тонкая настройка `LazyMount`/Reveal, чтобы блоки монтировались с нужным `rootMargin`
+- `Lighthouse CI` и Performance Budget (LCP/CLS/JS size)
+- Bundle analysis (`rollup-plugin-visualizer`) + сжатие изображений (WebP/AVIF, responsive `srcset`, preloading hero)
 
 ### Качество и стабильность
 
-- **Error Boundary** на уровне страниц (чтобы не падало всё приложение)
-- **E2E** (Playwright) для критических сценариев: навигация, форма записи, логин админки
-- **Логи/мониторинг**: минимум — сбор ошибок (Sentry/LogRocket аналоги) + отключение PII
+- Error Boundary на уровне страниц
+- E2E (Playwright) покрытие критичных путей: навигация, форма записи, логин админки
+- Логи/мониторинг (Sentry/LogRocket), без PII
 
 ### Продуктовые фичи
 
-- **Календарь записи** (слоты/расписание)
-- **Галерея работ “до/после”**
-- **Блог/статьи** (SEO‑контент)
-- **PWA** (service worker) — только после оценки рисков кеширования/обновлений
+- Календарь записи (слоты/расписание)
+- Галерея работ “до/после”
+- Блог/статьи для SEO
+- PWA (service worker) после оценки кеширования
 
 ## Лицензия
 
