@@ -72,3 +72,26 @@
   flex: 1;
 }
 
+@media (max-width: 768px) {
+  .formContainer {
+    max-width: 100%;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .row {
+    grid-template-columns: 1fr;
+  }
+
+  .arrayItem {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .arrayItem :global(button) {
+    width: 100%;
+  }
+}
+
