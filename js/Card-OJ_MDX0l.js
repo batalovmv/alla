@@ -1,0 +1,1 @@
+import{j as t}from"./index-dp0cXq8c.js";import{R as e}from"./react-vendor-BQWX9zlF.js";const o="_card_1b709_1",l="_clickable_1b709_11",a={card:o,clickable:l},m=({children:s,className:r="",onClick:c})=>t.jsx("div",{className:`${a.card} ${c?a.clickable:""} ${r}`,onClick:c,children:s}),b=e.memo(m);export{b as C};
