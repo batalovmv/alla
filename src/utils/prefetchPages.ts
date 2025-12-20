@@ -23,4 +23,12 @@ export function prefetchContactsPage(): void {
   void import('../pages/Contacts/Contacts')
 }
 
+export function prefetchProcedureDetailPage(): void {
+  void import('../pages/ProcedureDetail/ProcedureDetail')
+}
+
+export function prefetchPrivacyPage(): void {
+  void import('../pages/Privacy/Privacy')
+}
+
 

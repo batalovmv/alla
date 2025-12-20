@@ -27,6 +27,7 @@ import Select from '../../components/common/Select/Select'
 import Button from '../../components/common/Button/Button'
 import SEO from '../../components/common/SEO/SEO'
 import { Skeleton } from '../../components/common/Skeleton/Skeleton'
+import { Reveal } from '../../components/common/Reveal/Reveal'
 import styles from './Contacts.module.css'
 
 const Contacts: React.FC = () => {
@@ -210,8 +211,9 @@ const Contacts: React.FC = () => {
 
         <div className={styles.content}>
           <div className={styles.infoSection}>
-            <Card className={styles.infoCard}>
-              <h2>Контактная информация</h2>
+            <Reveal>
+              <Card className={styles.infoCard}>
+                <h2>Контактная информация</h2>
               <div className={styles.contactItem}>
                 <strong>Телефон:</strong>
                 <a href={`tel:${contactInfo.phone}`}>
@@ -309,12 +311,14 @@ const Contacts: React.FC = () => {
                   </div>
                 )}
               </div>
-            </Card>
+              </Card>
+            </Reveal>
           </div>
 
           <div className={styles.formSection}>
-            <Card className={styles.formCard}>
-              <h2>Записаться на сеанс</h2>
+            <Reveal delayMs={60}>
+              <Card className={styles.formCard}>
+                <h2>Записаться на сеанс</h2>
               {success && (
                 <div className={styles.successMessage}>
                   ✓ Ваша заявка успешно отправлена! Мы свяжемся с вами в
@@ -472,7 +476,8 @@ const Contacts: React.FC = () => {
                   {isSubmitting ? 'Отправка...' : 'Отправить заявку'}
                 </Button>
               </form>
-            </Card>
+              </Card>
+            </Reveal>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { setProcedures, setLoading } from '../../store/slices/proceduresSlice'
 import { fetchProcedures } from '../../utils/api'
@@ -8,6 +8,8 @@ import ProcedureFilters from '../../components/procedures/ProcedureFilters/Proce
 import SEO from '../../components/common/SEO/SEO'
 import { useDelayedFlag } from '../../utils/useDelayedFlag'
 import { ProcedureCardSkeleton } from '../../components/common/Skeleton/SkeletonPresets'
+import { useInView } from '../../utils/useInView'
+import { Reveal } from '../../components/common/Reveal/Reveal'
 import styles from './Procedures.module.css'
 
 const Procedures: React.FC = () => {
@@ -75,6 +77,33 @@ const Procedures: React.FC = () => {
   }, [procedures, filters])
 
   const showSkeleton = useDelayedFlag(loading && procedures.length === 0, 160)
+  const [visibleCount, setVisibleCount] = useState(9)
+  const { ref: sentinelRef, inView: sentinelInView } = useInView<HTMLDivElement>({
+    once: false,
+    rootMargin: '600px 0px',
+  })
+  const prevInViewRef = useRef(false)
+
+  useEffect(() => {
+    // Reset windowed rendering when filters change to avoid confusing “empty” screens.
+    setVisibleCount(9)
+  }, [filters.category, filters.search, filters.sort])
+
+  useEffect(() => {
+    const prev = prevInViewRef.current
+    prevInViewRef.current = sentinelInView
+    if (!sentinelInView || prev) return
+
+    setVisibleCount((c) => {
+      const next = Math.min(c + 6, filteredProcedures.length)
+      return next
+    })
+  }, [sentinelInView, filteredProcedures.length])
+
+  const visibleProcedures = useMemo(
+    () => filteredProcedures.slice(0, visibleCount),
+    [filteredProcedures, visibleCount]
+  )
 
   return (
     <>
@@ -100,9 +129,22 @@ const Procedures: React.FC = () => {
           </div>
         ) : filteredProcedures.length > 0 ? (
           <div className={styles.grid}>
-            {filteredProcedures.map((procedure) => (
-              <ProcedureCard key={procedure.id} procedure={procedure} />
+            {visibleProcedures.map((procedure, i) => (
+              <Reveal
+                key={procedure.id}
+                delayMs={Math.min(i * 28, 180)}
+              >
+                <ProcedureCard procedure={procedure} />
+              </Reveal>
             ))}
+            {/* Infinite scroll sentinel */}
+            {visibleCount < filteredProcedures.length && (
+              <div
+                ref={sentinelRef}
+                style={{ height: 1, width: '100%', gridColumn: '1 / -1' }}
+                aria-hidden="true"
+              />
+            )}
           </div>
         ) : (
           <div className={styles.empty}>

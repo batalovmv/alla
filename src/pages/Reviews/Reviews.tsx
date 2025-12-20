@@ -4,6 +4,7 @@ import { setReviews, addReview, setLoading } from '../../store/slices/reviewsSli
 import { fetchReviews, submitReview as submitReviewAPI } from '../../utils/api'
 import { isStale } from '../../utils/cache'
 import { useDelayedFlag } from '../../utils/useDelayedFlag'
+import { useInView } from '../../utils/useInView'
 import {
   loadReviewsFromStorage,
   saveReviewsToStorage,
@@ -17,6 +18,7 @@ import AddReviewForm from '../../components/reviews/AddReviewForm/AddReviewForm'
 import SEO from '../../components/common/SEO/SEO'
 import { ReviewCardSkeleton } from '../../components/common/Skeleton/SkeletonPresets'
 import { Skeleton } from '../../components/common/Skeleton/Skeleton'
+import { Reveal } from '../../components/common/Reveal/Reveal'
 import styles from './Reviews.module.css'
 
 const Reviews: React.FC = () => {
@@ -105,6 +107,30 @@ const Reviews: React.FC = () => {
   )
 
   const showListSkeleton = useDelayedFlag(loading && reviews.length === 0, 160)
+  const [visibleCount, setVisibleCount] = useState(6)
+  const { ref: sentinelRef, inView: sentinelInView } = useInView<HTMLDivElement>({
+    once: false,
+    rootMargin: '700px 0px',
+  })
+  const prevInViewRef = useRef(false)
+
+  useEffect(() => {
+    // Reset windowed rendering when filter changes.
+    setVisibleCount(6)
+  }, [filteredProcedure])
+
+  useEffect(() => {
+    const prev = prevInViewRef.current
+    prevInViewRef.current = sentinelInView
+    if (!sentinelInView || prev) return
+
+    setVisibleCount((c) => Math.min(c + 4, filteredReviews.length))
+  }, [sentinelInView, filteredReviews.length])
+
+  const visibleReviews = useMemo(
+    () => filteredReviews.slice(0, visibleCount),
+    [filteredReviews, visibleCount]
+  )
 
   const handleAddReview = useCallback(
     async (formData: {
@@ -233,45 +259,50 @@ const Reviews: React.FC = () => {
           </div>
         ) : filteredReviews.length > 0 ? (
           <div className={styles.reviewsGrid}>
-            {filteredReviews.map((review) => (
-              <Card key={review.id} className={styles.reviewCard}>
-                <div className={styles.reviewHeader}>
-                  <div className={styles.reviewAuthor}>
-                    {review.clientPhoto ? (
-                      <img
-                        src={review.clientPhoto}
-                        alt={review.clientName}
-                        className={styles.authorPhoto}
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className={styles.authorPlaceholder}>
-                        {review.clientName.charAt(0).toUpperCase()}
+            {visibleReviews.map((review, i) => (
+              <Reveal key={review.id} delayMs={Math.min(i * 22, 180)}>
+                <Card className={styles.reviewCard}>
+                  <div className={styles.reviewHeader}>
+                    <div className={styles.reviewAuthor}>
+                      {review.clientPhoto ? (
+                        <img
+                          src={review.clientPhoto}
+                          alt={review.clientName}
+                          className={styles.authorPhoto}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className={styles.authorPlaceholder}>
+                          {review.clientName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div>
+                        <h3 className={styles.authorName}>{review.clientName}</h3>
+                        <p className={styles.procedureName}>{review.procedureName}</p>
                       </div>
-                    )}
-                    <div>
-                      <h3 className={styles.authorName}>
-                        {review.clientName}
-                      </h3>
-                      <p className={styles.procedureName}>
-                        {review.procedureName}
-                      </p>
+                    </div>
+                    <div className={styles.reviewRating}>
+                      {getRatingStars(review.rating)}
                     </div>
                   </div>
-                  <div className={styles.reviewRating}>
-                    {getRatingStars(review.rating)}
-                  </div>
-                </div>
-                <p className={styles.reviewText}>{review.text}</p>
-                <p className={styles.reviewDate}>
-                  {new Date(review.date).toLocaleDateString('ru-RU', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </p>
-              </Card>
+                  <p className={styles.reviewText}>{review.text}</p>
+                  <p className={styles.reviewDate}>
+                    {new Date(review.date).toLocaleDateString('ru-RU', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </p>
+                </Card>
+              </Reveal>
             ))}
+            {visibleCount < filteredReviews.length && (
+              <div
+                ref={sentinelRef}
+                style={{ height: 1, width: '100%', gridColumn: '1 / -1' }}
+                aria-hidden="true"
+              />
+            )}
           </div>
         ) : (
           <div className={styles.empty}>

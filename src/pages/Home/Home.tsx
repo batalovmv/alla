@@ -17,6 +17,7 @@ import Card from '../../components/common/Card/Card'
 import SEO from '../../components/common/SEO/SEO'
 import { useDelayedFlag } from '../../utils/useDelayedFlag'
 import { ProcedureCardSkeleton, ReviewCardSkeleton } from '../../components/common/Skeleton/SkeletonPresets'
+import { Reveal } from '../../components/common/Reveal/Reveal'
 import styles from './Home.module.css'
 
 const Home: React.FC = () => {
@@ -139,7 +140,8 @@ const Home: React.FC = () => {
             </div>
           </section>
         ) : popularProcedures.length > 0 ? (
-          <section className={styles.section}>
+          <Reveal>
+            <section className={styles.section}>
             <div className={styles.container}>
               <h2 className={styles.sectionTitle}>Популярные процедуры</h2>
               <div className={styles.proceduresGrid}>
@@ -153,7 +155,8 @@ const Home: React.FC = () => {
                 </Link>
               </div>
             </div>
-          </section>
+            </section>
+          </Reveal>
         ) : null}
 
         {/* About Section */}
@@ -231,7 +234,8 @@ const Home: React.FC = () => {
             </div>
           </section>
         ) : featuredReviews.length > 0 ? (
-          <section className={`${styles.section} ${styles.reviewsSection}`}>
+          <Reveal>
+            <section className={`${styles.section} ${styles.reviewsSection}`}>
             <div className={styles.container}>
               <div className={styles.reviewsHeader}>
                 <div>
@@ -266,42 +270,45 @@ const Home: React.FC = () => {
                 ))}
               </div>
             </div>
-          </section>
+            </section>
+          </Reveal>
         ) : null}
 
         {/* Contact CTA */}
-        <section className={`${styles.section} ${styles.ctaSection}`}>
-          <div className={styles.container}>
-            <Card className={styles.ctaCard}>
-              <h2>Готовы начать?</h2>
-              <p>Запишитесь на консультацию и узнайте, как мы можем помочь</p>
-              <div className={styles.ctaActions}>
-                <Link to={ROUTES.CONTACTS}>
-                  <Button size="large">Записаться</Button>
-                </Link>
-                <a href={`tel:${ci.phone}`}>
-                  <Button variant="outline" size="large">
-                    Позвонить
-                  </Button>
-                </a>
-                {whatsappHref && (
-                  <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
+        <Reveal>
+          <section className={`${styles.section} ${styles.ctaSection}`}>
+            <div className={styles.container}>
+              <Card className={styles.ctaCard}>
+                <h2>Готовы начать?</h2>
+                <p>Запишитесь на консультацию и узнайте, как мы можем помочь</p>
+                <div className={styles.ctaActions}>
+                  <Link to={ROUTES.CONTACTS}>
+                    <Button size="large">Записаться</Button>
+                  </Link>
+                  <a href={`tel:${ci.phone}`}>
                     <Button variant="outline" size="large">
-                      WhatsApp
+                      Позвонить
                     </Button>
                   </a>
-                )}
-                {telegramHref && (
-                  <a href={telegramHref} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" size="large">
-                      Telegram
-                    </Button>
-                  </a>
-                )}
-              </div>
-            </Card>
-          </div>
-        </section>
+                  {whatsappHref && (
+                    <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="large">
+                        WhatsApp
+                      </Button>
+                    </a>
+                  )}
+                  {telegramHref && (
+                    <a href={telegramHref} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="large">
+                        Telegram
+                      </Button>
+                    </a>
+                  )}
+                </div>
+              </Card>
+            </div>
+          </section>
+        </Reveal>
       </div>
     </>
   )

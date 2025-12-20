@@ -16,6 +16,7 @@ import ProcedureCard from '../../components/procedures/ProcedureCard/ProcedureCa
 import SEO from '../../components/common/SEO/SEO'
 import { useDelayedFlag } from '../../utils/useDelayedFlag'
 import { PageFallback } from '../../components/common/PageFallback/PageFallback'
+import { Reveal } from '../../components/common/Reveal/Reveal'
 import styles from './ProcedureDetail.module.css'
 
 const ProcedureDetail: React.FC = () => {
@@ -162,37 +163,45 @@ const ProcedureDetail: React.FC = () => {
 
         <div className={styles.sections}>
           {procedure.indications.length > 0 && (
-            <Card className={styles.sectionCard}>
-              <h2>Показания</h2>
-              <ul className={styles.list}>
-                {procedure.indications.map((indication, index) => (
-                  <li key={index}>{indication}</li>
-                ))}
-              </ul>
-            </Card>
+            <Reveal>
+              <Card className={styles.sectionCard}>
+                <h2>Показания</h2>
+                <ul className={styles.list}>
+                  {procedure.indications.map((indication, index) => (
+                    <li key={index}>{indication}</li>
+                  ))}
+                </ul>
+              </Card>
+            </Reveal>
           )}
 
           {procedure.contraindications.length > 0 && (
-            <Card className={styles.sectionCard}>
-              <h2>Противопоказания</h2>
-              <ul className={styles.list}>
-                {procedure.contraindications.map((contraindication, index) => (
-                  <li key={index}>{contraindication}</li>
-                ))}
-              </ul>
-            </Card>
+            <Reveal delayMs={50}>
+              <Card className={styles.sectionCard}>
+                <h2>Противопоказания</h2>
+                <ul className={styles.list}>
+                  {procedure.contraindications.map((contraindication, index) => (
+                    <li key={index}>{contraindication}</li>
+                  ))}
+                </ul>
+              </Card>
+            </Reveal>
           )}
         </div>
 
         {relatedProcedures.length > 0 && (
-          <div className={styles.related}>
-            <h2 className={styles.relatedTitle}>Похожие процедуры</h2>
-            <div className={styles.relatedGrid}>
-              {relatedProcedures.map((p) => (
-                <ProcedureCard key={p.id} procedure={p} />
-              ))}
+          <Reveal>
+            <div className={styles.related}>
+              <h2 className={styles.relatedTitle}>Похожие процедуры</h2>
+              <div className={styles.relatedGrid}>
+                {relatedProcedures.map((p, i) => (
+                  <Reveal key={p.id} delayMs={Math.min(i * 24, 180)}>
+                    <ProcedureCard procedure={p} />
+                  </Reveal>
+                ))}
+              </div>
             </div>
-          </div>
+          </Reveal>
         )}
         </div>
       </div>
