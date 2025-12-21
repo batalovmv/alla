@@ -255,13 +255,24 @@ export const bookingsService = {
 
   async create(booking: BookingFormData & { procedureName?: string }): Promise<string> {
     checkFirebase()
-    const docRef = await addDoc(collection(db!, 'bookings'), {
-      ...booking,
+    // Firestore client does not like `undefined` fields and our rules are strict about schema.
+    // Use explicit nulls for optional fields.
+    const payload = {
+      name: booking.name,
+      phone: booking.phone,
+      email: booking.email ?? null,
+      procedureId: booking.procedureId,
+      procedureName: booking.procedureName ?? null,
+      desiredDate: booking.desiredDate,
+      desiredTime: booking.desiredTime,
       comment: booking.comment || '',
+      consent: booking.consent,
       status: 'new',
       // IMPORTANT: rules validate `createdAt is timestamp` on create
       createdAt: Timestamp.now(),
-    })
+    }
+
+    const docRef = await addDoc(collection(db!, 'bookings'), payload)
     return docRef.id
   },
 
