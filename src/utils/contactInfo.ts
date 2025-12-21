@@ -2,6 +2,7 @@ import { CONTACT_INFO } from '../config/constants'
 import { contactInfoService } from '../services/firebaseService'
 import { ContactInfo } from '../types'
 import { safeHttpUrl, safeIframeSrc } from './url'
+import { formatWorkingHoursFromSchedule, normalizeWorkingSchedule, parseWorkingHoursStringToSchedule } from './workingHours'
 
 const useFirebase =
   !!import.meta.env.VITE_FIREBASE_API_KEY && !!import.meta.env.VITE_FIREBASE_PROJECT_ID
@@ -12,12 +13,17 @@ let inflight: Promise<ContactInfo> | null = null
 function normalize(raw: any | null | undefined): ContactInfo {
   const social = raw?.socialMedia || {}
   const envMapEmbedUrl = safeIframeSrc(import.meta.env.VITE_MAP_EMBED_URL || '')
+  const schedule = normalizeWorkingSchedule(raw?.workingSchedule) || null
+  const derivedHours = schedule
+    ? formatWorkingHoursFromSchedule(schedule)
+    : null
   return {
     phone: raw?.phone || CONTACT_INFO.phone,
     whatsappPhone: raw?.whatsappPhone || '',
     email: raw?.email || CONTACT_INFO.email,
     address: raw?.address || CONTACT_INFO.address,
-    workingHours: raw?.workingHours || CONTACT_INFO.workingHours,
+    workingHours: derivedHours || raw?.workingHours || CONTACT_INFO.workingHours,
+    workingSchedule: schedule || (raw?.workingHours ? parseWorkingHoursStringToSchedule(raw.workingHours) : undefined),
     socialMedia: {
       instagram: safeHttpUrl(social.instagram || CONTACT_INFO.socialMedia.instagram || ''),
       vk: safeHttpUrl(social.vk || CONTACT_INFO.socialMedia.vk || ''),

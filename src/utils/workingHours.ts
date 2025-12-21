@@ -1,4 +1,4 @@
-type DayKey = 'Пн' | 'Вт' | 'Ср' | 'Чт' | 'Пт' | 'Сб' | 'Вс'
+export type DayKey = 'Пн' | 'Вт' | 'Ср' | 'Чт' | 'Пт' | 'Сб' | 'Вс'
 
 const DAY_ORDER: DayKey[] = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 
@@ -38,6 +38,128 @@ function parseDaysToken(token: string): DayKey[] {
 }
 
 export type WorkingWindow = { openMin: number; closeMin: number }
+
+export type WorkingScheduleDay = {
+  closed: boolean
+  open: string // HH:MM
+  close: string // HH:MM
+}
+
+export type WorkingSchedule = Record<DayKey, WorkingScheduleDay>
+
+export function defaultWorkingSchedule(): WorkingSchedule {
+  return {
+    'Пн': { closed: false, open: '09:00', close: '18:00' },
+    'Вт': { closed: false, open: '09:00', close: '18:00' },
+    'Ср': { closed: false, open: '09:00', close: '18:00' },
+    'Чт': { closed: false, open: '09:00', close: '18:00' },
+    'Пт': { closed: false, open: '09:00', close: '18:00' },
+    'Сб': { closed: false, open: '10:00', close: '16:00' },
+    'Вс': { closed: true, open: '10:00', close: '16:00' },
+  }
+}
+
+export function normalizeWorkingSchedule(raw: any): WorkingSchedule | null {
+  if (!raw || typeof raw !== 'object') return null
+  const base = defaultWorkingSchedule()
+  const out: any = { ...base }
+  for (const day of DAY_ORDER) {
+    const v = (raw as any)[day]
+    if (!v || typeof v !== 'object') continue
+    const closed = Boolean(v.closed)
+    const open = typeof v.open === 'string' ? v.open : base[day].open
+    const close = typeof v.close === 'string' ? v.close : base[day].close
+    out[day] = { closed, open, close }
+  }
+  return out as WorkingSchedule
+}
+
+export function formatWorkingHoursFromSchedule(schedule: WorkingSchedule): string {
+  const parts: string[] = []
+
+  type Sig = { closed: boolean; open: string; close: string }
+  const sigOf = (d: DayKey): Sig => {
+    const s = schedule[d]
+    return { closed: Boolean(s.closed), open: s.open, close: s.close }
+  }
+
+  let start: DayKey | null = null
+  let prev: DayKey | null = null
+  let prevSig: Sig | null = null
+
+  const flush = () => {
+    if (!start || !prev || !prevSig) return
+    const dayLabel = start === prev ? start : `${start}-${prev}`
+    if (prevSig.closed) {
+      parts.push(`${dayLabel}: выходной`)
+    } else {
+      parts.push(`${dayLabel}: ${prevSig.open} - ${prevSig.close}`)
+    }
+  }
+
+  for (const d of DAY_ORDER) {
+    const sig = sigOf(d)
+    if (!start) {
+      start = d
+      prev = d
+      prevSig = sig
+      continue
+    }
+    const same =
+      prevSig?.closed === sig.closed &&
+      prevSig?.open === sig.open &&
+      prevSig?.close === sig.close
+    if (same) {
+      prev = d
+      continue
+    }
+    flush()
+    start = d
+    prev = d
+    prevSig = sig
+  }
+  flush()
+
+  return parts.join(', ')
+}
+
+export function parseWorkingHoursStringToSchedule(workingHours: string): WorkingSchedule {
+  // Start from all closed; then set windows from parsed string.
+  const out: WorkingSchedule = {
+    'Пн': { closed: true, open: '09:00', close: '18:00' },
+    'Вт': { closed: true, open: '09:00', close: '18:00' },
+    'Ср': { closed: true, open: '09:00', close: '18:00' },
+    'Чт': { closed: true, open: '09:00', close: '18:00' },
+    'Пт': { closed: true, open: '09:00', close: '18:00' },
+    'Сб': { closed: true, open: '10:00', close: '16:00' },
+    'Вс': { closed: true, open: '10:00', close: '16:00' },
+  }
+
+  const parts = String(workingHours || '').split(',').map((x) => x.trim()).filter(Boolean)
+  for (const p of parts) {
+    const m = p.match(/^(.*?)\s*:\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*$/)
+    if (!m) continue
+    const daysToken = m[1]
+    const days = parseDaysToken(daysToken)
+    const open = m[2].padStart(5, '0')
+    const close = m[3].padStart(5, '0')
+    for (const d of days) {
+      out[d] = { closed: false, open, close }
+    }
+  }
+  return out
+}
+
+export function getWorkingWindowForDateFromSchedule(schedule: WorkingSchedule, date: Date): WorkingWindow | null {
+  const day = toDayKey(date)
+  const d = schedule[day]
+  if (!d || d.closed) return null
+  const openMin = parseTimeToMinutes(d.open)
+  const closeMin = parseTimeToMinutes(d.close)
+  if (openMin == null || closeMin == null) return null
+  if (closeMin <= openMin) return null
+  return { openMin, closeMin }
+}
 
 // Parses strings like: "Пн-Пт: 9:00 - 18:00, Сб: 10:00 - 16:00"
 export function getWorkingWindowForDate(workingHours: string, date: Date): WorkingWindow | null {
@@ -85,6 +207,7 @@ export type BookingSuggestion = {
 
 export function suggestBookingSlot(opts: {
   workingHours: string
+  schedule?: WorkingSchedule | null
   now?: Date
   leadMinutes?: number
   stepMinutes?: number
@@ -94,7 +217,9 @@ export function suggestBookingSlot(opts: {
   const stepMinutes = opts.stepMinutes ?? 15
 
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const todayWindow = getWorkingWindowForDate(opts.workingHours, today)
+  const todayWindow = opts.schedule
+    ? getWorkingWindowForDateFromSchedule(opts.schedule, today)
+    : getWorkingWindowForDate(opts.workingHours, today)
 
   const nowMin = now.getHours() * 60 + now.getMinutes()
   const requestedMin = nowMin + leadMinutes
@@ -134,7 +259,9 @@ export function suggestBookingSlot(opts: {
   for (let i = 1; i <= 14; i++) {
     const d = new Date(today)
     d.setDate(d.getDate() + i)
-    const w = getWorkingWindowForDate(opts.workingHours, d)
+    const w = opts.schedule
+      ? getWorkingWindowForDateFromSchedule(opts.schedule, d)
+      : getWorkingWindowForDate(opts.workingHours, d)
     if (!w) continue
     const t = roundUpToStep(w.openMin + 30, stepMinutes)
     return {

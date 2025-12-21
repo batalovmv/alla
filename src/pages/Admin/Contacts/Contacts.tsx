@@ -6,6 +6,7 @@ import Input from '../../../components/common/Input/Input'
 import Button from '../../../components/common/Button/Button'
 import Card from '../../../components/common/Card/Card'
 import { PageFallback } from '../../../components/common/PageFallback/PageFallback'
+import { DayKey, WorkingSchedule, defaultWorkingSchedule, formatWorkingHoursFromSchedule, parseWorkingHoursStringToSchedule } from '../../../utils/workingHours'
 import styles from './Contacts.module.css'
 
 interface ContactFormData {
@@ -13,7 +14,7 @@ interface ContactFormData {
   whatsappPhone: string
   email: string
   address: string
-  workingHours: string
+  workingSchedule: WorkingSchedule
   mapEmbedUrl: string
   instagram: string
   vk: string
@@ -31,6 +32,7 @@ const Contacts: React.FC = () => {
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
   } = useForm<ContactFormData>()
 
   useEffect(() => {
@@ -42,12 +44,16 @@ const Contacts: React.FC = () => {
       setLoading(true)
       const data = await contactInfoService.get()
       if (data) {
+        const schedule: WorkingSchedule =
+          (data.workingSchedule as any) ||
+          parseWorkingHoursStringToSchedule(data.workingHours || CONTACT_INFO.workingHours) ||
+          defaultWorkingSchedule()
         reset({
           phone: data.phone || CONTACT_INFO.phone,
           whatsappPhone: data.whatsappPhone || '',
           email: data.email || CONTACT_INFO.email,
           address: data.address || CONTACT_INFO.address,
-          workingHours: data.workingHours || CONTACT_INFO.workingHours,
+          workingSchedule: schedule,
           mapEmbedUrl: data.mapEmbedUrl || '',
           instagram: data.socialMedia?.instagram || CONTACT_INFO.socialMedia.instagram,
           vk: data.socialMedia?.vk || CONTACT_INFO.socialMedia.vk,
@@ -60,7 +66,7 @@ const Contacts: React.FC = () => {
           whatsappPhone: '',
           email: CONTACT_INFO.email,
           address: CONTACT_INFO.address,
-          workingHours: CONTACT_INFO.workingHours,
+          workingSchedule: parseWorkingHoursStringToSchedule(CONTACT_INFO.workingHours),
           mapEmbedUrl: '',
           instagram: CONTACT_INFO.socialMedia.instagram,
           vk: CONTACT_INFO.socialMedia.vk,
@@ -79,12 +85,14 @@ const Contacts: React.FC = () => {
     setSubmitting(true)
     setSuccess(false)
     try {
+      const workingHours = formatWorkingHoursFromSchedule(data.workingSchedule)
       await contactInfoService.update({
         phone: data.phone,
         whatsappPhone: String(data.whatsappPhone || '').replace(/\D/g, ''),
         email: data.email,
         address: data.address,
-        workingHours: data.workingHours,
+        workingHours,
+        workingSchedule: data.workingSchedule,
         mapEmbedUrl: data.mapEmbedUrl || '',
         socialMedia: {
           instagram: data.instagram,
@@ -106,6 +114,10 @@ const Contacts: React.FC = () => {
   if (loading) {
     return <PageFallback variant="admin" />
   }
+
+  const schedule = watch('workingSchedule') || defaultWorkingSchedule()
+  const previewHours = formatWorkingHoursFromSchedule(schedule)
+  const days: DayKey[] = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 
   return (
     <div className={styles.contacts}>
@@ -151,11 +163,44 @@ const Contacts: React.FC = () => {
             error={errors.address?.message}
           />
 
-          <Input
-            label="Часы работы"
-            {...register('workingHours', { required: 'Часы работы обязательны' })}
-            error={errors.workingHours?.message}
-          />
+          <h3 className={styles.sectionTitle}>График работы</h3>
+          <div style={{ display: 'grid', gap: 10 }}>
+            {days.map((day) => (
+              <div
+                key={day}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '72px 1fr 1fr 120px',
+                  gap: 10,
+                  alignItems: 'end',
+                }}
+              >
+                <div style={{ fontWeight: 600, paddingBottom: 8 }}>{day}</div>
+                <Input
+                  label="Открытие"
+                  type="time"
+                  step={900}
+                  disabled={watch(`workingSchedule.${day}.closed` as any)}
+                  {...register(`workingSchedule.${day}.open` as any, { required: true })}
+                />
+                <Input
+                  label="Закрытие"
+                  type="time"
+                  step={900}
+                  disabled={watch(`workingSchedule.${day}.closed` as any)}
+                  {...register(`workingSchedule.${day}.close` as any, { required: true })}
+                />
+                <label style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 8 }}>
+                  <input type="checkbox" {...register(`workingSchedule.${day}.closed` as any)} />
+                  Выходной
+                </label>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginTop: 8, opacity: 0.85 }}>
+            <strong>Как будет показано на сайте:</strong> {previewHours}
+          </div>
 
           <Input
             label="Ссылка для встраивания карты (iframe src)"

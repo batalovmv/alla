@@ -95,6 +95,9 @@ export interface ContactInfo {
   email: string
   address: string
   workingHours: string
+  // Preferred source of truth: structured schedule by day.
+  // If present, UI will generate `workingHours` for display and booking logic will use schedule.
+  workingSchedule?: any
   socialMedia: ContactSocialMedia
   mapEmbedUrl: string
   whatsappEnabled?: boolean

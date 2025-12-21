@@ -19,7 +19,7 @@ import { buildTelegramHref } from '../../utils/telegram'
 import { safeHttpUrl } from '../../utils/url'
 import { BookingFormData, ContactInfo } from '../../types'
 import { validatePhone, validateEmail, normalizePhone } from '../../utils/validation'
-import { getWorkingWindowForDate, suggestBookingSlot, toISODateLocal, minutesToHHMM, roundUpToStep } from '../../utils/workingHours'
+import { getWorkingWindowForDate, getWorkingWindowForDateFromSchedule, suggestBookingSlot, toISODateLocal, minutesToHHMM, roundUpToStep } from '../../utils/workingHours'
 import { useDelayedFlag } from '../../utils/useDelayedFlag'
 import Card from '../../components/common/Card/Card'
 import Input from '../../components/common/Input/Input'
@@ -117,6 +117,7 @@ const Contacts: React.FC = () => {
     if (hasDate && hasTime) return
     const { suggestedDate, suggestedTime } = suggestBookingSlot({
       workingHours: contactInfo.workingHours,
+      schedule: (contactInfo as any).workingSchedule,
       leadMinutes: 90,
       stepMinutes: 15,
     })
@@ -128,6 +129,7 @@ const Contacts: React.FC = () => {
   const bookingTimeNotice = useMemo(() => {
     const s = suggestBookingSlot({
       workingHours: contactInfo.workingHours,
+      schedule: (contactInfo as any).workingSchedule,
       leadMinutes: 90,
       stepMinutes: 15,
     })
@@ -137,7 +139,9 @@ const Contacts: React.FC = () => {
   const timeBounds = useMemo(() => {
     if (!desiredDate) return null
     const d = new Date(`${desiredDate}T00:00:00`)
-    const w = getWorkingWindowForDate(contactInfo.workingHours, d)
+    const w = (contactInfo as any).workingSchedule
+      ? getWorkingWindowForDateFromSchedule((contactInfo as any).workingSchedule, d)
+      : getWorkingWindowForDate(contactInfo.workingHours, d)
     if (!w) return null
 
     const now = new Date()
@@ -177,7 +181,9 @@ const Contacts: React.FC = () => {
   const timeValidationMessage = useMemo(() => {
     if (!desiredDate || !desiredTime) return ''
     const d = new Date(`${desiredDate}T00:00:00`)
-    const w = getWorkingWindowForDate(contactInfo.workingHours, d)
+    const w = (contactInfo as any).workingSchedule
+      ? getWorkingWindowForDateFromSchedule((contactInfo as any).workingSchedule, d)
+      : getWorkingWindowForDate(contactInfo.workingHours, d)
     if (!w) return 'Для выбранной даты часы работы не указаны. Пожалуйста, выберите другое время.'
     const [hh, mm] = desiredTime.split(':').map(Number)
     if (!Number.isFinite(hh) || !Number.isFinite(mm)) return 'Укажите корректное время.'
