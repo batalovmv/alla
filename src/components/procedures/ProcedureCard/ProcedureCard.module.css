@@ -60,6 +60,13 @@
   font-size: 20px;
   font-weight: 600;
   color: var(--color-text);
+  line-height: 1.25;
+  /* Keep card layout aligned: title always takes up to 2 lines */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  min-height: calc(1.25em * 2);
 }
 
 .description {
@@ -68,6 +75,12 @@
   font-size: 14px;
   line-height: 1.5;
   flex: 1;
+  /* Keep card layout aligned: description up to 3 lines, remaining space fills via flex */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  min-height: calc(1.5em * 3);
 }
 
 .info {
