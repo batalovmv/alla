@@ -376,7 +376,7 @@ const Bookings: React.FC = () => {
             <Card
               key={booking.id}
               className={styles.bookingCard}
-              onClick={isMobile ? () => openView(booking) : undefined}
+              onClick={() => openView(booking)}
             >
               <div className={styles.bookingHeader}>
                 <div className={styles.headerMain}>
@@ -418,7 +418,10 @@ const Bookings: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className={styles.actions}>
+                  <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
+                    <Button size="small" variant="outline" onClick={() => openView(booking)}>
+                      Подробнее
+                    </Button>
                     {booking.status === 'new' && (
                       <>
                         <Button size="small" onClick={() => handleStatusChange(booking.id, 'awaiting')}>
