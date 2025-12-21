@@ -10,6 +10,10 @@ export interface Procedure {
   indications: string[]
   contraindications: string[]
   popular?: boolean
+  // Soft-delete: archived procedures are hidden from public pages and selection lists,
+  // but kept for history (bookings/service records).
+  archived?: boolean
+  archivedAt?: any
 }
 
 export interface BookingFormData {

@@ -28,23 +28,26 @@ const checkFirebase = () => {
 
 // Procedures
 export const proceduresService = {
-  async getAll(): Promise<Procedure[]> {
+  async getAll(opts?: { includeArchived?: boolean }): Promise<Procedure[]> {
     checkFirebase()
+    const includeArchived = Boolean(opts?.includeArchived)
     try {
       const q = query(collection(db!, 'procedures'), orderBy('createdAt', 'desc'))
       const querySnapshot = await getDocs(q)
-      return querySnapshot.docs.map((doc) => ({
+      const all = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       })) as Procedure[]
+      return includeArchived ? all : all.filter((p) => p.archived !== true)
     } catch (error) {
       // Если нет поля createdAt или другой ошибки, загружаем без сортировки
       checkFirebase()
       const querySnapshot = await getDocs(collection(db!, 'procedures'))
-      return querySnapshot.docs.map((doc) => ({
+      const all = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       })) as Procedure[]
+      return includeArchived ? all : all.filter((p) => p.archived !== true)
     }
   },
 
@@ -62,6 +65,8 @@ export const proceduresService = {
     checkFirebase()
     const docRef = await addDoc(collection(db!, 'procedures'), {
       ...procedure,
+      archived: false,
+      archivedAt: null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
@@ -94,6 +99,24 @@ export const proceduresService = {
       reviews: reviewsSnap.data().count,
       serviceRecords: recordsSnap.data().count,
     }
+  },
+
+  async archive(id: string): Promise<void> {
+    checkFirebase()
+    await updateDoc(doc(db!, 'procedures', id), {
+      archived: true,
+      archivedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    })
+  },
+
+  async restore(id: string): Promise<void> {
+    checkFirebase()
+    await updateDoc(doc(db!, 'procedures', id), {
+      archived: false,
+      archivedAt: null,
+      updatedAt: serverTimestamp(),
+    })
   },
 }
 

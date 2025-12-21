@@ -9,12 +9,18 @@ interface ProceduresListProps {
   procedures: Procedure[]
   onEdit: (procedure: Procedure) => void
   onDelete: (id: string) => void
+  onRestore?: (id: string) => void
+  onHardDelete?: (id: string) => void
+  showArchived?: boolean
 }
 
 const ProceduresList: React.FC<ProceduresListProps> = ({
   procedures,
   onEdit,
   onDelete,
+  onRestore,
+  onHardDelete,
+  showArchived = false,
 }) => {
   if (procedures.length === 0) {
     return (
@@ -49,13 +55,20 @@ const ProceduresList: React.FC<ProceduresListProps> = ({
             <Button size="small" onClick={() => onEdit(procedure)}>
               Редактировать
             </Button>
-            <Button
-              size="small"
-              variant="secondary"
-              onClick={() => onDelete(procedure.id)}
-            >
-              Удалить
-            </Button>
+            {showArchived ? (
+              <>
+                <Button size="small" onClick={() => onRestore?.(procedure.id)}>
+                  Восстановить
+                </Button>
+                <Button size="small" variant="secondary" onClick={() => onHardDelete?.(procedure.id)}>
+                  Удалить навсегда
+                </Button>
+              </>
+            ) : (
+              <Button size="small" variant="secondary" onClick={() => onDelete(procedure.id)}>
+                Архивировать
+              </Button>
+            )}
           </div>
         </Card>
       ))}
