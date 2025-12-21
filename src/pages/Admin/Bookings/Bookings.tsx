@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { bookingsService, proceduresService } from '../../../services/firebaseService'
 import { Booking, BookingStatus } from '../../../types'
 import Card from '../../../components/common/Card/Card'
@@ -167,13 +167,15 @@ const Bookings: React.FC = () => {
     return <PageFallback variant="admin" />
   }
 
-  const selectedTitle = useMemo(() => {
+  const selectedTitle = (() => {
     if (!selected) return ''
-    const date = selected.desiredDate ? new Date(selected.desiredDate).toLocaleDateString('ru-RU') : ''
+    const date = selected.desiredDate
+      ? new Date(selected.desiredDate).toLocaleDateString('ru-RU')
+      : ''
     const time = selected.desiredTime || ''
     const dt = [date, time].filter(Boolean).join(' • ')
     return dt ? `Заявка • ${selected.name} • ${dt}` : `Заявка • ${selected.name}`
-  }, [selected])
+  })()
 
   return (
     <div className={styles.bookings}>
