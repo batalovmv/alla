@@ -1,6 +1,11 @@
-# Сайт косметолога (SPA + админ-панель)
+# Сайт косметолога (SPA + админ-панель) — Pet/Portfolio + Production-minded
 
-Сайт-визитка для косметолога: публичная часть + админ-панель для управления процедурами, отзывами и заявками. Приложение собирается через Vite и деплоится на GitHub Pages под базовым путем `/alla/` (см. `vite.config.ts`).
+Сайт‑визитка для косметолога: публичная часть + админ‑панель для управления контентом.
+Проект ведётся как **портфолио/пэт‑проект**, но с упором на **практики продакшена**: безопасность, контроль PII, стабильный деплой и UX без “белых экранов”.
+
+- **Public**: `/`, `/procedures`, `/procedures/:id`, `/about`, `/reviews`, `/contacts`, `/privacy`
+- **Admin**: `/admin/*` (Firebase Auth + admin custom claims)
+- **Deploy**: GitHub Pages (base path `/alla/`)
 
 ## Технологии
 
@@ -14,6 +19,14 @@
 - GitHub Actions → GitHub Pages (`.github/workflows/deploy.yml`)
 
 ## Что уже сделано
+
+### UX/перф (то, чем я горжусь)
+
+- **Seamless loading**: per‑route `Suspense` → `PageFallback` (Skeleton + TopProgress), анти‑flicker `useDelayedFlag`
+- **Scroll reveal**: `Reveal` (IntersectionObserver, respects `prefers-reduced-motion`)
+- **Infinite lists**: `/procedures`, `/reviews` (батчи + плавное появление)
+- **Prefetch** страниц: hover/focus + idle‑prefetch (минимум “micro‑loadings”)
+- **Mobile UX**: drawer‑меню в админке + адаптивы на страницах админки (в т.ч. “Процедуры”)
 
 ### Публичная часть
 
@@ -39,7 +52,7 @@
 ### Подготовка окружения
 
 1. Создайте `.env.local` в корне, скопируйте содержимое `env.local.template`
-2. Заполните `VITE_FIREBASE_*`, `VITE_ADMIN_UID(S)` и публичные переменные (контакты, соцсети, `VITE_MAP_EMBED_URL`). Эти `VITE_*` значения попадут в собранный бандл, поэтому держите в них только то, что не секретно.
+2. Заполните `VITE_FIREBASE_*` и публичные переменные (контакты, соцсети, `VITE_MAP_EMBED_URL`).
 3. Файл `.env.local` не должен коммититься (`.gitignore` уже настроен).
 
 ### Установка и запуск
@@ -61,9 +74,8 @@ npm run build
 
 1. Создайте/выберите **свой** проект Firebase (не коммитьте и не публикуйте приватные данные проекта).
 2. Включите Email/Password в Authentication.
-3. Создайте пользователя администратора и добавьте его UID в allowlist через `VITE_ADMIN_UID` или `VITE_ADMIN_UIDS`.
-4. Включите Firestore Database и Storage.
-5. Примените правила безопасности:
+3. Включите Firestore Database и Storage.
+4. Примените правила безопасности:
    - Firestore: `firebase.rules/firestore.rules`
    - Storage: `firebase.rules/storage.rules`
 
@@ -86,22 +98,30 @@ Workflow `.github/workflows/deploy.yml` передаёт переменные о
 
 Админ-доступ определяется **custom claim** `admin: true` в Firebase ID token.
 
-### 1) Выдать права первому админу (bootstrap)
+### Выдать права первому админу (bootstrap)
 
-1. Установите Firebase CLI и войдите:
+Firebase Console **не умеет** выставлять custom claims вручную — это делается через **Firebase Admin SDK** (сервер/Cloud Function/скрипт).
+
+В репозитории добавлены Cloud Functions (2nd gen):
+- `grantAdmin` (callable, **admin‑only**)
+- `bootstrapGrantAdmin` (HTTP, для bootstrap; может требовать Cloud Run policies/billing)
+
+Шаги:
+
+1) Установите Firebase CLI и войдите:
 
 ```bash
 firebase login
 firebase use --add
 ```
 
-2. Задайте одноразовый secret для Cloud Functions:
+2) (Опционально) для HTTP bootstrap задайте одноразовый secret:
 
 ```bash
 firebase functions:secrets:set ADMIN_GRANT_SECRET
 ```
 
-3. Деплой функций:
+3) Деплой функций:
 
 ```bash
 cd functions
@@ -110,12 +130,26 @@ npm run build
 firebase deploy --only functions
 ```
 
-4. В Firebase Console → Authentication найдите UID нужного пользователя и вызовите `bootstrapGrantAdmin` (HTTP) с секретом.
-   - Важно: после успешного выдачи прав **удалите/смените** `ADMIN_GRANT_SECRET`.
+4) Выдайте claim первому админу одним из способов:
+
+- **A (предпочтительно)**: если `bootstrapGrantAdmin` успешно задеплоился — вызовите его (HTTP) с `ADMIN_GRANT_SECRET`, затем **сразу уничтожьте/ротируйте** secret:
+
+```bash
+firebase functions:secrets:destroy ADMIN_GRANT_SECRET
+```
+
+- **B (надёжно везде)**: используйте локальный одноразовый скрипт на Firebase Admin SDK с service account (ключ **не коммитить**). Это безопаснее, чем пытаться “встроить” bootstrap в UI.
 
 ### 2) Выдавать админ-права дальше (только админ)
 
 После bootstrap используйте `grantAdmin` (callable) — вызывать может только пользователь с `admin: true`.
+
+## Security notes (важное для продакшена)
+
+- **Custom claims вместо allowlist в фронте**: админ‑доступ основан на `request.auth.token.admin == true` (см. `firebase.rules/*`).
+- **PII**: чувствительные данные (клиенты/история/телефоны) отделены и защищены правилами; публичная часть не должна иметь доступ к `clients`/`serviceRecords`.
+- **Не хранить секреты во фронте**: любые `VITE_*` видны в браузере. Безопасность обеспечивают **Rules + Claims**.
+- **Anti‑abuse** (следующий шаг для прода): публичные формы (заявки/отзывы) стоит усилить App Check / reCAPTCHA / Cloud Function proxy + rate‑limit.
 
 ## GitHub Pages (важно)
 
@@ -131,7 +165,7 @@ firebase deploy --only functions
 
 ## Управление контентом
 
-- Через админку `/admin/login` (требует Firebase Auth + allowlist UID)
+- Через админку `/admin/login` (требует Firebase Auth + `admin: true` claim)
 - Без Firebase (fallback): процедуры/отзывы из `src/utils/mockData.ts` (динамический import), контакты — `src/config/constants.ts` или env.
 - `src/utils/api.ts` переключает между Firebase и mock автоматически.
 
