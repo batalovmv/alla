@@ -116,10 +116,10 @@ const Bookings: React.FC = () => {
   }
 
   const tabs = [
-    { value: 'new', label: 'Новые' },
-    { value: 'awaiting', label: 'Ожидание' },
-    { value: 'completed', label: 'Выполненные' },
-    { value: 'cancelled', label: 'Отмененные' },
+    { value: 'new', label: 'Новые (не обработаны)' },
+    { value: 'awaiting', label: 'Записаны (подтверждены)' },
+    { value: 'completed', label: 'Услуга оказана' },
+    { value: 'cancelled', label: 'Отменено' },
   ]
 
   const getStatusLabel = (status: Booking['status']) => {
@@ -127,9 +127,9 @@ const Bookings: React.FC = () => {
       case 'new':
         return 'Новая'
       case 'awaiting':
-        return 'Ожидание'
+        return 'Записана'
       case 'completed':
-        return 'Выполнена'
+        return 'Услуга оказана'
       case 'cancelled':
         return 'Отменена'
       default:
@@ -232,7 +232,7 @@ const Bookings: React.FC = () => {
                       size="small"
                       onClick={() => handleStatusChange(booking.id, 'awaiting')}
                     >
-                      В ожидание
+                      Записать / подтвердить
                     </Button>
                     <Button
                       size="small"
@@ -249,7 +249,7 @@ const Bookings: React.FC = () => {
                       size="small"
                       onClick={() => handleStatusChange(booking.id, 'completed')}
                     >
-                      Выполнена
+                      Услуга оказана
                     </Button>
                     <Button
                       size="small"
