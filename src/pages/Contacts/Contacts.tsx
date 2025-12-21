@@ -18,11 +18,12 @@ import { buildWhatsAppHref } from '../../utils/whatsapp'
 import { buildTelegramHref } from '../../utils/telegram'
 import { safeHttpUrl } from '../../utils/url'
 import { BookingFormData, ContactInfo } from '../../types'
-import { validatePhone, validateEmail, formatPhoneMask, normalizePhone } from '../../utils/validation'
-import { getWorkingWindowForDate, suggestBookingSlot, toISODateLocal } from '../../utils/workingHours'
+import { validatePhone, validateEmail, normalizePhone } from '../../utils/validation'
+import { getWorkingWindowForDate, suggestBookingSlot, toISODateLocal, minutesToHHMM, roundUpToStep } from '../../utils/workingHours'
 import { useDelayedFlag } from '../../utils/useDelayedFlag'
 import Card from '../../components/common/Card/Card'
 import Input from '../../components/common/Input/Input'
+import { MaskedPhoneInput } from '../../components/common/MaskedPhoneInput/MaskedPhoneInput'
 import Textarea from '../../components/common/Textarea/Textarea'
 import Select from '../../components/common/Select/Select'
 import Button from '../../components/common/Button/Button'
@@ -131,6 +132,46 @@ const Contacts: React.FC = () => {
     })
     return s.notice || ''
   }, [contactInfo.workingHours])
+
+  const timeBounds = useMemo(() => {
+    if (!desiredDate) return null
+    const d = new Date(`${desiredDate}T00:00:00`)
+    const w = getWorkingWindowForDate(contactInfo.workingHours, d)
+    if (!w) return null
+
+    const now = new Date()
+    const isToday = toISODateLocal(now) === desiredDate
+    const nowMin = now.getHours() * 60 + now.getMinutes()
+    const minMin = isToday ? Math.max(w.openMin, nowMin + 30) : w.openMin
+
+    // UX rule: latest selectable time is 60 minutes before close
+    const maxMin = Math.max(w.openMin, w.closeMin - 60)
+
+    const min = minutesToHHMM(roundUpToStep(minMin, 15))
+    const max = minutesToHHMM(roundUpToStep(maxMin, 15))
+    return { min, max }
+  }, [contactInfo.workingHours, desiredDate])
+
+  // If user changes date after selecting time (or tries to "cheat"), clamp time into allowed range.
+  useEffect(() => {
+    if (!desiredDate) return
+    if (!timeBounds) return
+    if (!desiredTime) {
+      setValue('desiredTime', timeBounds.max, { shouldDirty: false })
+      return
+    }
+    const toMin = (t: string) => {
+      const [h, m] = t.split(':').map(Number)
+      if (!Number.isFinite(h) || !Number.isFinite(m)) return null
+      return h * 60 + m
+    }
+    const cur = toMin(desiredTime)
+    const min = toMin(timeBounds.min)
+    const max = toMin(timeBounds.max)
+    if (cur == null || min == null || max == null) return
+    if (cur < min) setValue('desiredTime', timeBounds.min, { shouldValidate: true, shouldDirty: true })
+    if (cur > max) setValue('desiredTime', timeBounds.max, { shouldValidate: true, shouldDirty: true })
+  }, [desiredDate, desiredTime, timeBounds, setValue])
 
   const timeValidationMessage = useMemo(() => {
     if (!desiredDate || !desiredTime) return ''
@@ -445,52 +486,25 @@ const Contacts: React.FC = () => {
                   error={errors.name?.message}
                 />
 
-                <Input
-                  label="Телефон"
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  placeholder="+7 (999) 462-10-36"
-                  {...register('phone', {
+                <Controller
+                  name="phone"
+                  control={control}
+                  rules={{
                     required: 'Телефон обязателен для заполнения',
-                    validate: (value) =>
-                      validatePhone(value) || 'Неверный формат телефона',
-                  })}
-                  onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
-                    if (!e.target.value) {
-                      setValue('phone', formatPhoneMask(''), { shouldDirty: false })
-                    }
+                    validate: (value) => validatePhone(String(value || '')) || 'Неверный формат телефона',
                   }}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    const masked = formatPhoneMask(e.target.value)
-                    setValue('phone', masked, { shouldValidate: true, shouldDirty: true })
-                  }}
-                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                    if (e.key !== 'Backspace') return
-                    const input = e.currentTarget
-                    const value = input.value || ''
-                    const selStart = input.selectionStart ?? value.length
-                    const selEnd = input.selectionEnd ?? value.length
-                    // Only handle simple "backspace at end" (common case) to avoid fighting selection edits.
-                    if (selStart !== selEnd || selStart !== value.length) return
-
-                    // If cursor is at end and last char is formatting, delete a digit instead.
-                    const lastChar = value[value.length - 1] || ''
-                    if (![')', '-', ' '].includes(lastChar)) return
-
-                    const digits = value.replace(/\D/g, '')
-                    // digits includes leading '7' (country) if present
-                    if (digits.length <= 1) {
-                      e.preventDefault()
-                      setValue('phone', formatPhoneMask(''), { shouldValidate: true, shouldDirty: true })
-                      return
-                    }
-
-                    const nextDigits = digits.slice(0, -1) // remove one digit
-                    e.preventDefault()
-                    setValue('phone', formatPhoneMask(nextDigits), { shouldValidate: true, shouldDirty: true })
-                  }}
-                  error={errors.phone?.message}
+                  render={({ field }) => (
+                    <MaskedPhoneInput
+                      label="Телефон"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      value={String(field.value || '')}
+                      onChange={(v) => field.onChange(v)}
+                      onBlur={field.onBlur}
+                      required
+                      error={errors.phone?.message}
+                    />
+                  )}
                 />
 
                 <Input
@@ -546,6 +560,8 @@ const Contacts: React.FC = () => {
                   label="Желаемое время"
                   type="time"
                   step={900}
+                  min={timeBounds?.min}
+                  max={timeBounds?.max}
                   {...register('desiredTime', {
                     required: 'Укажите желаемое время',
                     validate: () => {

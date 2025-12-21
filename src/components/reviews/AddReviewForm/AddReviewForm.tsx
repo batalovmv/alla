@@ -3,6 +3,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { useAppSelector } from '../../../store/hooks'
 import { validatePhone } from '../../../utils/validation'
 import Input from '../../common/Input/Input'
+import { MaskedPhoneInput } from '../../common/MaskedPhoneInput/MaskedPhoneInput'
 import Textarea from '../../common/Textarea/Textarea'
 import Select from '../../common/Select/Select'
 import Button from '../../common/Button/Button'
@@ -73,15 +74,25 @@ const AddReviewForm: React.FC<AddReviewFormProps> = ({
           error={errors.clientName?.message}
         />
 
-        <Input
-          label="Телефон (не публикуется, нужен для подтверждения)"
-          type="tel"
-          {...register('phone', {
+        <Controller
+          name="phone"
+          control={control}
+          rules={{
             required: 'Телефон обязателен для подтверждения',
-            validate: (value) =>
-              validatePhone(value) || 'Неверный формат телефона',
-          })}
-          error={errors.phone?.message}
+            validate: (value) => validatePhone(String(value || '')) || 'Неверный формат телефона',
+          }}
+          render={({ field }) => (
+            <MaskedPhoneInput
+              label="Телефон (не публикуется, нужен для подтверждения)"
+              inputMode="tel"
+              autoComplete="tel"
+              value={String(field.value || '')}
+              onChange={(v) => field.onChange(v)}
+              onBlur={field.onBlur}
+              required
+              error={errors.phone?.message}
+            />
+          )}
         />
 
         <Controller
