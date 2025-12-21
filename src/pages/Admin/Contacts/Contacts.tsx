@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { contactInfoService } from '../../../services/firebaseService'
 import { CONTACT_INFO } from '../../../config/constants'
@@ -33,6 +33,8 @@ const Contacts: React.FC = () => {
     formState: { errors },
     reset,
     watch,
+    getValues,
+    setValue,
   } = useForm<ContactFormData>()
 
   useEffect(() => {
@@ -119,6 +121,37 @@ const Contacts: React.FC = () => {
   const previewHours = formatWorkingHoursFromSchedule(schedule)
   const days: DayKey[] = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 
+  const weekdayDays: DayKey[] = useMemo(() => ['Пн', 'Вт', 'Ср', 'Чт', 'Пт'], [])
+
+  const applyToDays = (fromDay: DayKey, toDays: DayKey[]) => {
+    const cur = getValues('workingSchedule')
+    const src = cur?.[fromDay]
+    if (!src) return
+    for (const d of toDays) {
+      setValue(`workingSchedule.${d}.closed` as any, Boolean(src.closed), { shouldDirty: true })
+      setValue(`workingSchedule.${d}.open` as any, src.open, { shouldDirty: true })
+      setValue(`workingSchedule.${d}.close` as any, src.close, { shouldDirty: true })
+    }
+  }
+
+  const setClosedForDays = (toDays: DayKey[], closed: boolean) => {
+    for (const d of toDays) {
+      setValue(`workingSchedule.${d}.closed` as any, closed, { shouldDirty: true })
+    }
+  }
+
+  const validateDay = (day: DayKey) => {
+    const cur = getValues('workingSchedule')
+    const d = cur?.[day]
+    if (!d) return true
+    if (d.closed) return true
+    // Basic HH:MM compare
+    const open = String(d.open || '')
+    const close = String(d.close || '')
+    if (!open || !close) return false
+    return open < close
+  }
+
   return (
     <div className={styles.contacts}>
       <h1 className={styles.title}>Редактирование контактов</h1>
@@ -164,6 +197,32 @@ const Contacts: React.FC = () => {
           />
 
           <h3 className={styles.sectionTitle}>График работы</h3>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
+            <Button
+              type="button"
+              size="small"
+              variant="outline"
+              onClick={() => applyToDays('Пн', weekdayDays)}
+            >
+              Копировать Пн → Пн‑Пт
+            </Button>
+            <Button
+              type="button"
+              size="small"
+              variant="outline"
+              onClick={() => applyToDays('Пн', days)}
+            >
+              Копировать Пн → все дни
+            </Button>
+            <Button
+              type="button"
+              size="small"
+              variant="outline"
+              onClick={() => setClosedForDays(['Сб', 'Вс'], true)}
+            >
+              Сделать Сб/Вс выходными
+            </Button>
+          </div>
           <div style={{ display: 'grid', gap: 10 }}>
             {days.map((day) => (
               <div
@@ -181,14 +240,20 @@ const Contacts: React.FC = () => {
                   type="time"
                   step={900}
                   disabled={watch(`workingSchedule.${day}.closed` as any)}
-                  {...register(`workingSchedule.${day}.open` as any, { required: true })}
+                  {...register(`workingSchedule.${day}.open` as any, {
+                    required: !watch(`workingSchedule.${day}.closed` as any),
+                    validate: () => validateDay(day) || 'Открытие должно быть раньше закрытия',
+                  })}
                 />
                 <Input
                   label="Закрытие"
                   type="time"
                   step={900}
                   disabled={watch(`workingSchedule.${day}.closed` as any)}
-                  {...register(`workingSchedule.${day}.close` as any, { required: true })}
+                  {...register(`workingSchedule.${day}.close` as any, {
+                    required: !watch(`workingSchedule.${day}.closed` as any),
+                    validate: () => validateDay(day) || 'Закрытие должно быть позже открытия',
+                  })}
                 />
                 <label style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 8 }}>
                   <input type="checkbox" {...register(`workingSchedule.${day}.closed` as any)} />
