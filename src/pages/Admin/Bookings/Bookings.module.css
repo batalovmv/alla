@@ -56,7 +56,7 @@
   .tab {
     padding: 0.75rem 1rem;
     font-size: 0.9rem;
-    flex: 1;
+    flex: 0 0 auto;
     min-width: 0;
   }
 }
@@ -91,6 +91,10 @@
   border-bottom: 1px solid #eee;
 }
 
+.headerMain {
+  min-width: 0;
+}
+
 .clientName {
   margin: 0 0 0.5rem 0;
   font-size: 1.25rem;
@@ -101,6 +105,12 @@
   margin: 0;
   color: #666;
   font-size: 0.9rem;
+}
+
+.metaLine {
+  margin: 0.35rem 0 0;
+  font-size: 0.875rem;
+  color: rgba(31, 42, 51, 0.75);
 }
 
 .status {
@@ -174,5 +184,69 @@
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid #eee;
+}
+
+.modalContent {
+  display: grid;
+  gap: 12px;
+}
+
+.modalGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.modalRow {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.modalLabel {
+  font-weight: 600;
+  color: rgba(31, 42, 51, 0.65);
+}
+
+.modalValue {
+  color: rgba(31, 42, 51, 0.9);
+  word-break: break-word;
+}
+
+.modalActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .bookingCard {
+    padding: 1rem;
+  }
+
+  .bookingHeader {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .status {
+    padding: 0.35rem 0.75rem;
+  }
+
+  .metaLine {
+    font-size: 0.85rem;
+  }
+
+  .modalRow {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .modalActions {
+    flex-direction: column;
+  }
 }
 

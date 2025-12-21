@@ -1,15 +1,26 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { bookingsService, proceduresService } from '../../../services/firebaseService'
 import { Booking, BookingStatus } from '../../../types'
 import Card from '../../../components/common/Card/Card'
 import Button from '../../../components/common/Button/Button'
 import { PageFallback } from '../../../components/common/PageFallback/PageFallback'
+import Modal from '../../../components/common/Modal/Modal'
 import styles from './Bookings.module.css'
 
 const Bookings: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<BookingStatus>('new') // По умолчанию показываем новые
+  const [selected, setSelected] = useState<Booking | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)')
+    const update = () => setIsMobile(mq.matches)
+    update()
+    mq.addEventListener?.('change', update)
+    return () => mq.removeEventListener?.('change', update)
+  }, [])
 
   useEffect(() => {
     loadBookings()
@@ -156,6 +167,14 @@ const Bookings: React.FC = () => {
     return <PageFallback variant="admin" />
   }
 
+  const selectedTitle = useMemo(() => {
+    if (!selected) return ''
+    const date = selected.desiredDate ? new Date(selected.desiredDate).toLocaleDateString('ru-RU') : ''
+    const time = selected.desiredTime || ''
+    const dt = [date, time].filter(Boolean).join(' • ')
+    return dt ? `Заявка • ${selected.name} • ${dt}` : `Заявка • ${selected.name}`
+  }, [selected])
+
   return (
     <div className={styles.bookings}>
       <h1 className={styles.title}>Заявки на запись</h1>
@@ -179,116 +198,215 @@ const Bookings: React.FC = () => {
       ) : (
         <div className={styles.list}>
           {bookings.map((booking) => (
-            <Card key={booking.id} className={styles.bookingCard}>
+            <Card
+              key={booking.id}
+              className={styles.bookingCard}
+              onClick={isMobile ? () => setSelected(booking) : undefined}
+            >
               <div className={styles.bookingHeader}>
-                <div>
+                <div className={styles.headerMain}>
                   <h3 className={styles.clientName}>{booking.name}</h3>
                   <p className={styles.procedureName}>{booking.procedureName}</p>
+                  <p className={styles.metaLine}>
+                    {new Date(booking.desiredDate).toLocaleDateString('ru-RU')} • {booking.desiredTime || '—'}
+                  </p>
                 </div>
                 <span className={`${styles.status} ${getStatusClass(booking.status)}`}>
                   {getStatusLabel(booking.status)}
                 </span>
               </div>
 
-              <div className={styles.bookingInfo}>
-                <div className={styles.infoRow}>
-                  <span className={styles.label}>Телефон:</span>
-                  <a href={`tel:${booking.phone}`} className={styles.phone}>
-                    {booking.phone}
-                  </a>
-                </div>
-                {booking.email && (
-                  <div className={styles.infoRow}>
-                    <span className={styles.label}>Email:</span>
-                    <a href={`mailto:${booking.email}`}>{booking.email}</a>
+              {!isMobile && (
+                <>
+                  <div className={styles.bookingInfo}>
+                    <div className={styles.infoRow}>
+                      <span className={styles.label}>Телефон:</span>
+                      <a href={`tel:${booking.phone}`} className={styles.phone}>
+                        {booking.phone}
+                      </a>
+                    </div>
+                    {booking.email && (
+                      <div className={styles.infoRow}>
+                        <span className={styles.label}>Email:</span>
+                        <a href={`mailto:${booking.email}`}>{booking.email}</a>
+                      </div>
+                    )}
+                    {booking.comment && (
+                      <div className={styles.comment}>
+                        <span className={styles.label}>Комментарий:</span>
+                        <p>{booking.comment}</p>
+                      </div>
+                    )}
+                    <div className={styles.infoRow}>
+                      <span className={styles.label}>Дата заявки:</span>
+                      <span>{new Date(booking.createdAt).toLocaleString('ru-RU')}</span>
+                    </div>
                   </div>
-                )}
-                <div className={styles.infoRow}>
-                  <span className={styles.label}>Желаемая дата:</span>
-                  <span>{new Date(booking.desiredDate).toLocaleDateString('ru-RU')}</span>
-                </div>
-                <div className={styles.infoRow}>
-                  <span className={styles.label}>Желаемое время:</span>
-                  <span>{booking.desiredTime}</span>
-                </div>
-                {booking.comment && (
-                  <div className={styles.comment}>
-                    <span className={styles.label}>Комментарий:</span>
-                    <p>{booking.comment}</p>
-                  </div>
-                )}
-                <div className={styles.infoRow}>
-                  <span className={styles.label}>Дата заявки:</span>
-                  <span>
-                    {new Date(booking.createdAt).toLocaleString('ru-RU')}
-                  </span>
-                </div>
-              </div>
 
-              <div className={styles.actions}>
-                {booking.status === 'new' && (
-                  <>
-                    <Button
-                      size="small"
-                      onClick={() => handleStatusChange(booking.id, 'awaiting')}
-                    >
-                      Записать / подтвердить
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="secondary"
-                      onClick={() => handleStatusChange(booking.id, 'cancelled')}
-                    >
-                      Отменить
-                    </Button>
-                  </>
-                )}
-                {booking.status === 'awaiting' && (
-                  <>
-                    <Button
-                      size="small"
-                      onClick={() => handleStatusChange(booking.id, 'completed')}
-                    >
-                      Услуга оказана
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="secondary"
-                      onClick={() => handleStatusChange(booking.id, 'cancelled')}
-                    >
-                      Отменить
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="outline"
-                      onClick={() => handleStatusChange(booking.id, 'new')}
-                    >
-                      Вернуть в новые
-                    </Button>
-                  </>
-                )}
-                {booking.status === 'completed' && (
-                  <Button
-                    size="small"
-                    variant="outline"
-                    onClick={() => handleStatusChange(booking.id, 'new')}
-                  >
-                    Вернуть в новые
-                  </Button>
-                )}
-                {booking.status === 'cancelled' && (
-                  <Button
-                    size="small"
-                    onClick={() => handleStatusChange(booking.id, 'new')}
-                  >
-                    Вернуть в новые
-                  </Button>
-                )}
-              </div>
+                  <div className={styles.actions}>
+                    {booking.status === 'new' && (
+                      <>
+                        <Button size="small" onClick={() => handleStatusChange(booking.id, 'awaiting')}>
+                          Записать / подтвердить
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="secondary"
+                          onClick={() => handleStatusChange(booking.id, 'cancelled')}
+                        >
+                          Отменить
+                        </Button>
+                      </>
+                    )}
+                    {booking.status === 'awaiting' && (
+                      <>
+                        <Button size="small" onClick={() => handleStatusChange(booking.id, 'completed')}>
+                          Услуга оказана
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="secondary"
+                          onClick={() => handleStatusChange(booking.id, 'cancelled')}
+                        >
+                          Отменить
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outline"
+                          onClick={() => handleStatusChange(booking.id, 'new')}
+                        >
+                          Вернуть в новые
+                        </Button>
+                      </>
+                    )}
+                    {booking.status === 'completed' && (
+                      <Button size="small" variant="outline" onClick={() => handleStatusChange(booking.id, 'new')}>
+                        Вернуть в новые
+                      </Button>
+                    )}
+                    {booking.status === 'cancelled' && (
+                      <Button size="small" onClick={() => handleStatusChange(booking.id, 'new')}>
+                        Вернуть в новые
+                      </Button>
+                    )}
+                  </div>
+                </>
+              )}
             </Card>
           ))}
         </div>
       )}
+
+      <Modal
+        isOpen={!!selected}
+        onClose={() => setSelected(null)}
+        title={selectedTitle}
+      >
+        {selected && (
+          <div className={styles.modalContent}>
+            <div className={styles.modalGrid}>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>Процедура</div>
+                <div className={styles.modalValue}>{selected.procedureName || '—'}</div>
+              </div>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>Дата/время</div>
+                <div className={styles.modalValue}>
+                  {new Date(selected.desiredDate).toLocaleDateString('ru-RU')} • {selected.desiredTime || '—'}
+                </div>
+              </div>
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>Телефон</div>
+                <div className={styles.modalValue}>
+                  <a href={`tel:${selected.phone}`}>{selected.phone}</a>
+                </div>
+              </div>
+              {selected.email && (
+                <div className={styles.modalRow}>
+                  <div className={styles.modalLabel}>Email</div>
+                  <div className={styles.modalValue}>
+                    <a href={`mailto:${selected.email}`}>{selected.email}</a>
+                  </div>
+                </div>
+              )}
+              {selected.comment && (
+                <div className={styles.modalRow}>
+                  <div className={styles.modalLabel}>Комментарий</div>
+                  <div className={styles.modalValue}>{selected.comment}</div>
+                </div>
+              )}
+              <div className={styles.modalRow}>
+                <div className={styles.modalLabel}>Статус</div>
+                <div className={styles.modalValue}>{getStatusLabel(selected.status)}</div>
+              </div>
+            </div>
+
+            <div className={styles.modalActions}>
+              {selected.status === 'new' && (
+                <>
+                  <Button
+                    size="small"
+                    onClick={() => handleStatusChange(selected.id, 'awaiting').then(() => setSelected(null))}
+                  >
+                    Записать / подтвердить
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="secondary"
+                    onClick={() => handleStatusChange(selected.id, 'cancelled').then(() => setSelected(null))}
+                  >
+                    Отменить
+                  </Button>
+                </>
+              )}
+              {selected.status === 'awaiting' && (
+                <>
+                  <Button
+                    size="small"
+                    onClick={() => handleStatusChange(selected.id, 'completed').then(() => setSelected(null))}
+                  >
+                    Услуга оказана
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="secondary"
+                    onClick={() => handleStatusChange(selected.id, 'cancelled').then(() => setSelected(null))}
+                  >
+                    Отменить
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outline"
+                    onClick={() => handleStatusChange(selected.id, 'new').then(() => setSelected(null))}
+                  >
+                    Вернуть в новые
+                  </Button>
+                </>
+              )}
+              {selected.status === 'completed' && (
+                <Button
+                  size="small"
+                  variant="outline"
+                  onClick={() => handleStatusChange(selected.id, 'new').then(() => setSelected(null))}
+                >
+                  Вернуть в новые
+                </Button>
+              )}
+              {selected.status === 'cancelled' && (
+                <Button
+                  size="small"
+                  onClick={() => handleStatusChange(selected.id, 'new').then(() => setSelected(null))}
+                >
+                  Вернуть в новые
+                </Button>
+              )}
+              <Button size="small" variant="secondary" onClick={() => setSelected(null)}>
+                Закрыть
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

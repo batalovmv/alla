@@ -1,0 +1,210 @@
+.calendar {
+  max-width: 1200px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.title {
+  margin: 0;
+  color: #333;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  color: rgba(31, 42, 51, 0.65);
+  font-size: 0.95rem;
+}
+
+.controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(31, 42, 51, 0.7);
+}
+
+.monthInput {
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.weekdayRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+  color: rgba(31, 42, 51, 0.7);
+  font-size: 12px;
+}
+
+.weekday {
+  padding: 0 4px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dayCell {
+  padding: 10px;
+  min-height: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.dayCellMuted {
+  opacity: 0.55;
+}
+
+.dayTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dayNumber {
+  font-weight: 700;
+  color: rgba(31, 42, 51, 0.9);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(102, 126, 234, 0.15);
+  color: rgba(102, 126, 234, 1);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.preview {
+  font-size: 12px;
+  color: rgba(31, 42, 51, 0.75);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty {
+  padding: 18px;
+  color: rgba(31, 42, 51, 0.7);
+}
+
+.list {
+  display: grid;
+  gap: 10px;
+}
+
+.bookingItem {
+  padding: 12px;
+  cursor: pointer;
+}
+
+.bookingLine {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bookingMain {
+  min-width: 0;
+}
+
+.bookingTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(31, 42, 51, 0.9);
+}
+
+.bookingSub {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: rgba(31, 42, 51, 0.7);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timeChip {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(31, 42, 51, 0.06);
+  color: rgba(31, 42, 51, 0.85);
+  flex: 0 0 auto;
+}
+
+.detailGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.detailRow {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 14px;
+}
+
+.detailLabel {
+  color: rgba(31, 42, 51, 0.65);
+  font-weight: 600;
+}
+
+.detailValue {
+  color: rgba(31, 42, 51, 0.9);
+  word-break: break-word;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    gap: 6px;
+  }
+  .dayCell {
+    padding: 8px;
+    min-height: 72px;
+  }
+  .detailRow {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
+

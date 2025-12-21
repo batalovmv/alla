@@ -22,6 +22,7 @@ const AdminReviews = lazy(() => import('./pages/Admin/Reviews/Reviews'))
 const AdminContacts = lazy(() => import('./pages/Admin/Contacts/Contacts'))
 const AdminAbout = lazy(() => import('./pages/Admin/About/About'))
 const AdminBookings = lazy(() => import('./pages/Admin/Bookings/Bookings'))
+const AdminCalendar = lazy(() => import('./pages/Admin/Calendar/Calendar'))
 const AdminClients = lazy(() => import('./pages/Admin/Clients/Clients'))
 const AdminClientHistory = lazy(() => import('./pages/Admin/Clients/ClientHistory'))
 const AdminReports = lazy(() => import('./pages/Admin/Reports/Reports'))
@@ -133,6 +134,11 @@ function App() {
         <Route path="bookings" element={
           <Suspense fallback={<PageFallback variant="admin" />}>
             <AdminBookings />
+          </Suspense>
+        } />
+        <Route path="calendar" element={
+          <Suspense fallback={<PageFallback variant="admin" />}>
+            <AdminCalendar />
           </Suspense>
         } />
         <Route path="clients" element={

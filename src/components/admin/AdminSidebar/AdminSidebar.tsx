@@ -38,6 +38,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen = false, onClose }) 
     { path: ROUTES.ADMIN_PROCEDURES, label: 'Процедуры', icon: '💆' },
     { path: ROUTES.ADMIN_REVIEWS, label: 'Отзывы', icon: '⭐' },
     { path: ROUTES.ADMIN_BOOKINGS, label: 'Заявки', icon: '📅' },
+    { path: ROUTES.ADMIN_CALENDAR, label: 'Календарь', icon: '🗓️' },
     { path: ROUTES.ADMIN_CLIENTS, label: 'Клиенты', icon: '👥' },
     { path: ROUTES.ADMIN_REPORTS, label: 'Отчёты', icon: '📈' },
     { path: ROUTES.ADMIN_CONTACTS, label: 'Контакты', icon: '📞' },
