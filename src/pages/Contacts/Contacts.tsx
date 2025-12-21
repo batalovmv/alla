@@ -180,14 +180,26 @@ const Contacts: React.FC = () => {
           return
         }
 
+        const procedureId = String((data as any).procedureId ?? '').trim()
+        if (!procedureId) {
+          dispatch(submitBookingFailure('Выберите процедуру.'))
+          return
+        }
+        const procedure = procedures.find((p) => p.id === procedureId)
+        if (!procedure) {
+          dispatch(submitBookingFailure('Выбранная процедура не найдена. Обновите страницу и попробуйте снова.'))
+          return
+        }
+
         const emailRaw = (data.email ?? '').trim()
         const cleaned: BookingFormData = {
           ...data,
+          procedureId,
           phone: normalizedPhone,
           email: emailRaw ? emailRaw : undefined,
         }
 
-        const result = await submitBookingAPI(cleaned)
+        const result = await submitBookingAPI({ ...(cleaned as any), procedureName: procedure.name })
         if (result.success) {
           localStorage.setItem('booking_last_submit_ts', String(now))
           dispatch(submitBookingSuccess())
