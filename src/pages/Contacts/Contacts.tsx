@@ -393,11 +393,41 @@ const Contacts: React.FC = () => {
                     required: 'Телефон обязателен для заполнения',
                     validate: (value) =>
                       validatePhone(value) || 'Неверный формат телефона',
-                    onChange: (e) => {
-                      const masked = formatPhoneMask(e.target.value)
-                      setValue('phone', masked, { shouldValidate: true, shouldDirty: true })
-                    },
                   })}
+                  onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                    if (!e.target.value) {
+                      setValue('phone', formatPhoneMask(''), { shouldDirty: false })
+                    }
+                  }}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const masked = formatPhoneMask(e.target.value)
+                    setValue('phone', masked, { shouldValidate: true, shouldDirty: true })
+                  }}
+                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                    if (e.key !== 'Backspace') return
+                    const input = e.currentTarget
+                    const value = input.value || ''
+                    const selStart = input.selectionStart ?? value.length
+                    const selEnd = input.selectionEnd ?? value.length
+                    // Only handle simple "backspace at end" (common case) to avoid fighting selection edits.
+                    if (selStart !== selEnd || selStart !== value.length) return
+
+                    // If cursor is at end and last char is formatting, delete a digit instead.
+                    const lastChar = value[value.length - 1] || ''
+                    if (![')', '-', ' '].includes(lastChar)) return
+
+                    const digits = value.replace(/\D/g, '')
+                    // digits includes leading '7' (country) if present
+                    if (digits.length <= 1) {
+                      e.preventDefault()
+                      setValue('phone', formatPhoneMask(''), { shouldValidate: true, shouldDirty: true })
+                      return
+                    }
+
+                    const nextDigits = digits.slice(0, -1) // remove one digit
+                    e.preventDefault()
+                    setValue('phone', formatPhoneMask(nextDigits), { shouldValidate: true, shouldDirty: true })
+                  }}
                   error={errors.phone?.message}
                 />
 

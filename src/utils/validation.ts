@@ -19,6 +19,8 @@ export const normalizePhone = (raw: string): string | null => {
   let d = digits
   // Accept: 10 digits (national) or 11 digits starting with 7/8
   if (d.length === 11 && d.startsWith('8')) d = `7${d.slice(1)}`
+  // If user started typing "+7" but hasn't completed 10 digits after it yet, treat as invalid (incomplete).
+  if (d.length === 10 && d.startsWith('7')) return null
   if (d.length === 10) d = `7${d}`
   if (d.length !== 11) return null
   if (!d.startsWith('7')) return null
@@ -34,7 +36,7 @@ export const normalizePhone = (raw: string): string | null => {
 // Formats a phone as "+7 (XXX) XXX-XX-XX" progressively while the user types.
 export const formatPhoneMask = (raw: string): string => {
   const digits = String(raw || '').replace(/\D/g, '')
-  if (!digits) return ''
+  if (!digits) return '+7 ()'
 
   let d = digits
   if (d.startsWith('8')) d = `7${d.slice(1)}`
@@ -47,9 +49,9 @@ export const formatPhoneMask = (raw: string): string => {
   const p3 = d.slice(6, 8)
   const p4 = d.slice(8, 10)
 
-  let out = '+7'
-  if (p1) out += ` (${p1}`
-  if (p1.length === 3) out += ')'
+  let out = '+7 ('
+  out += p1
+  out += ')'
   if (p2) out += ` ${p2}`
   if (p3) out += `-${p3}`
   if (p4) out += `-${p4}`
