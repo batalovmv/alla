@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { contactInfoService } from '../../../services/firebaseService'
 import { CONTACT_INFO } from '../../../config/constants'
@@ -121,7 +121,7 @@ const Contacts: React.FC = () => {
   const previewHours = formatWorkingHoursFromSchedule(schedule)
   const days: DayKey[] = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 
-  const weekdayDays: DayKey[] = useMemo(() => ['Пн', 'Вт', 'Ср', 'Чт', 'Пт'], [])
+  const weekdayDays: DayKey[] = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт']
 
   const applyToDays = (fromDay: DayKey, toDays: DayKey[]) => {
     const cur = getValues('workingSchedule')
