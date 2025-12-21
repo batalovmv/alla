@@ -10,6 +10,7 @@ import { buildWhatsAppHref } from '../../utils/whatsapp'
 import { buildTelegramHref } from '../../utils/telegram'
 import { CONTACT_INFO, SITE_NAME } from '../../config/constants'
 import { ContactInfo } from '../../types'
+import { formatKzt } from '../../utils/money'
 import Card from '../../components/common/Card/Card'
 import Button from '../../components/common/Button/Button'
 import ProcedureCard from '../../components/procedures/ProcedureCard/ProcedureCard'
@@ -129,7 +130,7 @@ const ProcedureDetail: React.FC = () => {
             <div className={styles.details}>
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>Стоимость:</span>
-                <span className={styles.detailValue}>{procedure.price} ₽</span>
+                <span className={styles.detailValue}>{formatKzt(procedure.price)}</span>
               </div>
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>Длительность:</span>

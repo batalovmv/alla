@@ -31,6 +31,7 @@ import SEO from '../../components/common/SEO/SEO'
 import { Skeleton } from '../../components/common/Skeleton/Skeleton'
 import { Reveal } from '../../components/common/Reveal/Reveal'
 import styles from './Contacts.module.css'
+import { formatKzt } from '../../utils/money'
 
 const Contacts: React.FC = () => {
   const dispatch = useAppDispatch()
@@ -208,7 +209,7 @@ const Contacts: React.FC = () => {
     () =>
       procedures.map((p) => ({
         value: p.id,
-        label: `${p.name} - ${p.price} ₽`,
+        label: `${p.name} - ${formatKzt(p.price)}`,
       })),
     [procedures]
   )

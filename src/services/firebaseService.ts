@@ -10,6 +10,7 @@ import {
   where,
   orderBy,
   limit,
+  getCountFromServer,
   Timestamp,
   setDoc,
   serverTimestamp,
@@ -79,6 +80,20 @@ export const proceduresService = {
   async delete(id: string): Promise<void> {
     checkFirebase()
     await deleteDoc(doc(db!, 'procedures', id))
+  },
+
+  async getUsageCounts(id: string): Promise<{ bookings: number; reviews: number; serviceRecords: number }> {
+    checkFirebase()
+    const [bookingsSnap, reviewsSnap, recordsSnap] = await Promise.all([
+      getCountFromServer(query(collection(db!, 'bookings'), where('procedureId', '==', id))),
+      getCountFromServer(query(collection(db!, 'reviews'), where('procedureId', '==', id))),
+      getCountFromServer(query(collection(db!, 'serviceRecords'), where('procedureId', '==', id))),
+    ])
+    return {
+      bookings: bookingsSnap.data().count,
+      reviews: reviewsSnap.data().count,
+      serviceRecords: recordsSnap.data().count,
+    }
   },
 }
 

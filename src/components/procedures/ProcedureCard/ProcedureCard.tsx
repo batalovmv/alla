@@ -4,6 +4,7 @@ import { Procedure } from '../../../types'
 import { ROUTES } from '../../../config/routes'
 import Card from '../../common/Card/Card'
 import Button from '../../common/Button/Button'
+import { formatKzt } from '../../../utils/money'
 import styles from './ProcedureCard.module.css'
 
 interface ProcedureCardProps {
@@ -28,7 +29,7 @@ const ProcedureCard: React.FC<ProcedureCardProps> = ({ procedure }) => {
         <h3 className={styles.title}>{procedure.name}</h3>
         <p className={styles.description}>{procedure.description}</p>
         <div className={styles.info}>
-          <span className={styles.price}>{procedure.price} ₽</span>
+          <span className={styles.price}>{formatKzt(procedure.price)}</span>
           <span className={styles.duration}>{procedure.duration} мин</span>
         </div>
         <div className={styles.actions}>

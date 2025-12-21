@@ -10,6 +10,7 @@ import Input from '../../../components/common/Input/Input'
 import Textarea from '../../../components/common/Textarea/Textarea'
 import Select from '../../../components/common/Select/Select'
 import { PageFallback } from '../../../components/common/PageFallback/PageFallback'
+import { formatKzt } from '../../../utils/money'
 import styles from './ClientHistory.module.css'
 
 interface ServiceRecordFormData {
@@ -126,7 +127,7 @@ const ClientHistory: React.FC = () => {
 
   const procedureOptions = procedures.map((p) => ({
     value: p.id,
-    label: `${p.name} - ${p.price} ₽`,
+    label: `${p.name} - ${formatKzt(p.price)}`,
   }))
 
   const totalAmount = records.reduce((sum, record) => sum + (record.price || 0), 0)
@@ -183,7 +184,7 @@ const ClientHistory: React.FC = () => {
           {totalAmount > 0 && (
             <div>
               <span className={styles.label}>Общая сумма:</span>
-              <span>{totalAmount.toLocaleString('ru-RU')} ₽</span>
+              <span>{formatKzt(totalAmount)}</span>
             </div>
           )}
         </div>
@@ -268,7 +269,7 @@ const ClientHistory: React.FC = () => {
                   </div>
                   {record.price && (
                     <div className={styles.recordPrice}>
-                      {record.price.toLocaleString('ru-RU')} ₽
+                      {formatKzt(record.price)}
                     </div>
                   )}
                 </div>

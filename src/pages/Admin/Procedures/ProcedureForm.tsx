@@ -146,7 +146,7 @@ const ProcedureForm: React.FC<ProcedureFormProps> = ({
 
           <div className={styles.row}>
             <Input
-              label="Цена (₽)"
+              label="Цена (₸)"
               type="number"
               {...register('price', {
                 required: 'Цена обязательна',

@@ -40,14 +40,19 @@ const Procedures: React.FC = () => {
   }
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Вы уверены, что хотите удалить эту процедуру?')) {
-      try {
-        await proceduresService.delete(id)
-        await loadProcedures()
-      } catch (error) {
-        console.error('Ошибка удаления процедуры:', error)
-        alert('Ошибка при удалении процедуры')
-      }
+    try {
+      const usage = await proceduresService.getUsageCounts(id)
+      const hasLinks = usage.bookings > 0 || usage.reviews > 0 || usage.serviceRecords > 0
+      const msg = hasLinks
+        ? `Процедура используется:\n- заявок: ${usage.bookings}\n- отзывов: ${usage.reviews}\n- записей услуг: ${usage.serviceRecords}\n\nУдаление НЕ удалит связанные документы каскадом, но часть экранов может потерять “связь” с процедурой.\n\nУдалить всё равно?`
+        : 'Вы уверены, что хотите удалить эту процедуру?'
+      if (!window.confirm(msg)) return
+      if (hasLinks && !window.confirm('Последнее подтверждение: точно удалить процедуру?')) return
+      await proceduresService.delete(id)
+      await loadProcedures()
+    } catch (error) {
+      console.error('Ошибка удаления процедуры:', error)
+      alert('Ошибка при удалении процедуры')
     }
   }
 

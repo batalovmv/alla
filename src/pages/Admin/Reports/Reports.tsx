@@ -10,6 +10,7 @@ import {
   reviewsService,
   serviceRecordsService,
 } from '../../../services/firebaseService'
+import { formatKzt } from '../../../utils/money'
 import { auth, db } from '../../../config/firebase'
 import { deleteDoc, doc } from 'firebase/firestore'
 import {
@@ -100,7 +101,7 @@ function parseMonthValue(value: string): Date {
 }
 
 function toKzt(value: number): string {
-  return `${Math.round(value).toLocaleString('ru-RU')} ₸`
+  return formatKzt(value)
 }
 
 function startOfDay(d: Date): Date {

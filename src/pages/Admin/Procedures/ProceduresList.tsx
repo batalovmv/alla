@@ -2,6 +2,7 @@ import React from 'react'
 import { Procedure } from '../../../types'
 import Card from '../../../components/common/Card/Card'
 import Button from '../../../components/common/Button/Button'
+import { formatKzt } from '../../../utils/money'
 import styles from './ProceduresList.module.css'
 
 interface ProceduresListProps {
@@ -38,7 +39,7 @@ const ProceduresList: React.FC<ProceduresListProps> = ({
             <div className={styles.info}>
               <h3 className={styles.name}>{procedure.name}</h3>
               <p className={styles.category}>{procedure.category}</p>
-              <p className={styles.price}>{procedure.price} ₽</p>
+              <p className={styles.price}>{formatKzt(procedure.price)}</p>
               {procedure.popular && (
                 <span className={styles.badge}>Популярная</span>
               )}
