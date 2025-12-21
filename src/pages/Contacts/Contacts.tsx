@@ -18,7 +18,7 @@ import { buildWhatsAppHref } from '../../utils/whatsapp'
 import { buildTelegramHref } from '../../utils/telegram'
 import { safeHttpUrl } from '../../utils/url'
 import { BookingFormData, ContactInfo } from '../../types'
-import { validatePhone, validateEmail } from '../../utils/validation'
+import { validatePhone, validateEmail, formatPhoneMask, normalizePhone } from '../../utils/validation'
 import { useDelayedFlag } from '../../utils/useDelayedFlag'
 import Card from '../../components/common/Card/Card'
 import Input from '../../components/common/Input/Input'
@@ -174,7 +174,20 @@ const Contacts: React.FC = () => {
 
       dispatch(submitBooking())
       try {
-        const result = await submitBookingAPI(data)
+        const normalizedPhone = normalizePhone(data.phone)
+        if (!normalizedPhone) {
+          dispatch(submitBookingFailure('Укажите телефон в формате +7 (XXX) XXX-XX-XX'))
+          return
+        }
+
+        const emailRaw = (data.email ?? '').trim()
+        const cleaned: BookingFormData = {
+          ...data,
+          phone: normalizedPhone,
+          email: emailRaw ? emailRaw : undefined,
+        }
+
+        const result = await submitBookingAPI(cleaned)
         if (result.success) {
           localStorage.setItem('booking_last_submit_ts', String(now))
           dispatch(submitBookingSuccess())
@@ -373,17 +386,27 @@ const Contacts: React.FC = () => {
                 <Input
                   label="Телефон"
                   type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="+7 (999) 462-10-36"
                   {...register('phone', {
                     required: 'Телефон обязателен для заполнения',
                     validate: (value) =>
                       validatePhone(value) || 'Неверный формат телефона',
+                    onChange: (e) => {
+                      const masked = formatPhoneMask(e.target.value)
+                      setValue('phone', masked, { shouldValidate: true, shouldDirty: true })
+                    },
                   })}
                   error={errors.phone?.message}
                 />
 
                 <Input
-                  label="Email"
+                  label="Email (необязательно)"
                   type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="name@example.com"
                   {...register('email', {
                     validate: (value) =>
                       !value || validateEmail(value) || 'Неверный формат email',

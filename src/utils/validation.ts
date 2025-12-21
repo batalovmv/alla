@@ -1,7 +1,5 @@
 export const validatePhone = (phone: string): boolean => {
-  // Российский формат телефона
-  const phoneRegex = /^(\+7|7|8)?[\s\-]?\(?[489][0-9]{2}\)?[\s\-]?[0-9]{3}[\s\-]?[0-9]{2}[\s\-]?[0-9]{2}$/
-  return phoneRegex.test(phone.replace(/\s/g, ''))
+  return normalizePhone(phone) !== null
 }
 
 export const validateEmail = (email: string): boolean => {
@@ -10,14 +8,50 @@ export const validateEmail = (email: string): boolean => {
 }
 
 export const formatPhone = (phone: string): string => {
-  const cleaned = phone.replace(/\D/g, '')
-  if (cleaned.startsWith('8')) {
-    return cleaned.replace(/^8/, '+7')
-  }
-  if (cleaned.startsWith('7')) {
-    return `+${cleaned}`
-  }
-  return `+7${cleaned}`
+  return normalizePhone(phone) || phone
 }
 
+// Normalizes a phone to E.164-like format for RU/KZ: +7XXXXXXXXXX (11 digits total including country code).
+export const normalizePhone = (raw: string): string | null => {
+  const digits = String(raw || '').replace(/\D/g, '')
+  if (!digits) return null
+
+  let d = digits
+  // Accept: 10 digits (national) or 11 digits starting with 7/8
+  if (d.length === 11 && d.startsWith('8')) d = `7${d.slice(1)}`
+  if (d.length === 10) d = `7${d}`
+  if (d.length !== 11) return null
+  if (!d.startsWith('7')) return null
+
+  const national = d.slice(1) // 10 digits
+  // Basic sanity: first digit of national number should be 3-9 (covers most RU/KZ patterns; avoids +700...)
+  if (!/^[3-9]/.test(national)) return null
+
+  return `+${d}`
+}
+
+// Formats a phone as "+7 (XXX) XXX-XX-XX" progressively while the user types.
+export const formatPhoneMask = (raw: string): string => {
+  const digits = String(raw || '').replace(/\D/g, '')
+  if (!digits) return ''
+
+  let d = digits
+  if (d.startsWith('8')) d = `7${d.slice(1)}`
+  if (d.startsWith('7')) d = d.slice(1)
+  // Keep only last 10 digits of national part
+  if (d.length > 10) d = d.slice(d.length - 10)
+
+  const p1 = d.slice(0, 3)
+  const p2 = d.slice(3, 6)
+  const p3 = d.slice(6, 8)
+  const p4 = d.slice(8, 10)
+
+  let out = '+7'
+  if (p1) out += ` (${p1}`
+  if (p1.length === 3) out += ')'
+  if (p2) out += ` ${p2}`
+  if (p3) out += `-${p3}`
+  if (p4) out += `-${p4}`
+  return out
+}
 

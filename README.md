@@ -98,13 +98,12 @@ Workflow `.github/workflows/deploy.yml` передаёт переменные о
 
 Админ-доступ определяется **custom claim** `admin: true` в Firebase ID token.
 
-### Выдать права первому админу (bootstrap)
+### Выдать права первому админу (one-time)
 
 Firebase Console **не умеет** выставлять custom claims вручную — это делается через **Firebase Admin SDK** (сервер/Cloud Function/скрипт).
 
 В репозитории добавлены Cloud Functions (2nd gen):
 - `grantAdmin` (callable, **admin‑only**)
-- `bootstrapGrantAdmin` (HTTP, для bootstrap; может требовать Cloud Run policies/billing)
 
 Шаги:
 
@@ -130,15 +129,8 @@ npm run build
 firebase deploy --only functions
 ```
 
-4) Выдайте claim первому админу одним из способов:
-
-- **A (предпочтительно)**: если `bootstrapGrantAdmin` успешно задеплоился — вызовите его (HTTP) с `ADMIN_GRANT_SECRET`, затем **сразу уничтожьте/ротируйте** secret:
-
-```bash
-firebase functions:secrets:destroy ADMIN_GRANT_SECRET
-```
-
-- **B (надёжно везде)**: используйте локальный одноразовый скрипт на Firebase Admin SDK с service account (ключ **не коммитить**). Это безопаснее, чем пытаться “встроить” bootstrap в UI.
+4) Выдайте claim первому админу через **одноразовый локальный скрипт** на Firebase Admin SDK с service account (ключ **не коммитить**).
+Это надёжнее и безопаснее, чем “bootstrap UI/secret” в продакшене.
 
 ### 2) Выдавать админ-права дальше (только админ)
 
