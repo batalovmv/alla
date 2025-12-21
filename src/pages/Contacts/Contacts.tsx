@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useCallback, useState } from 'react'
+import React, { useEffect, useMemo, useCallback, useState, useRef } from 'react'
 import { useForm, Controller, useWatch } from 'react-hook-form'
 import { useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
@@ -56,6 +56,8 @@ const Contacts: React.FC = () => {
     },
   })
   const selectedProcedureId = useWatch({ control, name: 'procedureId' })
+  const hpRef = useRef<HTMLInputElement | null>(null)
+  const hpName = useMemo(() => `hp_${Math.random().toString(36).slice(2)}`, [])
 
   const loadProcedures = useCallback(async () => {
     dispatch(setProceduresLoading(true))
@@ -155,11 +157,11 @@ const Contacts: React.FC = () => {
 
   const onSubmit = useCallback(
     async (data: BookingFormData) => {
-      // Honeypot field: если бот заполнил скрытое поле — имитируем успех без записи в базу
-      const hp = (document.getElementById('hp_company') as HTMLInputElement | null)
-        ?.value
+      // Honeypot field: если поле заполнено (бот/автофилл) — НЕ симулируем успех.
+      // Иначе пользователь думает, что заявка ушла, хотя мы её отбросили.
+      const hp = hpRef.current?.value
       if (hp && hp.trim().length > 0) {
-        dispatch(submitBookingSuccess())
+        dispatch(submitBookingFailure('Похоже, сработала защита от спама. Обновите страницу и попробуйте снова.'))
         return
       }
 
@@ -214,7 +216,7 @@ const Contacts: React.FC = () => {
         )
       }
     },
-    [dispatch]
+    [dispatch, procedures]
   )
 
   const mapEmbedUrl = contactInfo.mapEmbedUrl || ''
@@ -375,7 +377,9 @@ const Contacts: React.FC = () => {
               <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
                 {/* Honeypot: скрытое поле для ботов */}
                 <input
-                  id="hp_company"
+                  ref={hpRef}
+                  id={hpName}
+                  name={hpName}
                   type="text"
                   tabIndex={-1}
                   autoComplete="off"
