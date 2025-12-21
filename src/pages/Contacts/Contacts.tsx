@@ -19,6 +19,7 @@ import { buildTelegramHref } from '../../utils/telegram'
 import { safeHttpUrl } from '../../utils/url'
 import { BookingFormData, ContactInfo } from '../../types'
 import { validatePhone, validateEmail, formatPhoneMask, normalizePhone } from '../../utils/validation'
+import { getWorkingWindowForDate, suggestBookingSlot, toISODateLocal } from '../../utils/workingHours'
 import { useDelayedFlag } from '../../utils/useDelayedFlag'
 import Card from '../../components/common/Card/Card'
 import Input from '../../components/common/Input/Input'
@@ -56,6 +57,8 @@ const Contacts: React.FC = () => {
     },
   })
   const selectedProcedureId = useWatch({ control, name: 'procedureId' })
+  const desiredDate = useWatch({ control, name: 'desiredDate' })
+  const desiredTime = useWatch({ control, name: 'desiredTime' })
   const hpRef = useRef<HTMLInputElement | null>(null)
   const hpName = useMemo(() => `hp_${Math.random().toString(36).slice(2)}`, [])
 
@@ -104,6 +107,49 @@ const Contacts: React.FC = () => {
       return () => clearTimeout(timer)
     }
   }, [success, reset, dispatch])
+
+  // Auto-suggest date/time based on working hours (only when fields are empty).
+  useEffect(() => {
+    const hasDate = Boolean(desiredDate)
+    const hasTime = Boolean(desiredTime)
+    if (hasDate && hasTime) return
+    const { suggestedDate, suggestedTime } = suggestBookingSlot({
+      workingHours: contactInfo.workingHours,
+      leadMinutes: 90,
+      stepMinutes: 15,
+    })
+    if (!hasDate) setValue('desiredDate', suggestedDate, { shouldDirty: false })
+    if (!hasTime) setValue('desiredTime', suggestedTime, { shouldDirty: false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contactInfo.workingHours])
+
+  const bookingTimeNotice = useMemo(() => {
+    const s = suggestBookingSlot({
+      workingHours: contactInfo.workingHours,
+      leadMinutes: 90,
+      stepMinutes: 15,
+    })
+    return s.notice || ''
+  }, [contactInfo.workingHours])
+
+  const timeValidationMessage = useMemo(() => {
+    if (!desiredDate || !desiredTime) return ''
+    const d = new Date(`${desiredDate}T00:00:00`)
+    const w = getWorkingWindowForDate(contactInfo.workingHours, d)
+    if (!w) return 'Для выбранной даты часы работы не указаны. Пожалуйста, выберите другое время.'
+    const [hh, mm] = desiredTime.split(':').map(Number)
+    if (!Number.isFinite(hh) || !Number.isFinite(mm)) return 'Укажите корректное время.'
+    const t = hh * 60 + mm
+    if (t < w.openMin || t >= w.closeMin) return 'Мы не работаем в это время — выберите другое.'
+    // If today and chosen time already in the past by > 10min, warn
+    const now = new Date()
+    const isToday = toISODateLocal(now) === desiredDate
+    if (isToday) {
+      const nowMin = now.getHours() * 60 + now.getMinutes()
+      if (t < nowMin + 30) return 'Пожалуйста, выберите время чуть позже (минимум через 30 минут).'
+    }
+    return ''
+  }, [contactInfo.workingHours, desiredDate, desiredTime])
 
   useEffect(() => {
     let mounted = true
@@ -486,6 +532,12 @@ const Contacts: React.FC = () => {
                   type="date"
                   {...register('desiredDate', {
                     required: 'Укажите желаемую дату',
+                    validate: (value) => {
+                      if (!value) return 'Укажите желаемую дату'
+                      const today = toISODateLocal(new Date())
+                      if (value < today) return 'Нельзя выбрать прошедшую дату'
+                      return true
+                    },
                   })}
                   error={errors.desiredDate?.message}
                 />
@@ -493,10 +545,14 @@ const Contacts: React.FC = () => {
                 <Input
                   label="Желаемое время"
                   type="time"
+                  step={900}
                   {...register('desiredTime', {
                     required: 'Укажите желаемое время',
+                    validate: () => {
+                      return timeValidationMessage ? timeValidationMessage : true
+                    },
                   })}
-                  error={errors.desiredTime?.message}
+                  error={errors.desiredTime?.message || timeValidationMessage || (bookingTimeNotice ? bookingTimeNotice : undefined)}
                 />
 
                 <Textarea
