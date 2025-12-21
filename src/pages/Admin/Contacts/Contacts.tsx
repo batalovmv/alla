@@ -205,10 +205,11 @@ const Contacts: React.FC = () => {
           />
 
           <h3 className={styles.sectionTitle}>График работы</h3>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
-            <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div className={styles.scheduleModeRow}>
+            <label className={styles.scheduleModeLabel}>
               <span style={{ fontWeight: 600 }}>Режим:</span>
               <select
+                className={styles.scheduleModeSelect}
                 value={scheduleMode}
                 onChange={(e) => {
                   const v = e.target.value === 'advanced' ? 'advanced' : 'simple'
@@ -223,9 +224,9 @@ const Contacts: React.FC = () => {
           </div>
 
           {scheduleMode === 'simple' ? (
-            <div style={{ display: 'grid', gap: 10 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr', gap: 10, alignItems: 'end' }}>
-                <div style={{ fontWeight: 600, paddingBottom: 8 }}>Пн‑Пт</div>
+            <div className={styles.scheduleGrid}>
+              <div className={styles.scheduleRowSimpleWeek}>
+                <div className={styles.dayLabel}>Пн‑Пт</div>
                 <Input
                   label="Открытие"
                   type="time"
@@ -242,8 +243,8 @@ const Contacts: React.FC = () => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr 120px', gap: 10, alignItems: 'end' }}>
-                <div style={{ fontWeight: 600, paddingBottom: 8 }}>Сб</div>
+              <div className={styles.scheduleRowSimpleDay}>
+                <div className={styles.dayLabel}>Сб</div>
                 <Input
                   label="Открытие"
                   type="time"
@@ -260,7 +261,7 @@ const Contacts: React.FC = () => {
                   value={satClose}
                   onChange={(e) => applyDayTemplate('Сб', { open: satOpen, close: e.target.value, closed: false })}
                 />
-                <label style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 8 }}>
+                <label className={styles.closedToggle}>
                   <input
                     type="checkbox"
                     checked={satClosed}
@@ -270,8 +271,8 @@ const Contacts: React.FC = () => {
                 </label>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr 120px', gap: 10, alignItems: 'end' }}>
-                <div style={{ fontWeight: 600, paddingBottom: 8 }}>Вс</div>
+              <div className={styles.scheduleRowSimpleDay}>
+                <div className={styles.dayLabel}>Вс</div>
                 <Input
                   label="Открытие"
                   type="time"
@@ -288,7 +289,7 @@ const Contacts: React.FC = () => {
                   value={sunClose}
                   onChange={(e) => applyDayTemplate('Вс', { open: sunOpen, close: e.target.value, closed: false })}
                 />
-                <label style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 8 }}>
+                <label className={styles.closedToggle}>
                   <input
                     type="checkbox"
                     checked={sunClosed}
@@ -299,18 +300,10 @@ const Contacts: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div style={{ display: 'grid', gap: 10 }}>
+            <div className={styles.scheduleGrid}>
               {days.map((day) => (
-                <div
-                  key={day}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '72px 1fr 1fr 120px',
-                    gap: 10,
-                    alignItems: 'end',
-                  }}
-                >
-                  <div style={{ fontWeight: 600, paddingBottom: 8 }}>{day}</div>
+                <div key={day} className={styles.scheduleRowAdvanced}>
+                  <div className={styles.dayLabel}>{day}</div>
                   <Input
                     label="Открытие"
                     type="time"
@@ -331,7 +324,7 @@ const Contacts: React.FC = () => {
                       validate: () => validateDay(day) || 'Закрытие должно быть позже открытия',
                     })}
                   />
-                  <label style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 8 }}>
+                  <label className={styles.closedToggle}>
                     <input type="checkbox" {...register(`workingSchedule.${day}.closed` as any)} />
                     Выходной
                   </label>
@@ -340,7 +333,7 @@ const Contacts: React.FC = () => {
             </div>
           )}
 
-          <div style={{ marginTop: 8, opacity: 0.85 }}>
+          <div className={styles.preview}>
             <strong>Как будет показано на сайте:</strong> {previewHours}
           </div>
 

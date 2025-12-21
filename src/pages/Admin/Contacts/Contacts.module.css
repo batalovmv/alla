@@ -41,3 +41,103 @@
   margin-top: 1rem;
 }
 
+/* Working schedule editor */
+.scheduleModeRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.scheduleModeLabel {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.scheduleModeSelect {
+  padding: 10px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.scheduleGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.scheduleRowSimpleWeek {
+  display: grid;
+  grid-template-columns: 120px 1fr 1fr;
+  gap: 10px;
+  align-items: end;
+}
+
+.scheduleRowSimpleDay {
+  display: grid;
+  grid-template-columns: 120px 1fr 1fr 120px;
+  gap: 10px;
+  align-items: end;
+}
+
+.scheduleRowAdvanced {
+  display: grid;
+  grid-template-columns: 72px 1fr 1fr 120px;
+  gap: 10px;
+  align-items: end;
+}
+
+.dayLabel {
+  font-weight: 600;
+  padding-bottom: 8px;
+}
+
+.closedToggle {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-bottom: 8px;
+}
+
+.preview {
+  margin-top: 8px;
+  opacity: 0.85;
+  word-break: break-word;
+}
+
+@media (max-width: 640px) {
+  .contacts {
+    max-width: 100%;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .scheduleModeSelect {
+    width: 100%;
+  }
+
+  .scheduleRowSimpleWeek,
+  .scheduleRowSimpleDay,
+  .scheduleRowAdvanced {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    padding: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.7);
+  }
+
+  .dayLabel {
+    padding-bottom: 0;
+  }
+
+  .closedToggle {
+    padding-bottom: 0;
+  }
+}
+
