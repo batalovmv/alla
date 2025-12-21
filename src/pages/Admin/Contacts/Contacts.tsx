@@ -26,6 +26,10 @@ const Contacts: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [scheduleMode, setScheduleMode] = useState<'simple' | 'advanced'>(() => {
+    const raw = localStorage.getItem('admin_schedule_mode')
+    return raw === 'advanced' ? 'advanced' : 'simple'
+  })
 
   const {
     register,
@@ -122,22 +126,17 @@ const Contacts: React.FC = () => {
   const days: DayKey[] = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 
   const weekdayDays: DayKey[] = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт']
-
-  const applyToDays = (fromDay: DayKey, toDays: DayKey[]) => {
-    const cur = getValues('workingSchedule')
-    const src = cur?.[fromDay]
-    if (!src) return
-    for (const d of toDays) {
-      setValue(`workingSchedule.${d}.closed` as any, Boolean(src.closed), { shouldDirty: true })
-      setValue(`workingSchedule.${d}.open` as any, src.open, { shouldDirty: true })
-      setValue(`workingSchedule.${d}.close` as any, src.close, { shouldDirty: true })
+  const applyWeekTemplate = (opts: { open: string; close: string; closed: boolean }) => {
+    for (const d of weekdayDays) {
+      setValue(`workingSchedule.${d}.closed` as any, opts.closed, { shouldDirty: true })
+      setValue(`workingSchedule.${d}.open` as any, opts.open, { shouldDirty: true })
+      setValue(`workingSchedule.${d}.close` as any, opts.close, { shouldDirty: true })
     }
   }
-
-  const setClosedForDays = (toDays: DayKey[], closed: boolean) => {
-    for (const d of toDays) {
-      setValue(`workingSchedule.${d}.closed` as any, closed, { shouldDirty: true })
-    }
+  const applyDayTemplate = (day: DayKey, opts: { open: string; close: string; closed: boolean }) => {
+    setValue(`workingSchedule.${day}.closed` as any, opts.closed, { shouldDirty: true })
+    setValue(`workingSchedule.${day}.open` as any, opts.open, { shouldDirty: true })
+    setValue(`workingSchedule.${day}.close` as any, opts.close, { shouldDirty: true })
   }
 
   const validateDay = (day: DayKey) => {
@@ -151,6 +150,15 @@ const Contacts: React.FC = () => {
     if (!open || !close) return false
     return open < close
   }
+
+  const weekOpen = watch('workingSchedule.Пн.open' as any) || '09:00'
+  const weekClose = watch('workingSchedule.Пн.close' as any) || '18:00'
+  const satClosed = Boolean(watch('workingSchedule.Сб.closed' as any))
+  const satOpen = watch('workingSchedule.Сб.open' as any) || '10:00'
+  const satClose = watch('workingSchedule.Сб.close' as any) || '16:00'
+  const sunClosed = Boolean(watch('workingSchedule.Вс.closed' as any))
+  const sunOpen = watch('workingSchedule.Вс.open' as any) || '10:00'
+  const sunClose = watch('workingSchedule.Вс.close' as any) || '16:00'
 
   return (
     <div className={styles.contacts}>
@@ -197,71 +205,140 @@ const Contacts: React.FC = () => {
           />
 
           <h3 className={styles.sectionTitle}>График работы</h3>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
-            <Button
-              type="button"
-              size="small"
-              variant="outline"
-              onClick={() => applyToDays('Пн', weekdayDays)}
-            >
-              Копировать Пн → Пн‑Пт
-            </Button>
-            <Button
-              type="button"
-              size="small"
-              variant="outline"
-              onClick={() => applyToDays('Пн', days)}
-            >
-              Копировать Пн → все дни
-            </Button>
-            <Button
-              type="button"
-              size="small"
-              variant="outline"
-              onClick={() => setClosedForDays(['Сб', 'Вс'], true)}
-            >
-              Сделать Сб/Вс выходными
-            </Button>
-          </div>
-          <div style={{ display: 'grid', gap: 10 }}>
-            {days.map((day) => (
-              <div
-                key={day}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '72px 1fr 1fr 120px',
-                  gap: 10,
-                  alignItems: 'end',
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+            <label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <span style={{ fontWeight: 600 }}>Режим:</span>
+              <select
+                value={scheduleMode}
+                onChange={(e) => {
+                  const v = e.target.value === 'advanced' ? 'advanced' : 'simple'
+                  setScheduleMode(v)
+                  localStorage.setItem('admin_schedule_mode', v)
                 }}
               >
-                <div style={{ fontWeight: 600, paddingBottom: 8 }}>{day}</div>
+                <option value="simple">Простой (Пн‑Пт / Сб / Вс)</option>
+                <option value="advanced">По дням (расширенный)</option>
+              </select>
+            </label>
+          </div>
+
+          {scheduleMode === 'simple' ? (
+            <div style={{ display: 'grid', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr', gap: 10, alignItems: 'end' }}>
+                <div style={{ fontWeight: 600, paddingBottom: 8 }}>Пн‑Пт</div>
                 <Input
                   label="Открытие"
                   type="time"
                   step={900}
-                  disabled={watch(`workingSchedule.${day}.closed` as any)}
-                  {...register(`workingSchedule.${day}.open` as any, {
-                    required: !watch(`workingSchedule.${day}.closed` as any),
-                    validate: () => validateDay(day) || 'Открытие должно быть раньше закрытия',
-                  })}
+                  value={weekOpen}
+                  onChange={(e) => applyWeekTemplate({ open: e.target.value, close: weekClose, closed: false })}
                 />
                 <Input
                   label="Закрытие"
                   type="time"
                   step={900}
-                  disabled={watch(`workingSchedule.${day}.closed` as any)}
-                  {...register(`workingSchedule.${day}.close` as any, {
-                    required: !watch(`workingSchedule.${day}.closed` as any),
-                    validate: () => validateDay(day) || 'Закрытие должно быть позже открытия',
-                  })}
+                  value={weekClose}
+                  onChange={(e) => applyWeekTemplate({ open: weekOpen, close: e.target.value, closed: false })}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr 120px', gap: 10, alignItems: 'end' }}>
+                <div style={{ fontWeight: 600, paddingBottom: 8 }}>Сб</div>
+                <Input
+                  label="Открытие"
+                  type="time"
+                  step={900}
+                  disabled={satClosed}
+                  value={satOpen}
+                  onChange={(e) => applyDayTemplate('Сб', { open: e.target.value, close: satClose, closed: false })}
+                />
+                <Input
+                  label="Закрытие"
+                  type="time"
+                  step={900}
+                  disabled={satClosed}
+                  value={satClose}
+                  onChange={(e) => applyDayTemplate('Сб', { open: satOpen, close: e.target.value, closed: false })}
                 />
                 <label style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 8 }}>
-                  <input type="checkbox" {...register(`workingSchedule.${day}.closed` as any)} />
+                  <input
+                    type="checkbox"
+                    checked={satClosed}
+                    onChange={(e) => applyDayTemplate('Сб', { open: satOpen, close: satClose, closed: e.target.checked })}
+                  />
                   Выходной
                 </label>
               </div>
-            ))}
-          </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr 120px', gap: 10, alignItems: 'end' }}>
+                <div style={{ fontWeight: 600, paddingBottom: 8 }}>Вс</div>
+                <Input
+                  label="Открытие"
+                  type="time"
+                  step={900}
+                  disabled={sunClosed}
+                  value={sunOpen}
+                  onChange={(e) => applyDayTemplate('Вс', { open: e.target.value, close: sunClose, closed: false })}
+                />
+                <Input
+                  label="Закрытие"
+                  type="time"
+                  step={900}
+                  disabled={sunClosed}
+                  value={sunClose}
+                  onChange={(e) => applyDayTemplate('Вс', { open: sunOpen, close: e.target.value, closed: false })}
+                />
+                <label style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={sunClosed}
+                    onChange={(e) => applyDayTemplate('Вс', { open: sunOpen, close: sunClose, closed: e.target.checked })}
+                  />
+                  Выходной
+                </label>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: 10 }}>
+              {days.map((day) => (
+                <div
+                  key={day}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '72px 1fr 1fr 120px',
+                    gap: 10,
+                    alignItems: 'end',
+                  }}
+                >
+                  <div style={{ fontWeight: 600, paddingBottom: 8 }}>{day}</div>
+                  <Input
+                    label="Открытие"
+                    type="time"
+                    step={900}
+                    disabled={watch(`workingSchedule.${day}.closed` as any)}
+                    {...register(`workingSchedule.${day}.open` as any, {
+                      required: !watch(`workingSchedule.${day}.closed` as any),
+                      validate: () => validateDay(day) || 'Открытие должно быть раньше закрытия',
+                    })}
+                  />
+                  <Input
+                    label="Закрытие"
+                    type="time"
+                    step={900}
+                    disabled={watch(`workingSchedule.${day}.closed` as any)}
+                    {...register(`workingSchedule.${day}.close` as any, {
+                      required: !watch(`workingSchedule.${day}.closed` as any),
+                      validate: () => validateDay(day) || 'Закрытие должно быть позже открытия',
+                    })}
+                  />
+                  <label style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 8 }}>
+                    <input type="checkbox" {...register(`workingSchedule.${day}.closed` as any)} />
+                    Выходной
+                  </label>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div style={{ marginTop: 8, opacity: 0.85 }}>
             <strong>Как будет показано на сайте:</strong> {previewHours}
