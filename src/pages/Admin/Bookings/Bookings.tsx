@@ -1,11 +1,36 @@
-import React, { useEffect, useState } from 'react'
-import { bookingsService, proceduresService } from '../../../services/firebaseService'
-import { Booking, BookingStatus } from '../../../types'
+import React, { useEffect, useMemo, useState } from 'react'
+import {
+  bookingsService,
+  proceduresService,
+  serviceRecordsService,
+  clientsService,
+} from '../../../services/firebaseService'
+import { Booking, BookingStatus, Procedure } from '../../../types'
 import Card from '../../../components/common/Card/Card'
 import Button from '../../../components/common/Button/Button'
 import { PageFallback } from '../../../components/common/PageFallback/PageFallback'
 import Modal from '../../../components/common/Modal/Modal'
+import Select from '../../../components/common/Select/Select'
+import Input from '../../../components/common/Input/Input'
+import Textarea from '../../../components/common/Textarea/Textarea'
 import styles from './Bookings.module.css'
+
+type ModalMode = 'view' | 'edit' | 'add'
+
+function normalizeBookingStatus(status: any): BookingStatus {
+  return (status as string) === 'processed' ? 'awaiting' : (status as BookingStatus)
+}
+
+function combineDateTime(dateIso: string, timeHHmm: string): Date {
+  const d = new Date(dateIso)
+  const [hh, mm] = String(timeHHmm || '')
+    .split(':')
+    .map((x) => Number(x))
+  if (Number.isFinite(hh) && Number.isFinite(mm)) {
+    d.setHours(hh, mm, 0, 0)
+  }
+  return d
+}
 
 const Bookings: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -13,6 +38,22 @@ const Bookings: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<BookingStatus>('new') // По умолчанию показываем новые
   const [selected, setSelected] = useState<Booking | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [procedures, setProcedures] = useState<Procedure[]>([])
+  const [modalMode, setModalMode] = useState<ModalMode>('view')
+  const [saving, setSaving] = useState(false)
+
+  // Edit form
+  const [editProcedureId, setEditProcedureId] = useState('')
+  const [editDesiredDate, setEditDesiredDate] = useState('')
+  const [editDesiredTime, setEditDesiredTime] = useState('')
+  const [editComment, setEditComment] = useState('')
+
+  // Add procedure form
+  const [addProcedureId, setAddProcedureId] = useState('')
+  const [addDesiredDate, setAddDesiredDate] = useState('')
+  const [addDesiredTime, setAddDesiredTime] = useState('')
+  const [addComment, setAddComment] = useState('')
+  const [addMode, setAddMode] = useState<'asBooked' | 'asCompleted'>('asBooked')
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)')
@@ -33,10 +74,11 @@ const Bookings: React.FC = () => {
       let filtered = allBookings as Booking[]
 
       // Если у заявки нет procedureName, загружаем процедуры и добавляем название
-      const procedures = await proceduresService.getAll()
+      const procs = await proceduresService.getAll({ includeArchived: true })
+      setProcedures(procs)
       filtered = filtered.map((booking: Booking) => {
         if (!booking.procedureName && booking.procedureId) {
-          const procedure = procedures.find((p) => p.id === booking.procedureId)
+          const procedure = procs.find((p) => p.id === booking.procedureId)
           if (procedure) {
             return { ...booking, procedureName: procedure.name }
           }
@@ -48,7 +90,7 @@ const Bookings: React.FC = () => {
       // Также обрабатываем старые статусы 'processed' как 'awaiting' для обратной совместимости
       filtered = filtered.filter((b: Booking) => {
         // Нормализуем статус: старый 'processed' становится 'awaiting'
-        const bookingStatus = (b.status as string) === 'processed' ? 'awaiting' : b.status
+        const bookingStatus = normalizeBookingStatus((b as any).status)
         return bookingStatus === statusFilter
       }) as Booking[]
 
@@ -81,8 +123,6 @@ const Bookings: React.FC = () => {
 
   const createServiceRecordFromBooking = async (booking: Booking) => {
     try {
-      const { clientsService, serviceRecordsService } = await import('../../../services/firebaseService')
-      const procedures = await proceduresService.getAll()
       const procedure = procedures.find((p) => p.id === booking.procedureId)
       
       // Находим или создаем клиента
@@ -99,7 +139,7 @@ const Bookings: React.FC = () => {
 
       if (client) {
         // Создаем запись об оказанной услуге
-        const serviceDate = new Date(booking.desiredDate)
+        const serviceDate = combineDateTime(booking.desiredDate, booking.desiredTime)
         await serviceRecordsService.create({
           clientId: client.id,
           clientPhone: booking.phone,
@@ -123,6 +163,139 @@ const Bookings: React.FC = () => {
     } catch (error) {
       console.error('Ошибка создания записи об услуге:', error)
       // Не показываем ошибку пользователю, так как заявка уже обновлена
+    }
+  }
+
+  const procedureOptions = useMemo(() => {
+    return procedures.map((p) => ({
+      value: p.id,
+      label: `${p.name}${p.archived ? ' (архив)' : ''}`,
+    }))
+  }, [procedures])
+
+  const openView = (b: Booking) => {
+    setSelected(b)
+    setModalMode('view')
+  }
+
+  const openEdit = () => {
+    if (!selected) return
+    setEditProcedureId(selected.procedureId || '')
+    setEditDesiredDate(selected.desiredDate || '')
+    setEditDesiredTime(selected.desiredTime || '')
+    setEditComment(selected.comment || '')
+    setModalMode('edit')
+  }
+
+  const openAddProcedure = () => {
+    if (!selected) return
+    setAddProcedureId(selected.procedureId || '')
+    setAddDesiredDate(selected.desiredDate || '')
+    setAddDesiredTime(selected.desiredTime || '')
+    setAddComment(selected.comment || '')
+    setAddMode(selected.status === 'completed' ? 'asCompleted' : 'asBooked')
+    setModalMode('add')
+  }
+
+  const saveEdit = async () => {
+    if (!selected) return
+    try {
+      setSaving(true)
+      const proc = procedures.find((p) => p.id === editProcedureId)
+      await bookingsService.update(selected.id, {
+        procedureId: editProcedureId,
+        procedureName: proc?.name || selected.procedureName,
+        desiredDate: editDesiredDate,
+        desiredTime: editDesiredTime,
+        comment: editComment || '',
+      })
+      // refresh selection in-place for UX
+      const next: Booking = {
+        ...selected,
+        procedureId: editProcedureId,
+        procedureName: proc?.name || selected.procedureName,
+        desiredDate: editDesiredDate,
+        desiredTime: editDesiredTime,
+        comment: editComment || '',
+      }
+      setSelected(next)
+      setModalMode('view')
+      await loadBookings()
+    } catch (e) {
+      console.error(e)
+      alert('Не удалось сохранить изменения')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const createAdditional = async () => {
+    if (!selected) return
+    try {
+      setSaving(true)
+      const proc = procedures.find((p) => p.id === addProcedureId)
+      if (!proc) {
+        alert('Выберите процедуру')
+        return
+      }
+
+      if (addMode === 'asBooked') {
+        // Create a new booking with the same client but different procedure and confirm it
+        const newId = await bookingsService.create({
+          name: selected.name,
+          phone: selected.phone,
+          email: selected.email,
+          procedureId: proc.id,
+          procedureName: proc.name,
+          desiredDate: addDesiredDate,
+          desiredTime: addDesiredTime,
+          comment: addComment || '',
+          consent: true,
+        })
+        await bookingsService.update(newId, { status: 'awaiting' })
+        alert('Создана дополнительная запись (подтверждена).')
+      } else {
+        // Create a service record immediately (for reports)
+        let client = await clientsService.getByPhone(selected.phone)
+        if (!client) {
+          const clientId = await clientsService.create({
+            phone: selected.phone,
+            name: selected.name,
+            email: selected.email,
+            totalVisits: 0,
+          })
+          client = await clientsService.get(clientId)
+        }
+        if (client) {
+          const d = combineDateTime(addDesiredDate, addDesiredTime)
+          await serviceRecordsService.create({
+            clientId: client.id,
+            clientPhone: selected.phone,
+            clientName: selected.name,
+            procedureId: proc.id,
+            procedureName: proc.name,
+            date: d,
+            price: proc.price ?? 0,
+            notes: addComment || undefined,
+            bookingId: selected.id,
+          })
+          // update client stats
+          const newTotalVisits = (client.totalVisits || 0) + 1
+          await clientsService.update(client.id, {
+            totalVisits: newTotalVisits,
+            lastVisit: d,
+          })
+          alert('Добавлена выполненная услуга (отчёты обновятся).')
+        }
+      }
+
+      setModalMode('view')
+      await loadBookings()
+    } catch (e) {
+      console.error(e)
+      alert('Не удалось добавить процедуру')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -203,7 +376,7 @@ const Bookings: React.FC = () => {
             <Card
               key={booking.id}
               className={styles.bookingCard}
-              onClick={isMobile ? () => setSelected(booking) : undefined}
+              onClick={isMobile ? () => openView(booking) : undefined}
             >
               <div className={styles.bookingHeader}>
                 <div className={styles.headerMain}>
@@ -301,49 +474,153 @@ const Bookings: React.FC = () => {
 
       <Modal
         isOpen={!!selected}
-        onClose={() => setSelected(null)}
+        onClose={() => {
+          setSelected(null)
+          setModalMode('view')
+        }}
         title={selectedTitle}
       >
         {selected && (
           <div className={styles.modalContent}>
-            <div className={styles.modalGrid}>
-              <div className={styles.modalRow}>
-                <div className={styles.modalLabel}>Процедура</div>
-                <div className={styles.modalValue}>{selected.procedureName || '—'}</div>
-              </div>
-              <div className={styles.modalRow}>
-                <div className={styles.modalLabel}>Дата/время</div>
-                <div className={styles.modalValue}>
-                  {new Date(selected.desiredDate).toLocaleDateString('ru-RU')} • {selected.desiredTime || '—'}
-                </div>
-              </div>
-              <div className={styles.modalRow}>
-                <div className={styles.modalLabel}>Телефон</div>
-                <div className={styles.modalValue}>
-                  <a href={`tel:${selected.phone}`}>{selected.phone}</a>
-                </div>
-              </div>
-              {selected.email && (
+            {modalMode === 'view' && (
+              <div className={styles.modalGrid}>
                 <div className={styles.modalRow}>
-                  <div className={styles.modalLabel}>Email</div>
+                  <div className={styles.modalLabel}>Процедура</div>
+                  <div className={styles.modalValue}>{selected.procedureName || '—'}</div>
+                </div>
+                <div className={styles.modalRow}>
+                  <div className={styles.modalLabel}>Дата/время</div>
                   <div className={styles.modalValue}>
-                    <a href={`mailto:${selected.email}`}>{selected.email}</a>
+                    {new Date(selected.desiredDate).toLocaleDateString('ru-RU')} • {selected.desiredTime || '—'}
                   </div>
                 </div>
-              )}
-              {selected.comment && (
                 <div className={styles.modalRow}>
-                  <div className={styles.modalLabel}>Комментарий</div>
-                  <div className={styles.modalValue}>{selected.comment}</div>
+                  <div className={styles.modalLabel}>Телефон</div>
+                  <div className={styles.modalValue}>
+                    <a href={`tel:${selected.phone}`}>{selected.phone}</a>
+                  </div>
                 </div>
-              )}
-              <div className={styles.modalRow}>
-                <div className={styles.modalLabel}>Статус</div>
-                <div className={styles.modalValue}>{getStatusLabel(selected.status)}</div>
+                {selected.email && (
+                  <div className={styles.modalRow}>
+                    <div className={styles.modalLabel}>Email</div>
+                    <div className={styles.modalValue}>
+                      <a href={`mailto:${selected.email}`}>{selected.email}</a>
+                    </div>
+                  </div>
+                )}
+                {selected.comment && (
+                  <div className={styles.modalRow}>
+                    <div className={styles.modalLabel}>Комментарий</div>
+                    <div className={styles.modalValue}>{selected.comment}</div>
+                  </div>
+                )}
+                <div className={styles.modalRow}>
+                  <div className={styles.modalLabel}>Статус</div>
+                  <div className={styles.modalValue}>{getStatusLabel(selected.status)}</div>
+                </div>
               </div>
-            </div>
+            )}
+
+            {modalMode === 'edit' && (
+              <div className={styles.formGrid}>
+                <Select
+                  label="Процедура"
+                  value={editProcedureId}
+                  onChange={(e) => setEditProcedureId(e.target.value)}
+                  options={procedureOptions}
+                />
+                <Input
+                  label="Дата"
+                  type="date"
+                  value={editDesiredDate}
+                  onChange={(e) => setEditDesiredDate(e.target.value)}
+                />
+                <Input
+                  label="Время"
+                  type="time"
+                  value={editDesiredTime}
+                  onChange={(e) => setEditDesiredTime(e.target.value)}
+                />
+                <Textarea
+                  label="Комментарий"
+                  value={editComment}
+                  onChange={(e) => setEditComment(e.target.value)}
+                />
+              </div>
+            )}
+
+            {modalMode === 'add' && (
+              <div className={styles.formGrid}>
+                <Select
+                  label="Процедура"
+                  value={addProcedureId}
+                  onChange={(e) => setAddProcedureId(e.target.value)}
+                  options={procedureOptions}
+                />
+                <Select
+                  label="Создать как"
+                  value={addMode}
+                  onChange={(e) => setAddMode(e.target.value as any)}
+                  options={[
+                    { value: 'asBooked', label: 'Записанную (подтверждённую)' },
+                    { value: 'asCompleted', label: 'Выполненную услугу (в отчёты)' },
+                  ]}
+                  showDefaultOption={false}
+                />
+                <Input
+                  label="Дата"
+                  type="date"
+                  value={addDesiredDate}
+                  onChange={(e) => setAddDesiredDate(e.target.value)}
+                />
+                <Input
+                  label="Время"
+                  type="time"
+                  value={addDesiredTime}
+                  onChange={(e) => setAddDesiredTime(e.target.value)}
+                />
+                <Textarea
+                  label="Комментарий"
+                  value={addComment}
+                  onChange={(e) => setAddComment(e.target.value)}
+                />
+              </div>
+            )}
 
             <div className={styles.modalActions}>
+              {modalMode === 'view' && (
+                <>
+                  <Button size="small" variant="outline" onClick={openEdit}>
+                    Редактировать
+                  </Button>
+                  <Button size="small" variant="outline" onClick={openAddProcedure}>
+                    Добавить процедуру
+                  </Button>
+                </>
+              )}
+
+              {modalMode === 'edit' && (
+                <>
+                  <Button size="small" onClick={saveEdit} disabled={saving}>
+                    {saving ? 'Сохранение…' : 'Сохранить'}
+                  </Button>
+                  <Button size="small" variant="secondary" onClick={() => setModalMode('view')} disabled={saving}>
+                    Отмена
+                  </Button>
+                </>
+              )}
+
+              {modalMode === 'add' && (
+                <>
+                  <Button size="small" onClick={createAdditional} disabled={saving}>
+                    {saving ? 'Создание…' : 'Создать'}
+                  </Button>
+                  <Button size="small" variant="secondary" onClick={() => setModalMode('view')} disabled={saving}>
+                    Отмена
+                  </Button>
+                </>
+              )}
+
               {selected.status === 'new' && (
                 <>
                   <Button

@@ -191,6 +191,11 @@
   gap: 12px;
 }
 
+.formGrid {
+  display: grid;
+  gap: 10px;
+}
+
 .modalGrid {
   display: grid;
   gap: 10px;
