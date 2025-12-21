@@ -24,8 +24,9 @@ export const normalizePhone = (raw: string): string | null => {
   if (!d.startsWith('7')) return null
 
   const national = d.slice(1) // 10 digits
-  // Basic sanity: first digit of national number should be 3-9 (covers most RU/KZ patterns; avoids +700...)
-  if (!/^[3-9]/.test(national)) return null
+  // Basic sanity: must be exactly 10 digits after country code.
+  // (We intentionally do NOT over-restrict prefixes here to keep UX simple.)
+  if (!/^\d{10}$/.test(national)) return null
 
   return `+${d}`
 }
@@ -38,8 +39,8 @@ export const formatPhoneMask = (raw: string): string => {
   let d = digits
   if (d.startsWith('8')) d = `7${d.slice(1)}`
   if (d.startsWith('7')) d = d.slice(1)
-  // Keep only last 10 digits of national part
-  if (d.length > 10) d = d.slice(d.length - 10)
+  // Keep only first 10 digits of national part (ignore extra input; do NOT shift digits)
+  if (d.length > 10) d = d.slice(0, 10)
 
   const p1 = d.slice(0, 3)
   const p2 = d.slice(3, 6)
