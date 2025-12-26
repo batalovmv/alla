@@ -25,11 +25,13 @@
   display: grid;
   grid-template-columns: 420px 1fr;
   gap: 32px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .imageSection {
   width: 100%;
+  display: flex;
+  align-self: stretch;
 }
 
 .subtitle {
@@ -54,7 +56,9 @@
 
 .photo {
   width: 100%;
-  aspect-ratio: 1;
+  height: 100%;
+  min-height: 560px;
+  aspect-ratio: auto;
   object-fit: cover;
   border-radius: 16px;
   background: rgba(31, 41, 55, 0.06);
@@ -65,7 +69,9 @@
 
 .imagePlaceholder {
   width: 100%;
-  aspect-ratio: 1;
+  height: 100%;
+  min-height: 560px;
+  aspect-ratio: auto;
   background:
     radial-gradient(700px 420px at 30% 18%, rgba(242, 154, 179, 0.22), transparent 60%),
     radial-gradient(700px 420px at 70% 18%, rgba(216, 184, 146, 0.22), transparent 60%),
@@ -129,8 +135,23 @@
 .certificateCard {
   display: grid;
   gap: 10px;
-  text-decoration: none;
-  color: inherit;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(31, 41, 55, 0.12);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(10px);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.certificateCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(31, 41, 55, 0.18);
+  box-shadow: 0 18px 40px rgba(17, 24, 39, 0.10);
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .certificateImage {
@@ -154,6 +175,41 @@
   justify-content: center;
   color: rgba(31, 41, 55, 0.75);
   font-size: 14px;
+  padding: 12px;
+}
+
+.certificateText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  line-height: 1.35;
+}
+
+.certificateLink {
+  text-decoration: none;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(31, 41, 55, 0.12);
+  background: rgba(31, 41, 55, 0.04);
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.certificateLink:hover {
+  background: rgba(31, 41, 55, 0.06);
+  border-color: rgba(31, 41, 55, 0.16);
+}
+
+.certificateLink:focus-visible {
+  outline: 2px solid rgba(255, 107, 157, 0.55);
+  outline-offset: 2px;
 }
 
 .certificateLabel {
@@ -185,6 +241,11 @@
 
   .content {
     grid-template-columns: 1fr;
+  }
+
+  .photo,
+  .imagePlaceholder {
+    min-height: 360px;
   }
 
   .card {

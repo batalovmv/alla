@@ -10,9 +10,14 @@ let inflight: Promise<AboutInfo> | null = null
 
 function normalize(raw: any | null | undefined): AboutInfo {
   const certificatesRaw = Array.isArray(raw?.certificates) ? raw.certificates : []
+  // IMPORTANT:
+  // Do not drop user-entered certificate values here — older data might contain
+  // non-URL strings or URLs without scheme. We keep raw strings and validate
+  // *only at render-time* before using as href/src.
   const certificates = certificatesRaw
-    .map((v: any) => safeHttpUrl(String(v || '')))
+    .map((v: any) => String(v ?? '').trim())
     .filter(Boolean)
+    .slice(0, 50)
 
   return {
     name: String(raw?.name || '').trim(),

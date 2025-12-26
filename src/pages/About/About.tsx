@@ -4,10 +4,19 @@ import SEO from '../../components/common/SEO/SEO'
 import { PageFallback } from '../../components/common/PageFallback/PageFallback'
 import { AboutInfo } from '../../types'
 import { getAboutInfo } from '../../utils/aboutInfo'
+import { safeHttpUrl } from '../../utils/url'
 import styles from './About.module.css'
 
 function isLikelyImageUrl(url: string): boolean {
   return /\.(png|jpe?g|webp|gif|avif)(\?|#|$)/i.test(url)
+}
+
+function labelFromValue(raw: string, index: number): string {
+  const s = String(raw || '').trim()
+  if (!s) return `Сертификат ${index + 1}`
+  const safe = s.replace(/^https?:\/\//i, '')
+  const short = safe.length > 44 ? `${safe.slice(0, 44).trim()}…` : safe
+  return `Сертификат ${index + 1}: ${short}`
 }
 
 const About: React.FC = () => {
@@ -120,32 +129,46 @@ const About: React.FC = () => {
                 <Card className={styles.card}>
                   <h2>Сертификаты</h2>
                   <div className={styles.certificates}>
-                    {aboutInfo.certificates.map((url, idx) => {
-                      const label = `Сертификат ${idx + 1}`
-                      const isImg = isLikelyImageUrl(url)
+                    {aboutInfo.certificates.map((rawValue, idx) => {
+                      const href = safeHttpUrl(rawValue)
+                      const label = labelFromValue(rawValue, idx)
+                      const isClickable = Boolean(href)
+                      const isImg = Boolean(href) && isLikelyImageUrl(href)
                       return (
-                        <a
-                          key={`${url}-${idx}`}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={styles.certificateCard}
-                        >
+                        <div key={`${rawValue}-${idx}`} className={styles.certificateCard}>
                           {isImg ? (
                             <img
                               className={styles.certificateImage}
-                              src={url}
+                              src={href}
                               alt={label}
                               loading="lazy"
                               decoding="async"
                             />
                           ) : (
-                            <div className={styles.certificateFile}>
-                              <span>Открыть файл</span>
+                            <div className={styles.certificateFile} aria-label={label}>
+                              {isClickable ? (
+                                <span>Открыть ссылку</span>
+                              ) : (
+                                <span className={styles.certificateText} title={rawValue}>
+                                  {rawValue}
+                                </span>
+                              )}
                             </div>
                           )}
-                          <span className={styles.certificateLabel}>{label}</span>
-                        </a>
+                          {isClickable ? (
+                            <a
+                              href={href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.certificateLink}
+                              aria-label={label}
+                            >
+                              <span className={styles.certificateLabel}>Открыть</span>
+                            </a>
+                          ) : (
+                            <span className={styles.certificateLabel}>Сертификат {idx + 1}</span>
+                          )}
+                        </div>
                       )
                     })}
                   </div>
