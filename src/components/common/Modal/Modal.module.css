@@ -4,7 +4,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background:
+    radial-gradient(900px 420px at 18% 0%, rgba(242, 154, 179, 0.18), transparent 60%),
+    radial-gradient(900px 420px at 82% 0%, rgba(216, 184, 146, 0.18), transparent 60%),
+    rgba(17, 24, 39, 0.55);
+  backdrop-filter: blur(6px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -13,9 +17,10 @@
 }
 
 .modal {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-modal);
+  border: 1px solid var(--color-border);
   max-width: 500px;
   width: 100%;
   max-height: 90vh;
@@ -28,13 +33,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .title {
   margin: 0;
   font-size: 24px;
   font-weight: 600;
+  color: var(--color-text);
 }
 
 .closeButton {
@@ -43,19 +49,20 @@
   font-size: 32px;
   line-height: 1;
   cursor: pointer;
-  color: #666;
+  color: var(--color-text-light);
   padding: 0;
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  border-radius: 10px;
+  transition: var(--transition);
 }
 
 .closeButton:hover {
-  background-color: #f0f0f0;
+  background-color: rgba(31, 41, 55, 0.06);
+  color: var(--color-text);
 }
 
 .content {

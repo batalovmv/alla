@@ -16,6 +16,7 @@
 - Firebase (Auth, Firestore, Storage) через `src/services/firebaseService.ts`
 - Vite 5 с ручным разбиением на чанки (`vite.config.ts`)
 - CSS Modules + глобальные стили в `src/assets/styles/index.css`
+- Дизайн-ориентир для ревью (современный “beauty salon” стиль): `DESIGN_STYLE_GUIDE.md`
 - GitHub Actions → GitHub Pages (`.github/workflows/deploy.yml`)
 
 ## Что уже сделано

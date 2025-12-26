@@ -1,0 +1,32 @@
+### Project rules for Cursor AI
+
+This repo deploys the frontend to GitHub Pages via the existing workflow `.github/workflows/deploy.yml` on **push to `main`**.
+
+#### Slash commands (chat shortcuts)
+
+When the user types a slash command, treat it as an instruction to execute the corresponding procedure.
+
+##### `/deploy-prod`
+
+Goal: trigger a production deployment (GitHub Pages) by pushing to `main`.
+
+Procedure:
+- Confirm there are intended changes: run `git status --porcelain`.
+- Ensure we are on `main`. If not, ask before switching.
+- Pull latest main safely: `git pull --rebase origin main`.
+- Build locally to avoid breaking prod: `npm ci` then `npm run build`.
+- Stage and commit:
+  - `git add -A`
+  - `git commit -m "chore(deploy): prod"`
+  - If there is nothing to commit, do not create an empty commit; tell the user.
+- Push to trigger CI/CD:
+  - `git push origin main`
+- Report:
+  - Share the commit hash and remind the user to check GitHub Actions run “Deploy to GitHub Pages”.
+
+Safety rules:
+- Never print or request secrets in chat. Use GitHub Actions secrets already configured.
+- If the build fails, do not push; fix the issue first.
+- If the repo has untracked sensitive files (e.g. `.env.local`), never commit them.
+
+

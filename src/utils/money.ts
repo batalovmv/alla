@@ -6,3 +6,4 @@ export function formatKzt(value: number): string {
 }
 
 
+
