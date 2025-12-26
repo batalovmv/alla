@@ -103,6 +103,15 @@ export interface ContactInfo {
   whatsappEnabled?: boolean
 }
 
+export interface AboutInfo {
+  name: string
+  photo: string
+  education: string
+  experience: string
+  description: string
+  certificates: string[]
+}
+
 export interface ProceduresState {
   items: Procedure[]
   categories: string[]

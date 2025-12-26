@@ -10,7 +10,7 @@ import { CONTACT_INFO, SITE_NAME } from '../../config/constants'
 import { getContactInfo } from '../../utils/contactInfo'
 import { buildWhatsAppHref } from '../../utils/whatsapp'
 import { buildTelegramHref } from '../../utils/telegram'
-import { ContactInfo } from '../../types'
+import { AboutInfo, ContactInfo } from '../../types'
 import ProcedureCard from '../../components/procedures/ProcedureCard/ProcedureCard'
 import Button from '../../components/common/Button/Button'
 import Card from '../../components/common/Card/Card'
@@ -19,11 +19,22 @@ import { useDelayedFlag } from '../../utils/useDelayedFlag'
 import { ProcedureCardSkeleton, ReviewCardSkeleton } from '../../components/common/Skeleton/SkeletonPresets'
 import { Skeleton } from '../../components/common/Skeleton/Skeleton'
 import { LazyMount } from '../../components/common/LazyMount/LazyMount'
+import { getAboutInfo } from '../../utils/aboutInfo'
 import styles from './Home.module.css'
+
+function excerpt(text: string, maxLen: number): string {
+  const s = String(text || '').replace(/\s+/g, ' ').trim()
+  if (!s) return ''
+  if (s.length <= maxLen) return s
+  const cut = s.slice(0, maxLen)
+  const lastSpace = cut.lastIndexOf(' ')
+  return `${(lastSpace > 120 ? cut.slice(0, lastSpace) : cut).trim()}…`
+}
 
 const Home: React.FC = () => {
   const dispatch = useAppDispatch()
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null)
+  const [aboutInfo, setAboutInfo] = useState<AboutInfo | null>(null)
   // Stage-based mounting: page “builds” as user scrolls.
   const [stage, setStage] = useState(0)
   const { items: procedures, lastFetched: proceduresLastFetched, loading: proceduresLoading } = useAppSelector(
@@ -67,6 +78,18 @@ const Home: React.FC = () => {
     getContactInfo()
       .then((ci) => {
         if (mounted) setContactInfo(ci)
+      })
+      .catch(() => {})
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+    getAboutInfo()
+      .then((ai) => {
+        if (mounted) setAboutInfo(ai)
       })
       .catch(() => {})
     return () => {
@@ -196,24 +219,36 @@ const Home: React.FC = () => {
                 <div className={styles.aboutContent}>
                   <div className={styles.aboutText}>
                     <h2 className={styles.sectionTitle}>О специалисте</h2>
-                    <p>
-                      Опытный косметолог с многолетним стажем работы. Постоянно
-                      повышаю квалификацию, посещаю семинары и мастер-классы ведущих
-                      специалистов индустрии красоты.
-                    </p>
-                    <p>
-                      Использую только сертифицированные препараты и современное
-                      оборудование. Индивидуальный подход к каждому клиенту и
-                      гарантия качества услуг.
-                    </p>
+                    {aboutInfo?.name && <p className={styles.aboutName}>{aboutInfo.name}</p>}
+                    {aboutInfo?.description ? (
+                      <p>{excerpt(aboutInfo.description, 320)}</p>
+                    ) : (
+                      <p>
+                        Опытный косметолог с многолетним стажем работы. Постоянно
+                        повышаю квалификацию и использую современные методики, чтобы
+                        вы получали лучший результат.
+                      </p>
+                    )}
+                    {aboutInfo?.education && <p className={styles.aboutMeta}>Образование: {aboutInfo.education}</p>}
+                    {aboutInfo?.experience && <p className={styles.aboutMeta}>Опыт: {aboutInfo.experience}</p>}
                     <Link to={ROUTES.ABOUT}>
                       <Button>Узнать больше</Button>
                     </Link>
                   </div>
                   <div className={styles.aboutImage}>
-                    <div className={styles.imagePlaceholder}>
-                      <span>Фото специалиста</span>
-                    </div>
+                    {aboutInfo?.photo ? (
+                      <img
+                        className={styles.aboutPhoto}
+                        src={aboutInfo.photo}
+                        alt={aboutInfo?.name ? `Фото специалиста — ${aboutInfo.name}` : 'Фото специалиста'}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <div className={styles.imagePlaceholder}>
+                        <span>Фото специалиста</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
